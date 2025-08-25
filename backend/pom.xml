@@ -70,13 +70,6 @@
 				<version>8.0.0.Final</version>
 		</dependency>
 
-		<!-- Dotenv, cargador de variables de entorno -->
-		<dependency>
-				<groupId>io.github.cdimascio</groupId>
-				<artifactId>dotenv-java</artifactId>
-				<version>3.0.0</version>
-		</dependency>
-
 		<!-- Swagger -->
 		<dependency>
         <groupId>org.springdoc</groupId>

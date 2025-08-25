@@ -2,46 +2,33 @@
 
 Proyecto fullstack (backend + frontend) en desarrollo.
 
----
-
-## 🚀 Cómo levantar el backend
+## 🚀 Levantar el Proyecto
 
 ### Requisitos
 
-- Java 21 (o la versión configurada en el proyecto)
-- Maven (puedes usar el wrapper incluido `./mvnw`)
-- MySQL corriendo en tu sistema
+- Docker y Docker Compose instalados en tu sistema
 - Archivo `.env` dentro de la carpeta `backend` con las siguientes variables:
 
 ```
 DB_URL=
-DB_USER=
+DB_USERNAME=
 DB_PASSWORD=
 ```
 
 > ⚠️ _Si no sabes los valores, pregúntale a algún compañero que los tenga._
 
-### Usando el wrapper de Maven
-
-Para compilar y ejecutar:
-
-```basrc
-./mvnw spring-boot:run
+### Inicializar Contenedores
+Desde la raíz del proyecto, corre el comando
+```bashrc
+docker compose up
 ```
+Este comando hace lo siguiente:
+* Crea y levanta un contenedor de MySQL (`mentora-db`) con la base mentora_db
+* Crea y levanta el backend (`mentora-backend`) con Spring Boot (http://localhost:8080)
+* Crea y levanta el frontend (`mentora-frontend`) con Next.js (http://localhost:3000)
 
-- Spring Boot cargará automáticamente las variables del `.env` usando dotenv.
-- La aplicación se levantará en http://localhost:8080 por defecto.
 
-### Compilar y generar el jar
-
-```
-./mvnw clean install
-```
-
-- Esto compila el proyecto y ejecuta los tests.
-- Genera un archivo jar en `target/backend-0.0.1-SNAPSHOT.jar`.
-
-📖 Documentación de endpoints
+## 📖 Documentación de endpoints
 
 Todos los endpoints del backend están documentados con Swagger/OpenAPI.
 

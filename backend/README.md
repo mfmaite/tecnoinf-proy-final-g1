@@ -1,26 +1,33 @@
-# Mentora
+🖥️ Backend - Mentora
 
-Proyecto backend desarrollado con **Spring Boot**.
+Backend desarrollado con Spring Boot para la API REST del proyecto Mentora.
 
-Este proyecto sigue una estructura organizada para RESTful APIs, separando modelos, controladores y servicios.
+## 📁 Estructura de carpetas
 
+- Modelos (model/): Clases que representan los datos (Greeting.java, User.java, etc.)
+- Controladores (controller/): Manejan rutas HTTP y devuelven JSON
+- Servicios (service/): Contienen la lógica de negocio
+- Repository (repository/): Interfaces que extienden JpaRepository para acceso a la base de datos
+- Resources (src/main/resources/): Archivos de configuración (application.properties)
 
-## Estructura de carpetas
+### 📌 Swagger/OpenAPI
 
-- **Modelos (`model/`)**: Contienen las clases que representan los datos, por ejemplo `Greeting.java`.
-- **Controladores (`controller/`)**: Manejan las rutas HTTP y devuelven datos en JSON.
-- **Servicios (`service/`)**: Contienen la lógica de negocio separada del controlador (opcional).
+- Todos los endpoints están documentados en Swagger UI.
+- Para acceder a la documentación mientras el backend está corriendo:
 
-## Cómo ejecutar el proyecto
+http://localhost:8080/swagger-ui.html
 
-### Usando el wrapper de Maven incluido (`./mvnw`)
+- Desde ahí puedes ver los endpoints, parámetros, request y response.
 
-Este proyecto incluye un **Maven Wrapper**, que permite ejecutar Maven sin necesidad de instalarlo globalmente en tu sistema.
+Todos los endpoints devuelven respuestas usando `ResponseDTO`:
 
-Para compilar y ejecutar:
+- success: boolean
+- message: string
+- code: número de estado HTTP
+- data: objeto (para GETs)
 
-```bash
-./mvnw spring-boot:run
-```
+## 📝 Notas
 
-Esto levanta la aplicación Spring Boot en http://localhost:8080 por defecto.
+- Se recomienda usar DTOs para las peticiones y respuestas de la API
+- Los errores de validación se manejan con mensajes claros dependiendo del campo faltante
+- Separa siempre la lógica de negocio (service) del controlador

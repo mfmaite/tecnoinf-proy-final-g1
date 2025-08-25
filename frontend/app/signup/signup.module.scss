@@ -1,0 +1,5 @@
+@use "../../public/assets/stylesheets/text-styles.scss" as *;
+
+.h1 {
+  @extend .h2;
+}

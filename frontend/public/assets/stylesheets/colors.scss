@@ -1,42 +1,71 @@
-// 🎨 PALETA DE COLORES - Mentora
+// PRIMARY COLOR (Naranja)
+$primary-color-10: #FFF6ED;
+$primary-color-20: #FFE8D2;
+$primary-color-30: #FFD0A8;
+$primary-color-40: #FFB170;
+$primary-color-50: #FF9440;
+$primary-color-60: #F97316;
+$primary-color-70: #E66112;
+$primary-color-80: #CC540F;
+$primary-color-90: #B1470B;
+$primary-color-100: #993808;
 
-// PRIMARY (naranja suave)
-$primary-50:  #FFF6ED;
-$primary-100: #FFE8D2;
-$primary-200: #FFD0A8;
-$primary-300: #FFB170;
-$primary-400: #FF9440;
-$primary-500: #F97316;
-$primary-600: #EA580C;
-$primary-700: #C2410C;
-$primary-800: #9A3412;
-$primary-900: #7C2D12;
+// SECONDARY COLOR (Verde oscuro del logo)
+$secondary-color-10: #E6F0E8;
+$secondary-color-20: #CCE1D0;
+$secondary-color-30: #99C3A1;
+$secondary-color-40: #66A672;
+$secondary-color-50: #338A43;
+$secondary-color-60: #266C35;
+$secondary-color-70: #1A4D26;
+$secondary-color-80: #0D2F18;
+$secondary-color-90: #00100A;
+$secondary-color-100: #000000;
 
-// SECONDARY (verde contraste)
-$secondary-50:  #F4FBF8;
-$secondary-100: #DBF5E9;
-$secondary-200: #AFE8CE;
-$secondary-300: #7AD2AA;
-$secondary-400: #4CB689;
-$secondary-500: #2E7D58;
-$secondary-600: #256948;
-$secondary-700: #1E553A;
-$secondary-800: #18432E;
-$secondary-900: #123223;
+// TEXT NEUTRAL
+$text-neutral-10: #F5F4F1;
+$text-neutral-20: #EAE8E3;
+$text-neutral-30: #DCE1DE;
+$text-neutral-40: #999999;
+$text-neutral-50: #333333;
 
-// TEXT
-$text-primary:   #1B1B1B;
-$text-secondary: #374151;
-$text-muted:     #6B7280;
-$text-inverse:   #FFFFFF;
+// SURFACES (ya definidos)
+$surface-light-10: #FFFFFF;
+$surface-light-20: #FAF9F6;
+$surface-light-30: #F5F4F1;
+$surface-light-40: #EAE8E3;
+$surface-light-50: #DCE1DE;
 
-// BACKGROUND
-$background-light: #FFFDF9;
-$background-main:  #FAF7F2;
-$background-alt:   #F1EDE7;
+$surface-dark-10:  #E5E5E5;
+$surface-dark-20:  #CCCCCC;
+$surface-dark-30:  #999999;
+$surface-dark-40:  #666666;
+$surface-dark-50:  #333333;
 
-// ACCENTS
-$success: #16A34A;
-$info:    #0EA5E9;
-$warning: #FACC15;
-$danger:  #DC2626;
+// ACCENTS - SUCCESS
+$accent-success-10: #EBF9DD;
+$accent-success-20: #C0DDA4;
+$accent-success-30: #85AE5D;
+$accent-success-40: #4A7F16;
+$accent-success-50: #2C4C0D;
+
+// ACCENTS - INFO
+$accent-info-10: #F4F8FA;
+$accent-info-20: #BBD5DF;
+$accent-info-30: #8DB9CA;
+$accent-info-40: #779FAE;
+$accent-info-50: #3F5D69;
+
+// ACCENTS - WARNING
+$accent-warning-10: #FFF2CC;
+$accent-warning-20: #FFDC73;
+$accent-warning-30: #FFBF3F;
+$accent-warning-40: #ECB100;
+$accent-warning-50: #99770F;
+
+// ACCENTS - DANGER
+$accent-danger-10: #F9DDDD;
+$accent-danger-20: #ED9998;
+$accent-danger-30: #E15554;
+$accent-danger-40: #B64444;
+$accent-danger-50: #612323;

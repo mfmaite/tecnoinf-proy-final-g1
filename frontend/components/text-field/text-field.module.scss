@@ -1,0 +1,169 @@
+@use "sass:list";
+@use "../../public/assets/stylesheets/colors.scss" as *;
+@use "../../public/assets/stylesheets/variables/text-styles.scss" as *;
+@use "../../public/assets/stylesheets/text-styles.scss" as *;
+
+$label-colors: (
+  default: (
+    $text-neutral-50,
+  ),
+  error: (
+    $accent-danger-40,
+  ),
+  success: (
+    $accent-success-40,
+  ),
+);
+
+$input-border-colors: (
+  default: (
+    $surface-light-50,
+  ),
+  error: (
+    $accent-danger-40,
+  ),
+  success: (
+    $accent-success-40,
+  ),
+);
+
+$helper-colors: (
+  default: (
+    $text-neutral-50,
+  ),
+  error: (
+    $accent-danger-40,
+  ),
+  success: (
+    $accent-success-40,
+  ),
+);
+
+.container {
+  width: 100%;
+  position: relative;
+}
+
+.inputContainer {
+  position: relative;
+  width: 100%;
+  display: flex;
+}
+
+%icon {
+  position: absolute;
+  transition: all 0.3s ease-in-out;
+  height: 100%;
+  color: $text-neutral-30;
+  display: flex;
+  align-items: center;
+}
+
+.iconLeft {
+  @extend %icon;
+
+  margin-left: 12px;
+
+  &:hover {
+    cursor: text;
+  }
+}
+
+.iconRight {
+  @extend %icon;
+
+  right: 12px;
+}
+
+// If you update the styles here, don't forget to do the same in the LawPay input in step 4.
+.inputStyle {
+  @extend .text-medium-regular;
+  padding: 8px 12px;
+  width: 100%;
+  border: 1px solid $surface-light-50;
+  border-radius: 4px;
+  transition:
+    border,
+    color 0.2s ease-in-out;
+  background-color: $surface-light-10;
+  color: $text-neutral-50;
+
+  @each $color, $properties in $input-border-colors {
+    &.#{$color} {
+      border-color: list.nth($properties, 1);
+    }
+  }
+
+  &:active {
+    outline: 0;
+    background-color: $surface-light-40;
+  }
+
+  &:hover {
+    background-color: $surface-light-30;
+  }
+
+  &:focus {
+    outline: 0;
+    border: 1px solid $surface-dark-50;
+    background-color: $surface-light-10;
+  }
+
+  &:disabled {
+    color: $text-neutral-30;
+  }
+
+  &::placeholder {
+    color: $text-neutral-30;
+  }
+}
+
+.withPaddingLeft {
+  padding-left: 48px;
+}
+
+.withPaddingRight {
+  padding-right: 48px;
+}
+
+.label {
+  @extend .text-small-bold;
+  margin-bottom: 4px;
+  @each $color, $properties in $label-colors {
+    &.#{$color} {
+      color: list.nth($properties, 1);
+    }
+  }
+}
+
+.labelError {
+  color: $accent-danger-40;
+}
+
+.helperText {
+  display: flex;
+  align-items: center;
+  position: absolute;
+
+  @each $color, $properties in $helper-colors {
+    &.#{$color} {
+      color: list.nth($properties, 1);
+    }
+  }
+}
+
+.helperIcon {
+  display: flex;
+  width: 16px;
+  margin-right: 4px;
+
+  @each $color, $properties in $helper-colors {
+    &.#{$color} {
+      color: list.nth($properties, 1);
+    }
+  }
+}
+
+.disableResize {
+  resize: none;
+}

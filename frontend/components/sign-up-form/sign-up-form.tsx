@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { userController } from '../controllers/userController';
-import type { UserSignUpData } from '../types/user';
+import { userController } from '../../controllers/userController';
+import type { UserSignUpData } from '../../types/user';
+import { TextField, TextFieldStatus } from '../text-field/text-field';
 
-export default function SignUpForm() {
+const SignUpForm = () => {
   const [formData, setFormData] = useState<UserSignUpData>({
     name: '',
     email: '',
@@ -39,47 +40,38 @@ export default function SignUpForm() {
     <div className="w-full max-w-md mx-auto p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Nombre
-          </label>
-          <input
+          <TextField
             type="text"
-            id="name"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Nombre"
+            label="Nombre"
+            status={error ? TextFieldStatus.error : TextFieldStatus.default}
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
+          <TextField
             type="email"
-            id="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Email"
+            label="Email"
+            status={error ? TextFieldStatus.error : TextFieldStatus.default}
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Contraseña
-          </label>
-          <input
-            type="password"
-            id="password"
+          <TextField
             name="password"
+            type="password"
             value={formData.password}
             onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Contraseña"
+            label="Contraseña"
+            status={error ? TextFieldStatus.error : TextFieldStatus.default}
           />
         </div>
 
@@ -100,3 +92,5 @@ export default function SignUpForm() {
     </div>
   );
 }
+
+export { SignUpForm };

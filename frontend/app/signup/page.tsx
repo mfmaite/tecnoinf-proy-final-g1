@@ -1,10 +1,15 @@
-import SignUpForm from '../../components/SignUpForm';
+import { SignUpForm } from '@/components/sign-up-form/sign-up-form';
+import clsx from 'clsx';
+import styles from './signup.module.scss';
 
 export default function SignUpPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className={clsx(
+          styles.h1,
+          'text-center',
+        )}>
           Crear una cuenta
         </h2>
 

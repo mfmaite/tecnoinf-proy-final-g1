@@ -1,0 +1,173 @@
+@use "../colors" as *;
+@use "./variables" as *;
+@forward "../colors";
+@forward "./variables";
+
+$font-weights: (
+  regular: 400,
+  semibold: 500,
+  bold: 700,
+);
+
+// Headings
+// h1 (56px, 64px)
+// ^    ^    ^
+// |    |    |
+// |    |    Line height
+// |    Font size
+// Class name
+
+$headings: (
+  h1: (
+    web: (
+      48px,
+      56px,
+    ),
+    mobile: (
+      32px,
+      40px,
+    ),
+    font-family: $secondary-font,
+  ),
+  h2: (
+    web: (
+      40px,
+      48px,
+    ),
+    mobile: (
+      24px,
+      32px,
+    ),
+    font-family: $secondary-font,
+  ),
+  h3: (
+    web: (
+      32px,
+      40px,
+    ),
+    mobile: (
+      20px,
+      24px,
+    ),
+    font-family: $secondary-font,
+  ),
+  h4: (
+    web: (
+      24px,
+      32px,
+    ),
+    mobile: (
+      18px,
+      24px,
+    ),
+    font-family: $secondary-font,
+  ),
+  h5: (
+    web: (
+      20px,
+      28px,
+    ),
+    mobile: (
+      16px,
+      22px,
+    ),
+    font-family: $secondary-font,
+  ),
+  h6: (
+    web: (
+      20px,
+      28px,
+    ),
+    mobile: (
+      16px,
+      22px,
+    ),
+  ),
+);
+
+$text: (
+  large: (
+    web: (
+      20px,
+      28px,
+      $text-neutral-40,
+      none,
+    ),
+    mobile: (
+      20px,
+      28px,
+      $text-neutral-40,
+      none,
+    ),
+  ),
+  medium: (
+    web: (
+      16px,
+      26px,
+      $text-neutral-40,
+      none,
+    ),
+    mobile: (
+      16px,
+      26px,
+      $text-neutral-40,
+      none,
+    ),
+  ),
+  small: (
+    web: (
+      14px,
+      20px,
+      $text-neutral-40,
+      none,
+    ),
+    mobile: (
+      14px,
+      20px,
+      $text-neutral-40,
+      none,
+    ),
+  ),
+  tiny: (
+    web: (
+      12px,
+      16px,
+      $text-neutral-30,
+      none,
+    ),
+    mobile: (
+      12px,
+      16px,
+      $text-neutral-30,
+      none,
+    ),
+  ),
+  xtiny: (
+    web: (
+      10px,
+      16px,
+      $text-neutral-30,
+      none,
+    ),
+    mobile: (
+      10px,
+      16px,
+      $text-neutral-30,
+      none,
+    ),
+  ),
+  overline: (
+    web: (
+      12px,
+      16px,
+      $text-neutral-40,
+      uppercase,
+    ),
+    mobile: (
+      12px,
+      16px,
+      $text-neutral-40,
+      uppercase,
+    ),
+  ),
+);

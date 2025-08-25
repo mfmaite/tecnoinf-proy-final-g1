@@ -7,6 +7,7 @@ Proyecto fullstack (backend + frontend) en desarrollo.
 ### Requisitos
 
 - Docker y Docker Compose instalados en tu sistema
+- Node.js y npm instalados en tu sistema
 - Archivo `.env` dentro de la carpeta `backend` con las siguientes variables:
 
 ```
@@ -17,7 +18,7 @@ DB_PASSWORD=
 
 > ⚠️ _Si no sabes los valores, pregúntale a algún compañero que los tenga._
 
-### Inicializar Contenedores
+### Inicializar Backend y Base de Datos
 Desde la raíz del proyecto, corre el comando
 ```bashrc
 docker compose up
@@ -25,7 +26,14 @@ docker compose up
 Este comando hace lo siguiente:
 * Crea y levanta un contenedor de MySQL (`mentora-db`) con la base mentora_db
 * Crea y levanta el backend (`mentora-backend`) con Spring Boot (http://localhost:8080)
-* Crea y levanta el frontend (`mentora-frontend`) con Next.js (http://localhost:3000)
+
+### Inicializar Frontend
+En una terminal separada, navega a la carpeta `frontend` y ejecuta:
+```bashrc
+npm install    # Solo la primera vez o cuando se actualicen dependencias
+npm run dev
+```
+Esto levantará el frontend con Next.js en http://localhost:3000
 
 
 ## 📖 Documentación de endpoints

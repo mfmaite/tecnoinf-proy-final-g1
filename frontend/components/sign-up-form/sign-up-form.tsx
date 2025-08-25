@@ -21,6 +21,7 @@ const SignUpForm = () => {
     setLoading(true);
 
     try {
+      console.log(formData);
       await userController.signUp(formData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al registrar usuario');
@@ -83,7 +84,7 @@ const SignUpForm = () => {
         )}
 
         <Button
-          type="submit"
+          onClick={handleSubmit}
           disabled={loading}
         >
           {loading ? 'Registrando...' : 'Registrarse'}

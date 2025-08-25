@@ -9,13 +9,7 @@ Proyecto fullstack (backend + frontend) en desarrollo.
 - Docker y Docker Compose instalados en tu sistema
 - Node.js y npm instalados en tu sistema
 - Java 17 o superior y Maven (si vas a desarrollar el backend)
-- Archivo `.env` dentro de la carpeta `backend` con las siguientes variables:
-
-```
-DB_URL=jdbc:mysql://db:3306/mentora_db
-DB_USERNAME=
-DB_PASSWORD=
-```
+- Archivo `.env` dentro de la carpeta `backend`. Si no conoces el valor de las variables, pídeselo a algún compañerx.
 
 ### Inicializar el Proyecto con Docker
 Desde la raíz del proyecto, corre el comando
@@ -51,10 +45,10 @@ DB_URL=jdbc:mysql://localhost:3307/mentora_db
 3. Carga las variables de entorno:
 ```bashrc
 # En sistemas Unix (Linux/MacOS)
-export $(cat backend/.env.local | xargs)
+export $(cat backend/.env | xargs)
 
 # En Windows (PowerShell)
-Get-Content backend/.env.local | ForEach-Object { $envItem = $_.Split('='); if ($envItem[0] -and $envItem[1]) { [Environment]::SetEnvironmentVariable($envItem[0], $envItem[1]) } }
+Get-Content backend/.env | ForEach-Object { $envItem = $_.Split('='); if ($envItem[0] -and $envItem[1]) { [Environment]::SetEnvironmentVariable($envItem[0], $envItem[1]) } }
 ```
 
 4. Verifica que las variables se cargaron correctamente:

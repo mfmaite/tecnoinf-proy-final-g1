@@ -17,12 +17,8 @@ public class UserService {
   }
 
   public UserDTO createUser(UserDTO userDTO) {
-    if (userDTO.getName() == null || userDTO.getEmail() == null || userDTO.getPassword() == null) {
-      throw new RuntimeException("All fields are required");
-    }
-
     if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
-      throw new RuntimeException("Email already exists");
+      throw new RuntimeException("El email ya existe");
     }
 
     User user = new User();

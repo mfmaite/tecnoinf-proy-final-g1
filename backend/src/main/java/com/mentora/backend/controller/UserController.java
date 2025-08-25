@@ -32,7 +32,7 @@ public class UserController {
       ResponseDTO<UserDTO> response = new ResponseDTO<>(
               true,
               HttpStatus.CREATED.value(),
-              "User created successfully",
+              "El usuario se ha creado exitosamente",
               createdUser
       );
 

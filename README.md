@@ -11,9 +11,7 @@ Proyecto fullstack (backend + frontend) en desarrollo.
 - Java 17 o superior y Maven (si vas a desarrollar el backend)
 - Archivo `.env` dentro de la carpeta `backend`. Si no conoces el valor de las variables, pídeselo a algún compañerx.
 
-> ⚠️ _Si no sabes los valores, pregúntale a algún compañero que los tenga._
-
-### Inicializar Backend y Base de Datos
+### Inicializar el Proyecto con Docker
 Desde la raíz del proyecto, corre el comando
 ```bashrc
 docker compose up

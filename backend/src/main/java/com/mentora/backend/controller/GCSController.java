@@ -21,19 +21,27 @@ public class GCSController {
     @Autowired
     private GCSConfig gcsConfig;
 
-    // este es el de subir archivos
+    // Endpoint para subir archivos
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            return "El archivo no tiene un nombre válido";
+        }
+
         Storage storage = gcsConfig.getStorage();
         String bucketName = gcsConfig.getBucketName();
+        BlobId blobId = BlobId.of(bucketName, originalFilename); // esto es decirle en que bucket va a subir y con que nombre
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build(); // aca lo seteas
 
-        BlobId blobId = BlobId.of(bucketName, file.getOriginalFilename());
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+        // aca se sube el archivo
         storage.create(blobInfo, file.getBytes());
 
-        return "Archivo subido: " + file.getOriginalFilename();
+        return "Archivo subido correctamente: " + originalFilename;
     }
-    // este es el otro
+
+    // Endpoint para descargar archivos
     @GetMapping("/download/{filename}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable String filename) {
         try {
@@ -47,13 +55,16 @@ public class GCSController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentType(MediaType.parseMediaType(blob.getContentType()))
                     .body(blob.getContent());
+
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
-
 }
+
+
+
 

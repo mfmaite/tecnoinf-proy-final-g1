@@ -19,6 +19,7 @@ public class GCSConfig {
     @Value("${KEY_DEL_GCS}")
     private String credentialsFile;
 
+    @org.springframework.context.annotation.Lazy
     @Bean
     public Storage getStorage() throws IOException {
         return StorageOptions.newBuilder()

@@ -18,12 +18,17 @@ public class SecurityConfig {
 
                 // Configuración de autorización
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/users").permitAll() // endpoints públicos
-                        .anyRequest().authenticated()           // resto requiere autenticación
-                )
-
-                // Configuración de autenticación básica (opcional si usas JWT)
-                .httpBasic();
+                        .requestMatchers(
+                            "/auth/**",
+                            "/users",
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/swagger-ui/index.html"
+                            )
+                            .permitAll()
+                        .anyRequest().authenticated()
+                );
 
         return http.build();
     }

@@ -26,12 +26,10 @@ public class DtUser {
     @NotNull(message = "El rol es requerido")
     private Role role;
 
-    // Constructor completo
-    public DtUser(String ci, String name, String email, String password, String description, String pictureUrl, Role role) {
+    public DtUser(String ci, String name, String email, String description, String pictureUrl, Role role) {
         this.ci = ci;
         this.name = name;
         this.email = email;
-        this.password = password;
         this.description = description;
         this.pictureUrl = pictureUrl;
         this.role = role;

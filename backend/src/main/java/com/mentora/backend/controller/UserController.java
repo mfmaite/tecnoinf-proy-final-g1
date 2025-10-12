@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @RestController
 @RequestMapping("/api/users")
@@ -21,10 +19,6 @@ public class UserController {
   }
 
   @PostMapping("/signup")
-    @Operation(summary = "Crear un nuevo usuario",
-               description = "Crea un usuario con nombre, email y password")
-    @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente")
-    @ApiResponse(responseCode = "400", description = "Datos inválidos o email ya existente")
   public ResponseEntity<ResponseDTO<UserDTO>> createUser(@Valid @RequestBody UserDTO userDTO) {
     try {
       UserDTO createdUser = userService.createUser(userDTO);

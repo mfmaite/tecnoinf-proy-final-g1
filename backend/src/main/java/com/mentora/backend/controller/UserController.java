@@ -5,10 +5,12 @@ import com.mentora.backend.service.UserService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import org.springframework.http.HttpStatus;
 import com.mentora.backend.dto.ResponseDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,10 +25,14 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear un usuario",
-               description = "Crea un usuario con nombre, email y password")
+               description = "Crea un usuario con nombre, email y password. Solo administradores.",
+               security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
-    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos de administrador")
+    @ApiResponse(responseCode = "409", description = "Usuario ya existe o rol inválido")
     public ResponseEntity<ResponseDTO<DtUser>> createUser(@Valid @RequestBody DtUser dtUser) {
         try {
             DtUser createdUser = userService.createUser(dtUser);

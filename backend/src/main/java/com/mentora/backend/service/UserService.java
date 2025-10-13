@@ -53,7 +53,6 @@ public class UserService {
 
         userRepository.save(user);
 
-        // Intentar enviar email de bienvenida (no crítico)
         try {
             emailService.sendEmail(
                 user.getEmail(),

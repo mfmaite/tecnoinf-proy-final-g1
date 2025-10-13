@@ -90,6 +90,12 @@ module.exports = {
           40: '#B64444',
           50: '#612323',
         },
+        // Background Colors
+        background: {
+          light: '#FFFDF9',
+          main: '#FAF7F2',
+          alt: '#F1EDE7',
+        },
       },
       fontFamily: {
         playfair: ['var(--font-playfair)', 'serif'],

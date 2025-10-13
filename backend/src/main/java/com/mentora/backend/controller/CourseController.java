@@ -23,7 +23,31 @@ public class CourseController {
         this.courseService = courseService;
     }
 
+    @GetMapping
+    public ResponseEntity<ResponseDTO<List<DtCourse>>> listCourses(Authentication authentication) {
 
+        String ci = authentication.getName();
+        String roleString = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse("ROLE_ESTUDIANTE");
+        Role role = Role.valueOf(roleString.replace("ROLE_", ""));
+
+        List<DtCourse> courses = switch (role) {
+            case ADMIN -> courseService.getAllCourses();
+            case PROFESOR -> courseService.getCoursesForProfessorCi(ci);
+            case ESTUDIANTE -> courseService.getCoursesForStudentCi(ci);
+            default -> List.of();
+        };
+
+        ResponseDTO<List<DtCourse>> response = new ResponseDTO<>(
+                true,
+                200,
+                "Cursos obtenidos correctamente",
+                courses
+        );
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")

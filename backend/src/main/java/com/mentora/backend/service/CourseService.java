@@ -23,7 +23,31 @@ public class CourseService {
         this.userRepository = userRepository;
     }
 
+    // Obtener todos los cursos (admin)
+    @Transactional(readOnly = true)
+    public List<DtCourse> getAllCourses() {
+        return courseRepository.findAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
 
+    // Cursos para profesor (por CI desde token)
+    @Transactional(readOnly = true)
+    public List<DtCourse> getCoursesForProfessorCi(String ci) {
+        Optional<User> profOpt = userRepository.findById(ci);
+        return profOpt.map(user -> courseRepository.findByProfessorsContains(user).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList())).orElse(Collections.emptyList());
+    }
+
+    // Cursos para estudiante (por CI desde token)
+    @Transactional(readOnly = true)
+    public List<DtCourse> getCoursesForStudentCi(String ci) {
+        Optional<User> studOpt = userRepository.findById(ci);
+        return studOpt.map(user -> courseRepository.findByStudentsContains(user).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList())).orElse(Collections.emptyList());
+    }
 
     // Crear curso (solo admin via controller con @PreAuthorize)
     @Transactional

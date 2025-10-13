@@ -45,24 +45,31 @@ DB_URL=jdbc:mysql://localhost:3307/mentora_db
 3. Carga las variables de entorno:
 ```bashrc
 # En sistemas Unix (Linux/MacOS)
-export $(cat backend/.env | xargs)
+set -a
+source backend/.env
+set +a
 
 # En Windows (PowerShell)
 Get-Content backend/.env | ForEach-Object { $envItem = $_.Split('='); if ($envItem[0] -and $envItem[1]) { [Environment]::SetEnvironmentVariable($envItem[0], $envItem[1]) } }
 ```
 
+**Nota para MacOS/Linux:** El comando `set -a` y `source` maneja correctamente variables con espacios o caracteres especiales, a diferencia del método con `export $(cat ...)`.
+
 4. Verifica que las variables se cargaron correctamente:
 ```bashrc
 # En sistemas Unix (Linux/MacOS)
 echo $DB_URL  # Debería mostrar jdbc:mysql://localhost:3307/mentora_db
+echo $SMTP_PASSWORD  # Debería mostrar tu contraseña completa
 
 # En Windows (PowerShell)
 echo $env:DB_URL
+echo $env:SMTP_PASSWORD
 
 # En Windows (CMD)
 echo %DB_URL%
+echo %SMTP_PASSWORD%
 ```
-Si no ves los valores o son incorrectos, las variables no se cargaron correctamente.
+Si no ves los valores completos o son incorrectos, las variables no se cargaron correctamente.
 
 4. Navega a la carpeta `backend` con `cd backend` y ejecuta:
 ```bashrc

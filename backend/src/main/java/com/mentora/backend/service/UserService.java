@@ -10,7 +10,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -28,6 +27,10 @@ public class UserService {
     }
 
     public DtUser createUser(DtUser dto) {
+        if (dto.getRole() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El rol es requerido");
+        }
+
         if (findByCI(dto.getCi()) != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con esa CI");
         }
@@ -36,24 +39,25 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese email");
         }
 
-        User user = new User();
-        user.setCi(dto.getCi());
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setDescription(dto.getDescription());
-        user.setPictureUrl(dto.getPictureUrl());
-        user.setRole(dto.getRole());
+        User user = new User(
+            dto.getCi(),
+            dto.getName(),
+            dto.getEmail(),
+            passwordEncoder.encode(dto.getPassword()),
+            dto.getDescription(),
+            dto.getPictureUrl(),
+            dto.getRole()
+        );
 
-        User saved = userRepository.save(user);
+        userRepository.save(user);
 
         return new DtUser(
-                saved.getCi(),
-                saved.getName(),
-                saved.getEmail(),
-                saved.getDescription(),
-                saved.getPictureUrl(),
-                saved.getRole()
+            user.getCi(),
+            user.getName(),
+            user.getEmail(),
+            user.getDescription(),
+            user.getPictureUrl(),
+            user.getRole()
         );
     }
 }

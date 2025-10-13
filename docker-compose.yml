@@ -19,6 +19,7 @@ services:
       - ./backend/.env
     depends_on:
       - db
-
+    volumes:
+      - ./backend/credentialsGCS.json:/app/credentialsGCS.json
 volumes:
   db-data:

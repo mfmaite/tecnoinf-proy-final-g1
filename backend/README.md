@@ -26,6 +26,10 @@ Todos los endpoints devuelven respuestas usando `ResponseDTO`:
 - code: número de estado HTTP
 - data: objeto (para GETs)
 
+## 🌱 Seed de Datos
+
+El proyecto incluye un seed automático que crea usuarios de prueba al iniciar la aplicación. Este seed se ejecuta automáticamente cada vez que levantas el backend y solo crea los objetos si aún no existen en la base de datos.
+
 ## 📝 Notas
 
 - Se recomienda usar DTOs para las peticiones y respuestas de la API

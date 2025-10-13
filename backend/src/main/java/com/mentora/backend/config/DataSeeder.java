@@ -1,0 +1,75 @@
+package com.mentora.backend.config;
+
+import com.mentora.backend.model.Role;
+import com.mentora.backend.model.User;
+import com.mentora.backend.repository.UserRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DataSeeder implements CommandLineRunner {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public void run(String... args) {
+        seedUsers();
+    }
+
+    private void seedUsers() {
+        // Usuario Admin
+        if (userRepository.findByEmail("admin@mentora.com").isEmpty()) {
+            User admin = new User(
+                "11111111",
+                "Administrador",
+                "admin@mentora.com",
+                passwordEncoder.encode("admin123"),
+                "Usuario administrador del sistema",
+                null,
+                Role.ADMIN
+            );
+            userRepository.save(admin);
+            System.out.println("✓ Usuario ADMIN creado: admin@mentora.com");
+        }
+
+        // Usuario Profesor
+        if (userRepository.findByEmail("profesor@mentora.com").isEmpty()) {
+            User profesor = new User(
+                "22222222",
+                "Juan Pérez",
+                "profesor@mentora.com",
+                passwordEncoder.encode("profesor123"),
+                "Profesor de matemáticas con 10 años de experiencia",
+                null,
+                Role.PROFESOR
+            );
+            userRepository.save(profesor);
+            System.out.println("✓ Usuario PROFESOR creado: profesor@mentora.com");
+        }
+
+        // Usuario Estudiante
+        if (userRepository.findByEmail("estudiante@mentora.com").isEmpty()) {
+            User estudiante = new User(
+                "33333333",
+                "María González",
+                "estudiante@mentora.com",
+                passwordEncoder.encode("estudiante123"),
+                "Estudiante de segundo año",
+                null,
+                Role.ESTUDIANTE
+            );
+            userRepository.save(estudiante);
+            System.out.println("✓ Usuario ESTUDIANTE creado: estudiante@mentora.com");
+        }
+
+        System.out.println("=== Seed de usuarios completado ===");
+    }
+}
+

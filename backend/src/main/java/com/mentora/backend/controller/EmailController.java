@@ -11,6 +11,8 @@ import com.mentora.backend.dto.ResponseDTO;
 import com.mentora.backend.request.EmailRequest;
 import com.mentora.backend.service.EmailService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -23,6 +25,10 @@ public class EmailController {
   }
 
   @PostMapping("/send")
+  @Operation(summary = "Enviar un email",
+             description = "Envía un email a un destinatario con un asunto y un cuerpo")
+  @ApiResponse(responseCode = "200", description = "Email enviado exitosamente")
+  @ApiResponse(responseCode = "400", description = "Datos inválidos")
   public ResponseEntity<ResponseDTO<EmailRequest>> sendEmail(@Valid @RequestBody EmailRequest request) {
     try {
       emailService.sendEmail(request.getRecipient(), request.getSubject(), request.getBody());

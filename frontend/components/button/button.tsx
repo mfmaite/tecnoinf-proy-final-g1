@@ -20,7 +20,7 @@ const sizeClasses = {
 const colorClasses = {
   primary: {
     filled: `
-      bg-primary-color-80 text-white
+      bg-primary-color-50 text-secondary-color-70
       hover:bg-primary-color-70
       focus:bg-primary-color-50 focus:ring-2 focus:ring-primary-color-20 focus:ring-offset-2
       active:bg-primary-color-70
@@ -81,7 +81,6 @@ export const Button = ({
     <button
       {...props}
       disabled={disabled}
-      type="button"
       className={clsx(
         // Base styles
         'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors',

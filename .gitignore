@@ -9,3 +9,6 @@
 .env.development
 .env.test
 .env.production
+**/node_modules
+/mobile/.expo
+/mobile/expo-env.d.ts

@@ -12,10 +12,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public User findByCI(String ci) {
@@ -50,6 +52,17 @@ public class UserService {
         );
 
         userRepository.save(user);
+
+        // Intentar enviar email de bienvenida (no crítico)
+        try {
+            emailService.sendEmail(
+                user.getEmail(),
+                "Bienvenido a Mentora",
+                "Le damos la bienvenida a Mentora. Su usuario es: " + user.getCi() + " y su contraseña es: " + user.getPassword()
+            );
+        } catch (Exception e) {
+            System.err.println("Error al enviar email de bienvenida: " + e.getMessage());
+        }
 
         return new DtUser(
             user.getCi(),

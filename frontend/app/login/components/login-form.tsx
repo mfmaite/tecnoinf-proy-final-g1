@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { Button } from '@/components/button/button';
 import { authController } from '@/controllers/authController';
@@ -11,6 +12,8 @@ import { UserLoginData } from '@/types/user';
 
 const LoginForm = () => {
   const router = useRouter();
+  const params = useSearchParams();
+  const { setSession } = useAuth();
   const [formData, setFormData] = useState<UserLoginData>({
     ci: '',
     password: '',
@@ -48,8 +51,10 @@ const LoginForm = () => {
     try {
       const response = await authController.login(formData);
 
-      if (response.success) {
-        router.push('/');
+      if (response.success && response.data) {
+        setSession(response.data.jwt, response.data.user as any);
+        const from = params.get('from');
+        router.push(from ? decodeURIComponent(from) : '/');
       } else {
         setError(response.message || 'Error al iniciar sesión');
       }

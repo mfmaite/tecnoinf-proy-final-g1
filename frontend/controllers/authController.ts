@@ -38,6 +38,9 @@ class AuthController {
       if (data.success && data.data?.jwt) {
         const sevenDaysInSeconds = 7 * 24 * 60 * 60;
         setCookie('authToken', data.data.jwt, sevenDaysInSeconds);
+        if (data.data.user?.role) {
+          setCookie('authRole', data.data.user.role, sevenDaysInSeconds);
+        }
         try {
           localStorage.setItem('authToken', data.data.jwt);
           localStorage.setItem('authUser', JSON.stringify(data.data.user));
@@ -52,6 +55,7 @@ class AuthController {
 
   logout(): void {
     deleteCookie('authToken');
+    deleteCookie('authRole');
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
   }

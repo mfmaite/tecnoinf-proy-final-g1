@@ -18,8 +18,11 @@ class AuthController {
         throw new Error(data.message || 'Error al iniciar sesión');
       }
 
-      if (data.success && data.data) {
-        localStorage.setItem('authToken', data.data);
+      if (data.success && data.data?.jwt) {
+        localStorage.setItem('authToken', data.data.jwt);
+        try {
+          localStorage.setItem('authUser', JSON.stringify(data.data.user));
+        } catch {}
       }
 
       return data;

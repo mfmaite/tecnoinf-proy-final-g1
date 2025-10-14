@@ -17,7 +17,10 @@ export interface LoginResponse {
   success: boolean;
   code: number;
   message: string;
-  data: string; // JWT token
+  data: {
+    jwt: string;
+    user: UserResponse;
+  };
 }
 
 export interface UserResponse {

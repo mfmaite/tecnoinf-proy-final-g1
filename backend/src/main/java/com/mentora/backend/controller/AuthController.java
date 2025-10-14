@@ -1,6 +1,7 @@
 package com.mentora.backend.controller;
 
 import com.mentora.backend.dto.DtLogin;
+import com.mentora.backend.dto.DtLoginResponse;
 import com.mentora.backend.dto.ResponseDTO;
 import com.mentora.backend.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,17 +23,18 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión",
-               description = "Autentica un usuario y devuelve un token JWT")
+               description = "Autentica un usuario y devuelve un token JWT y datos del usuario")
     @ApiResponse(responseCode = "200", description = "Autenticación exitosa")
     @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
-    public ResponseEntity<ResponseDTO<String>> login(@RequestBody DtLogin dtLogin) {
+    public ResponseEntity<ResponseDTO<DtLoginResponse>> login(@RequestBody DtLogin dtLogin) {
         try {
-            String jwt = authService.login(dtLogin);
+            DtLoginResponse dtLoginResponse = authService.login(dtLogin);
+
             return ResponseEntity.ok().body(new ResponseDTO<>(
                 true,
                 HttpStatus.OK.value(),
                 "Autenticación exitosa",
-                jwt
+                dtLoginResponse
             ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDTO<>(

@@ -1,6 +1,8 @@
 package com.mentora.backend.service;
 
 import com.mentora.backend.dto.DtLogin;
+import com.mentora.backend.dto.DtUser;
+import com.mentora.backend.dto.DtLoginResponse;
 import com.mentora.backend.model.User;
 import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.security.JwtService;
@@ -22,7 +24,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String login(DtLogin dtLogin) {
+    public DtLoginResponse login(DtLogin dtLogin) {
         if (dtLogin.getCi() == null || dtLogin.getCi().isBlank() ||
                 dtLogin.getPassword() == null || dtLogin.getPassword().isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
@@ -35,6 +37,17 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
 
-        return jwtService.generateToken(user);
+        String jwt = jwtService.generateToken(user);
+
+        DtUser dtUser = new DtUser(
+                user.getCi(),
+                user.getName(),
+                user.getEmail(),
+                user.getDescription(),
+                user.getPictureUrl(),
+                user.getRole()
+        );
+
+        return new DtLoginResponse(jwt, dtUser);
     }
 }

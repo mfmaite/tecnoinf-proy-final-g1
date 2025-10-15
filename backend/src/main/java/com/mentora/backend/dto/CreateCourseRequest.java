@@ -15,7 +15,7 @@ public class CreateCourseRequest {
     public Set<String> getProfessorCis() { return professorCis; }
     public void setProfessorCis(Set<String> professorCis) { this.professorCis = professorCis; }
 
-    public Set<String> getStudentCis() { return studentCis; }
-    public void setStudentCis(Set<String> studentCis) { this.studentCis = studentCis; }
+    /*public Set<String> getStudentCis() { return studentCis; }
+    public void setStudentCis(Set<String> studentCis) { this.studentCis = studentCis; } */
 }
 

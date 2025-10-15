@@ -38,7 +38,7 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    // Cursos para profesor
+    // Obtener Cursos para profesor
     @Transactional(readOnly = true)
     public List<DtCourse> getCoursesForProfessorCi(String ci) {
         User professor = userRepository.findById(ci)
@@ -49,7 +49,7 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    // Cursos para estudiante
+    // Obtener cursos para estudiante
     @Transactional(readOnly = true)
     public List<DtCourse> getCoursesForStudentCi(String ci) {
         User student = userRepository.findById(ci)
@@ -99,7 +99,7 @@ public class CourseService {
         }
 
         if (!course.getStudents().add(student)) {
-            return "Estudiante ya estaba matriculado";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estudiante ya estaba matriculado");
         }
 
         courseRepository.save(course);

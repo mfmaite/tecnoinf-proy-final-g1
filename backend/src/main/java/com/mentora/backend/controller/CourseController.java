@@ -46,17 +46,17 @@ public class CourseController {
     }
 
     // Matricular estudiante individual
-    @PostMapping("/{courseId}/students/{studentId}")
+    @PostMapping("/{courseId}/students/{studentCi}")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<String>> enrollStudent(
             @PathVariable Long courseId,
-            @PathVariable String studentId,
+            @PathVariable String studentCi,
             Authentication authentication) {
 
         String professorCi = authentication.getName();
-        String message = courseService.enrollStudent(courseId, professorCi, studentId);
+        String message = courseService.enrollStudent(courseId, professorCi, studentCi);
 
-        ResponseDTO<String> response = new ResponseDTO<>(true, 200, message, studentId);
+        ResponseDTO<String> response = new ResponseDTO<>(true, 200, message, studentCi);
         return ResponseEntity.ok(response);
     }
 

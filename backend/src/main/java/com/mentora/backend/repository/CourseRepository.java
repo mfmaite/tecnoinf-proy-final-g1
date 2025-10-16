@@ -9,4 +9,3 @@ public interface CourseRepository extends JpaRepository<Course, String> {
     List<Course> findByProfessorsContains(User professor);
     List<Course> findByStudentsContains(User student);
 }
-

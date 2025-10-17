@@ -1,29 +1,32 @@
 package com.mentora.backend.dto;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class DtCourse {
     private String id;
     private String name;
     private LocalDateTime creationDate;
-    private Double grade;
     private Set<String> professorCis;
     private Set<String> studentCis;
 
-    public DtCourse() {}
+    public DtCourse() {
+        this.professorCis = new HashSet<>();
+        this.studentCis = new HashSet<>();
+    }
 
-    public DtCourse(String id, String name, LocalDateTime creationDate, Double grade,
+    public DtCourse(String id, String name, LocalDateTime creationDate,
                     Set<String> professorCis, Set<String> studentCis) {
         this.id = id;
         this.name = name;
         this.creationDate = creationDate;
-        this.grade = grade;
-        this.professorCis = professorCis;
-        this.studentCis = studentCis;
+        this.professorCis = professorCis != null ? new HashSet<>(professorCis) : new HashSet<>();
+        this.studentCis = studentCis != null ? new HashSet<>(studentCis) : new HashSet<>();
     }
 
-    // getters y setters
+    // Getters y setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -33,12 +36,13 @@ public class DtCourse {
     public LocalDateTime getCreationDate() { return creationDate; }
     public void setCreationDate(LocalDateTime creationDate) { this.creationDate = creationDate; }
 
-    public Double getGrade() { return grade; }
-    public void setGrade(Double grade) { this.grade = grade; }
+    public Set<String> getProfessorCis() { return Collections.unmodifiableSet(professorCis); }
+    public void setProfessorCis(Set<String> professorCis) {
+        this.professorCis = professorCis != null ? new HashSet<>(professorCis) : new HashSet<>();
+    }
 
-    public Set<String> getProfessorCis() { return professorCis; }
-    public void setProfessorCis(Set<String> professorCis) { this.professorCis = professorCis; }
-
-    public Set<String> getStudentCis() { return studentCis; }
-    public void setStudentCis(Set<String> studentCis) { this.studentCis = studentCis; }
+    public Set<String> getStudentCis() { return Collections.unmodifiableSet(studentCis); }
+    public void setStudentCis(Set<String> studentCis) {
+        this.studentCis = studentCis != null ? new HashSet<>(studentCis) : new HashSet<>();
+    }
 }

@@ -12,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -28,9 +28,15 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Crear un usuario",
+    @Operation(
+            summary = "Crear un usuario",
             description = "Crea un usuario con nombre, email y password. Solo administradores.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    @ApiResponse(responseCode = "409", description = "Ya existe un usuario con esa CI o email, o rol no especificado")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado")
     public ResponseEntity<ResponseDTO<DtUser>> createUser(@Valid @RequestBody DtUser dtUser) {
         try {
             DtUser createdUser = userService.createUser(dtUser);
@@ -48,9 +54,11 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Listar usuarios",
+    @Operation(
+            summary = "Listar usuarios",
             description = "Devuelve todos los usuarios del sistema. Solo administradores.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponse(responseCode = "200", description = "Usuarios listados exitosamente")
     @ApiResponse(responseCode = "403", description = "Acceso denegado")
     public ResponseEntity<ResponseDTO<List<DtUser>>> listUsers(
@@ -63,8 +71,14 @@ public class UserController {
     }
 
     @PostMapping("/change-password")
+    @Operation(
+            summary = "Cambiar contraseña",
+            description = "Permite a un usuario autenticado cambiar su contraseña actual por una nueva.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Contraseña cambiada correctamente")
+    @ApiResponse(responseCode = "400", description = "Contraseña incorrecta, nuevas contraseñas no coinciden o no cumplen requisitos")
     public ResponseEntity<ResponseDTO<Object>> changePassword(@RequestBody ChangePasswordRequest request) {
-        // Tomar ci directamente del token JWT ya procesado por JwtAuthenticationFilter
         String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
 
         userService.changePassword(
@@ -84,6 +98,13 @@ public class UserController {
     }
 
     @PostMapping("/password-recovery")
+    @Operation(
+            summary = "Recuperar contraseña",
+            description = "Solicita un enlace de recuperación de contraseña para un correo registrado.",
+            security = @SecurityRequirement(name = "bearerAuth") // si quieres público, puedes quitar esta línea
+    )
+    @ApiResponse(responseCode = "200", description = "Correo de recuperación enviado si existe el usuario")
+    @ApiResponse(responseCode = "400", description = "Correo no corresponde a un usuario registrado")
     public ResponseEntity<ResponseDTO<Void>> forgotPassword(@RequestParam String email) {
         userService.forgotPassword(email);
         return ResponseEntity.ok(

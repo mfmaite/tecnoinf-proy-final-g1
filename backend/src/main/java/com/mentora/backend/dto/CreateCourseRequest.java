@@ -6,7 +6,6 @@ public class CreateCourseRequest {
     private String id; // el usuario lo envía
     private String name;
     private Set<String> professorCis;
-    private Set<String> studentCis;
 
     public CreateCourseRequest() {}
 
@@ -19,6 +18,4 @@ public class CreateCourseRequest {
     public Set<String> getProfessorCis() { return professorCis; }
     public void setProfessorCis(Set<String> professorCis) { this.professorCis = professorCis; }
 
-    public Set<String> getStudentCis() { return studentCis; }
-    public void setStudentCis(Set<String> studentCis) { this.studentCis = studentCis; }
 }

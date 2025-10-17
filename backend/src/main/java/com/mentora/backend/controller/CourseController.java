@@ -73,12 +73,7 @@ public class CourseController {
                     .orElse("ROLE_ESTUDIANTE");
             Role role = Role.valueOf(roleString.replace("ROLE_", ""));
 
-            List<DtCourse> courses = switch (role) {
-                case ADMIN -> courseService.getAllCourses();
-                case PROFESOR -> courseService.getCoursesForProfessorCi(ci);
-                case ESTUDIANTE -> courseService.getCoursesForStudentCi(ci);
-                default -> List.of();
-            };
+            List<DtCourse> courses = courseService.getCoursesForUser(ci, role);
 
             ResponseDTO<List<DtCourse>> response = new ResponseDTO<>(
                     true,

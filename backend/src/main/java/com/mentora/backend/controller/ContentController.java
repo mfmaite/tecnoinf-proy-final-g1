@@ -7,6 +7,9 @@ import com.mentora.backend.model.ContentType;
 import com.mentora.backend.model.User;
 import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.service.ContentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +35,15 @@ public class ContentController {
 
     @PostMapping("/simple")
     @PreAuthorize("hasRole('PROFESOR')")
+    @Operation(
+            summary = "Crear contenido simple",
+            description = "Crea un contenido simple con texto o archivo para un curso. Solo profesores asignados.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "201", description = "Contenido creado correctamente")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos o archivo no permitido")
+    @ApiResponse(responseCode = "403", description = "Profesor no asignado al curso")
+    @ApiResponse(responseCode = "404", description = "Curso o usuario no encontrado")
     public ResponseEntity<ResponseDTO<Content>> createSimpleContent(
             @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
@@ -45,6 +57,15 @@ public class ContentController {
 
     @PostMapping("/file")
     @PreAuthorize("hasRole('PROFESOR')")
+    @Operation(
+            summary = "Crear contenido tipo archivo",
+            description = "Crea un contenido que requiere un archivo adjunto para un curso. Solo profesores asignados.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "201", description = "Contenido creado correctamente")
+    @ApiResponse(responseCode = "400", description = "Archivo obligatorio o formato no permitido")
+    @ApiResponse(responseCode = "403", description = "Profesor no asignado al curso")
+    @ApiResponse(responseCode = "404", description = "Curso o usuario no encontrado")
     public ResponseEntity<ResponseDTO<Content>> createFileContent(
             @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
@@ -57,6 +78,15 @@ public class ContentController {
 
     @PostMapping("/evaluation")
     @PreAuthorize("hasRole('PROFESOR')")
+    @Operation(
+            summary = "Crear evaluación",
+            description = "Crea una evaluación con fecha de vencimiento, texto o archivo. Solo profesores asignados.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "201", description = "Contenido creado correctamente")
+    @ApiResponse(responseCode = "400", description = "Fecha de vencimiento requerida o contenido inválido")
+    @ApiResponse(responseCode = "403", description = "Profesor no asignado al curso")
+    @ApiResponse(responseCode = "404", description = "Curso o usuario no encontrado")
     public ResponseEntity<ResponseDTO<Content>> createEvaluationContent(
             @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
@@ -69,6 +99,15 @@ public class ContentController {
 
     @PostMapping("/quiz")
     @PreAuthorize("hasRole('PROFESOR')")
+    @Operation(
+            summary = "Crear quiz",
+            description = "Crea un contenido tipo quiz con preguntas y respuestas. Solo profesores asignados.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "201", description = "Quiz creado correctamente")
+    @ApiResponse(responseCode = "400", description = "Quiz requiere al menos una pregunta y fecha de vencimiento")
+    @ApiResponse(responseCode = "403", description = "Profesor no asignado al curso")
+    @ApiResponse(responseCode = "404", description = "Curso o usuario no encontrado")
     public ResponseEntity<ResponseDTO<Content>> createQuizContent(
             @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
@@ -79,6 +118,13 @@ public class ContentController {
     }
 
     @GetMapping
+    @Operation(
+            summary = "Listar contenidos por curso",
+            description = "Devuelve todos los contenidos de un curso, ordenados por fecha de creación descendente.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Contenidos obtenidos correctamente")
+    @ApiResponse(responseCode = "404", description = "Curso no encontrado")
     public ResponseEntity<ResponseDTO<List<Content>>> listContents(@PathVariable String courseId) {
         List<Content> contents = contentService.listByCourse(courseId);
         ResponseDTO<List<Content>> response = new ResponseDTO<>(

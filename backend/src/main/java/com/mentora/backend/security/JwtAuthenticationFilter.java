@@ -1,7 +1,5 @@
 package com.mentora.backend.security;
 
-import com.mentora.backend.model.User;
-import com.mentora.backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,11 +18,9 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
+    public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
     }
 
     @Override
@@ -42,32 +38,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = authHeader.substring(7);
 
-            if (jwtService.isTokenValid(token)) {
+            if (jwtService.isTokenValid(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String ci = jwtService.extractCi(token);
+                String role = jwtService.extractRole(token);
 
-                User user = userRepository.findByCi(ci).orElse(null);
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-                if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    List<SimpleGrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-                    );
+                var authToken = new UsernamePasswordAuthenticationToken(ci, null, authorities);
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        user.getCi(),
-                        null,
-                        authorities
-                    );
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (Exception e) {
             System.err.println("Error al procesar token JWT: " + e.getMessage());
         }
 
-        // Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 }

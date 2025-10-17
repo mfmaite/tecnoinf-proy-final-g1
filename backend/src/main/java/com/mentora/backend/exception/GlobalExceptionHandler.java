@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,5 +33,27 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ResponseDTO<Object>> handleNotFound(NoSuchElementException ex) {
+        ResponseDTO<Object> response = new ResponseDTO<>(
+                false,
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseDTO<Object>> handleGeneric(Exception ex) {
+        ResponseDTO<Object> response = new ResponseDTO<>(
+                false,
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                ex.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

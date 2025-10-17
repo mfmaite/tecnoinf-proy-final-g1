@@ -40,7 +40,8 @@ public class SecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html",
                             "/swagger-ui/index.html",
-                            "/test/public"
+                            "/test/public",
+                            "/users/password-recovery"
                             )
                             .permitAll()
                         .anyRequest().authenticated()

@@ -82,4 +82,17 @@ public class UserController {
                 )
         );
     }
+
+    @PostMapping("/password-recovery")
+    public ResponseEntity<ResponseDTO<Void>> forgotPassword(@RequestParam String email) {
+        userService.forgotPassword(email);
+        return ResponseEntity.ok(
+                new ResponseDTO<>(
+                        true,
+                        HttpStatus.OK.value(),
+                        "Si el usuario existe, recibirás un correo electrónico con instrucciones",
+                        null
+                )
+        );
+    }
 }

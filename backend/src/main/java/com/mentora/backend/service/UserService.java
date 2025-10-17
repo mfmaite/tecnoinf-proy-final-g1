@@ -1,15 +1,17 @@
 package com.mentora.backend.service;
 
 import com.mentora.backend.dto.DtUser;
+import com.mentora.backend.model.PasswordResetToken;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.model.User;
+import com.mentora.backend.repository.PasswordResetTokenRepository;
 import com.mentora.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,11 +20,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public User findByCI(String ci) {
@@ -128,6 +132,32 @@ public class UserService {
         return password != null &&
                 password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$");
     }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Usuario no encontrado"
+                ));
+
+        String token = UUID.randomUUID().toString();
+        Instant expiry = Instant.now().plus(Duration.ofHours(2));
+
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiryDate(expiry);
+        passwordResetTokenRepository.save(resetToken);
+
+        String link = "https://tu-frontend.com/reset-password?token=" + token;
+
+        String subject = "Recuperación de contraseña";
+        String body = "Haz clic en el siguiente enlace para restablecer tu contraseña (válido por 2 horas): " + link;
+
+        emailService.sendEmail(user.getEmail(), subject, body);
+    }
+
 
     private DtUser toDto(User u) {
         return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());

@@ -1,5 +1,6 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dto.DtCourse;
 import com.mentora.backend.model.Course;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.UserCourse;
@@ -12,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserCourseService {
@@ -53,5 +55,16 @@ public class UserCourseService {
             return "Algunos usuarios no se pudieron matricular: " + String.join(", ", errorUsers);
         }
         return "Usuarios matriculados correctamente";
+    }
+
+    public List<DtCourse> getCoursesForUser(String ci) {
+        User user = userRepository.findById(ci).orElse(null);
+        if (user == null) {
+            return new ArrayList<>();
+        }
+
+        return userCourseRepository.findAllByUser(user).stream()
+            .map(userCourse -> new DtCourse(userCourse.getCourse().getId(), userCourse.getCourse().getName(), userCourse.getCourse().getCreatedDate()))
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 }

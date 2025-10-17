@@ -3,10 +3,13 @@ package com.mentora.backend.service;
 import com.mentora.backend.dto.CreateCourseRequest;
 import com.mentora.backend.dto.DtCourse;
 import com.mentora.backend.model.Course;
+import com.mentora.backend.model.Role;
 import com.mentora.backend.repository.CourseRepository;
 import org.springframework.stereotype.Service;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 
@@ -21,8 +24,17 @@ public class CourseService {
         this.userCourseService = userCourseService;
     }
 
+    public List<DtCourse> getCoursesForUser(String ci, Role role) {
+        if (role == Role.ADMIN) {
+            return courseRepository.findAll().stream()
+                .map(this::getDtCourse)
+                .collect(Collectors.toList());
+        }
 
-    @Transactional
+        return userCourseService.getCoursesForUser(ci).stream()
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");

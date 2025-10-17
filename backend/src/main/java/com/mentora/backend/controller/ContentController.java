@@ -33,7 +33,7 @@ public class ContentController {
     @PostMapping("/simple")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<Content>> createSimpleContent(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
             @RequestPart(value = "file", required = false) MultipartFile file,
             Authentication authentication
@@ -46,7 +46,7 @@ public class ContentController {
     @PostMapping("/file")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<Content>> createFileContent(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
             @RequestPart("file") MultipartFile file,
             Authentication authentication
@@ -58,7 +58,7 @@ public class ContentController {
     @PostMapping("/evaluation")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<Content>> createEvaluationContent(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
             @RequestPart(value = "file", required = false) MultipartFile file,
             Authentication authentication
@@ -70,7 +70,7 @@ public class ContentController {
     @PostMapping("/quiz")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<Content>> createQuizContent(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @RequestPart("content") CreateContentRequest req,
             Authentication authentication
     ) throws IOException {
@@ -79,7 +79,7 @@ public class ContentController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<Content>>> listContents(@PathVariable Long courseId) {
+    public ResponseEntity<ResponseDTO<List<Content>>> listContents(@PathVariable String courseId) {
         List<Content> contents = contentService.listByCourse(courseId);
         ResponseDTO<List<Content>> response = new ResponseDTO<>(
                 true,
@@ -92,7 +92,7 @@ public class ContentController {
 
     // Método base privado para no repetir lógica
     private ResponseEntity<ResponseDTO<Content>> createContentBase(
-            Long courseId,
+            String courseId,
             CreateContentRequest req,
             List<MultipartFile> files,
             Authentication authentication

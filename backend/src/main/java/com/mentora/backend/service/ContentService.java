@@ -36,7 +36,7 @@ public class ContentService {
     }
 
     @Transactional
-    public Content createContent(Long courseId, CreateContentRequest req,
+    public Content createContent(String courseId, CreateContentRequest req,
                                  List<MultipartFile> files, User user) throws IOException {
 
         // Buscar curso
@@ -165,7 +165,7 @@ public class ContentService {
     }
 
     @Transactional(readOnly = true)
-    public List<Content> listByCourse(Long courseId) {
+    public List<Content> listByCourse(String courseId) {
         return contentRepo.findByCourseIdOrderByCreatedAtDesc(courseId);
     }
 }

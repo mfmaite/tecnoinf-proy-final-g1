@@ -49,7 +49,7 @@ public class CourseController {
     @PostMapping("/{courseId}/students/{studentCi}")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<String>> enrollStudent(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @PathVariable String studentCi,
             Authentication authentication) {
 
@@ -64,7 +64,7 @@ public class CourseController {
     @PostMapping("/{courseId}/students/csv")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<List<String>>> enrollStudentsCsv(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @RequestPart("file") MultipartFile file,
             Authentication authentication) throws IOException {
 
@@ -79,7 +79,7 @@ public class CourseController {
     @DeleteMapping("/{courseId}/students/{studentId}")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<String>> unenrollStudent(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @PathVariable String studentId,
             Authentication authentication) {
 
@@ -94,7 +94,7 @@ public class CourseController {
     @DeleteMapping("/{courseId}/students/csv")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<ResponseDTO<List<String>>> unenrollStudentsCsv(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @RequestPart("file") MultipartFile file,
             Authentication authentication) throws IOException {
 

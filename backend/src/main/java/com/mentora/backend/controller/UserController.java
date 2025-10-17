@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dto.ChangePasswordRequest;
 import com.mentora.backend.dto.DtUser;
 import com.mentora.backend.dto.ResponseDTO;
 import com.mentora.backend.service.UserService;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -58,5 +60,26 @@ public class UserController {
         List<DtUser> users = userService.listUsers(order, filter);
         return ResponseEntity.ok(new ResponseDTO<>(true, HttpStatus.OK.value(),
                 "Usuarios listados correctamente", users));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ResponseDTO<Object>> changePassword(@RequestBody ChangePasswordRequest request) {
+        // Tomar ci directamente del token JWT ya procesado por JwtAuthenticationFilter
+        String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        userService.changePassword(
+                request.getOldPassword(),
+                request.getNewPassword(),
+                request.getConfirmPassword(),
+                userCi
+        );
+        return ResponseEntity.ok(
+                new ResponseDTO<>(
+                        true,
+                        HttpStatus.OK.value(),
+                        "Contraseña cambiada correctamente",
+                        null
+                )
+        );
     }
 }

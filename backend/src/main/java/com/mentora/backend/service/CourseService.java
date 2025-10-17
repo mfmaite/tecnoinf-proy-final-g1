@@ -30,7 +30,6 @@ public class CourseService {
         this.userRepository = userRepository;
     }
 
-    // Obtener todos los cursos (admin)
     @Transactional(readOnly = true)
     public List<DtCourse> getAllCourses() {
         return courseRepository.findAll().stream()
@@ -38,7 +37,6 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    // Obtener Cursos para profesor
     @Transactional(readOnly = true)
     public List<DtCourse> getCoursesForProfessorCi(String ci) {
         User professor = userRepository.findById(ci)
@@ -49,7 +47,6 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    // Obtener cursos para estudiante
     @Transactional(readOnly = true)
     public List<DtCourse> getCoursesForStudentCi(String ci) {
         User student = userRepository.findById(ci)
@@ -60,10 +57,16 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    // Crear curso
     @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
+        if (req.getId() == null || req.getId().isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID del curso es obligatorio");
+
+        if (courseRepository.existsById(req.getId()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
+
         Course course = new Course();
+        course.setId(req.getId());
         course.setName(req.getName());
 
         if (req.getProfessorCis() != null) {
@@ -78,71 +81,55 @@ public class CourseService {
         return toDto(saved);
     }
 
-    // Matricular estudiante individual
     @Transactional
-    public String enrollStudent(Long courseId, String professorCi, String studentCi) {
+    public String enrollStudent(String courseId, String professorCi, String studentCi) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         User professor = userRepository.findById(professorCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
 
-        if (!course.getProfessors().contains(professor)) {
+        if (!course.getProfessors().contains(professor))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado a este curso");
-        }
 
         User student = userRepository.findById(studentCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
 
-        if (student.getRole() != Role.ESTUDIANTE) {
+        if (student.getRole() != Role.ESTUDIANTE)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario no es estudiante");
-        }
 
-        if (!course.getStudents().add(student)) {
+        if (!course.getStudents().add(student))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estudiante ya estaba matriculado");
-        }
 
         courseRepository.save(course);
         return "Estudiante matriculado correctamente";
     }
 
-    // Desmatricular estudiante individual
     @Transactional
-    public String unenrollStudent(Long courseId, String professorCi, String studentCi) {
+    public String unenrollStudent(String courseId, String professorCi, String studentCi) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         User professor = userRepository.findById(professorCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
 
-        if (!course.getProfessors().contains(professor)) {
+        if (!course.getProfessors().contains(professor))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado a este curso");
-        }
 
         User student = userRepository.findById(studentCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
 
-        if (!course.getStudents().remove(student)) {
+        if (!course.getStudents().remove(student))
             return "Estudiante no estaba previamente matriculado";
-        }
 
         courseRepository.save(course);
         return "Estudiante desmatriculado correctamente";
     }
 
-    // Matricular desde CSV
     @Transactional
-    public List<String> enrollStudentsFromCsv(Long courseId, String professorCi, MultipartFile file) throws IOException {
+    public List<String> enrollStudentsFromCsv(String courseId, String professorCi, MultipartFile file) throws IOException {
         List<String> results = new ArrayList<>();
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
-
-        User professor = userRepository.findById(professorCi)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
-
-        if (!course.getProfessors().contains(professor)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado a este curso");
-        }
+        Course course = checkCourseForProfessor(courseId, professorCi);
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
@@ -158,11 +145,10 @@ public class CourseService {
                     continue;
                 }
 
-                if (!course.getStudents().add(student)) {
+                if (!course.getStudents().add(student))
                     results.add(ci + " ya estaba matriculado");
-                } else {
+                else
                     results.add(ci + " matriculado correctamente");
-                }
             }
         }
 
@@ -170,19 +156,10 @@ public class CourseService {
         return results;
     }
 
-    // Desmatricular desde CSV
     @Transactional
-    public List<String> unenrollStudentsFromCsv(Long courseId, String professorCi, MultipartFile file) throws IOException {
+    public List<String> unenrollStudentsFromCsv(String courseId, String professorCi, MultipartFile file) throws IOException {
         List<String> results = new ArrayList<>();
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
-
-        User professor = userRepository.findById(professorCi)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
-
-        if (!course.getProfessors().contains(professor)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado a este curso");
-        }
+        Course course = checkCourseForProfessor(courseId, professorCi);
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
@@ -193,16 +170,29 @@ public class CourseService {
                 User student = userRepository.findById(ci)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante ci=" + ci + " no encontrado"));
 
-                if (!course.getStudents().remove(student)) {
+                if (!course.getStudents().remove(student))
                     results.add(ci + " no estaba previamente matriculado");
-                } else {
+                else
                     results.add(ci + " desmatriculado correctamente");
-                }
             }
         }
 
         courseRepository.save(course);
         return results;
+    }
+
+    private Course checkCourseForProfessor(String courseId, String professorCi) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        User professor = userRepository.findById(professorCi)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
+
+        if (!course.getProfessors().contains(professor)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado a este curso");
+        }
+
+        return course;
     }
 
     private DtCourse toDto(Course c) {

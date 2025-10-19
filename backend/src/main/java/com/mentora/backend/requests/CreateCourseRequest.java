@@ -1,4 +1,4 @@
-package com.mentora.backend.dto;
+package com.mentora.backend.requests;
 
 public class CreateCourseRequest {
     private String id;

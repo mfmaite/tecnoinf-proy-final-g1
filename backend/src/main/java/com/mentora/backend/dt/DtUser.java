@@ -1,4 +1,4 @@
-package com.mentora.backend.dto;
+package com.mentora.backend.dt;
 
 import com.mentora.backend.model.Role;
 import jakarta.validation.constraints.Email;
@@ -25,6 +25,8 @@ public class DtUser {
 
     @NotNull(message = "El rol es requerido")
     private Role role;
+
+    public DtUser() {}
 
     public DtUser(String ci, String name, String email, String description, String pictureUrl, Role role) {
         this.ci = ci;

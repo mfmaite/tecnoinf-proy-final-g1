@@ -1,8 +1,8 @@
 package com.mentora.backend.service;
 
-import com.mentora.backend.dto.CreateContentRequest;
-import com.mentora.backend.dto.QuizAnswerDto;
-import com.mentora.backend.dto.QuizQuestionDto;
+import com.mentora.backend.requests.CreateContentRequest;
+import com.mentora.backend.dt.QuizAnswerDto;
+import com.mentora.backend.dt.QuizQuestionDto;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.ContentRepository;
 import com.mentora.backend.repository.CourseRepository;
@@ -24,15 +24,18 @@ public class ContentService {
     private final FileStorageService storage;
     private final FileResourceRepository fileRepo;
     private final CourseRepository courseRepo;
+    private final UserCourseService userCourseService;
 
     public ContentService(ContentRepository contentRepo,
                           FileStorageService storage,
                           FileResourceRepository fileRepo,
-                          CourseRepository courseRepo) {
+                          CourseRepository courseRepo,
+                          UserCourseService userCourseService) {
         this.contentRepo = contentRepo;
         this.storage = storage;
         this.fileRepo = fileRepo;
         this.courseRepo = courseRepo;
+        this.userCourseService = userCourseService;
     }
 
     @Transactional
@@ -40,12 +43,12 @@ public class ContentService {
                                  List<MultipartFile> files, User user) throws IOException {
 
         // Buscar curso
-        Course course = courseRepo.findById(courseId)
+        Course course = courseRepo.findById(courseId.toString())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         // Validar que profesor esté asignado al curso
-        boolean isAssigned = course.getProfessors().stream()
-                .anyMatch(p -> p.getCi().equals(user.getCi()));
+        boolean isAssigned = userCourseService.getCoursesForUser(user.getCi()).stream()
+                .anyMatch(c -> c.getId().equals(courseId));
         if (!isAssigned) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado al curso");
         }

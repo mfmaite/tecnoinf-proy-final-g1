@@ -1,5 +1,6 @@
-package com.mentora.backend.dto;
+package com.mentora.backend.requests;
 
+import com.mentora.backend.dt.QuizQuestionDto;
 import java.time.Instant;
 import java.util.List;
 

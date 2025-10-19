@@ -1,7 +1,5 @@
 package com.mentora.backend.controller;
 
-import com.mentora.backend.dto.CreateContentRequest;
-import com.mentora.backend.dto.ResponseDTO;
 import com.mentora.backend.model.Content;
 import com.mentora.backend.model.ContentType;
 import com.mentora.backend.model.User;
@@ -14,7 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.requests.CreateContentRequest;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class ContentController {
 
     @PostMapping("/simple")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<ResponseDTO<Content>> createSimpleContent(
+    public ResponseEntity<DtApiResponse<Content>> createSimpleContent(
             @PathVariable Long courseId,
             @RequestPart("content") CreateContentRequest req,
             @RequestPart(value = "file", required = false) MultipartFile file,
@@ -45,7 +44,7 @@ public class ContentController {
 
     @PostMapping("/file")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<ResponseDTO<Content>> createFileContent(
+    public ResponseEntity<DtApiResponse<Content>> createFileContent(
             @PathVariable Long courseId,
             @RequestPart("content") CreateContentRequest req,
             @RequestPart("file") MultipartFile file,
@@ -57,7 +56,7 @@ public class ContentController {
 
     @PostMapping("/evaluation")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<ResponseDTO<Content>> createEvaluationContent(
+    public ResponseEntity<DtApiResponse<Content>> createEvaluationContent(
             @PathVariable Long courseId,
             @RequestPart("content") CreateContentRequest req,
             @RequestPart(value = "file", required = false) MultipartFile file,
@@ -69,7 +68,7 @@ public class ContentController {
 
     @PostMapping("/quiz")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<ResponseDTO<Content>> createQuizContent(
+    public ResponseEntity<DtApiResponse<Content>> createQuizContent(
             @PathVariable Long courseId,
             @RequestPart("content") CreateContentRequest req,
             Authentication authentication
@@ -79,9 +78,9 @@ public class ContentController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<Content>>> listContents(@PathVariable Long courseId) {
+    public ResponseEntity<DtApiResponse<List<Content>>> listContents(@PathVariable Long courseId) {
         List<Content> contents = contentService.listByCourse(courseId);
-        ResponseDTO<List<Content>> response = new ResponseDTO<>(
+        DtApiResponse<List<Content>> response = new DtApiResponse<>(
                 true,
                 HttpStatus.OK.value(),
                 "Contenidos obtenidos correctamente",
@@ -91,7 +90,7 @@ public class ContentController {
     }
 
     // Método base privado para no repetir lógica
-    private ResponseEntity<ResponseDTO<Content>> createContentBase(
+    private ResponseEntity<DtApiResponse<Content>> createContentBase(
             Long courseId,
             CreateContentRequest req,
             List<MultipartFile> files,
@@ -103,7 +102,7 @@ public class ContentController {
 
         Content content = contentService.createContent(courseId, req, files, user);
 
-        ResponseDTO<Content> response = new ResponseDTO<>(
+        DtApiResponse<Content> response = new DtApiResponse<>(
                 true,
                 HttpStatus.CREATED.value(),
                 "Contenido creado correctamente",

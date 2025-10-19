@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mentora.backend.dto.ResponseDTO;
-import com.mentora.backend.request.EmailRequest;
+import com.mentora.backend.requests.EmailRequest;
+import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.EmailService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,18 +29,18 @@ public class EmailController {
              description = "Envía un email a un destinatario con un asunto y un cuerpo")
   @ApiResponse(responseCode = "200", description = "Email enviado exitosamente")
   @ApiResponse(responseCode = "400", description = "Datos inválidos")
-  public ResponseEntity<ResponseDTO<EmailRequest>> sendEmail(@Valid @RequestBody EmailRequest request) {
+  public ResponseEntity<DtApiResponse<EmailRequest>> sendEmail(@Valid @RequestBody EmailRequest request) {
     try {
       emailService.sendEmail(request.getRecipient(), request.getSubject(), request.getBody());
 
-      return ResponseEntity.ok(new ResponseDTO<>(
+      return ResponseEntity.ok(new DtApiResponse<>(
               true,
               HttpStatus.OK.value(),
               "Email enviado correctamente",
               request)
       );
     } catch (Exception e) {
-      return ResponseEntity.badRequest().body(new ResponseDTO<>(
+      return ResponseEntity.badRequest().body(new DtApiResponse<>(
               false,
               HttpStatus.BAD_REQUEST.value(),
               e.getMessage(),

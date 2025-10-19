@@ -1,21 +1,21 @@
-package com.mentora.backend.dto;
+package com.mentora.backend.responses;
 
-public class ResponseDTO<T> {
+public class DtApiResponse<T> {
 
     private boolean success;
     private int status;
     private String message;
     private T data;
 
-    public ResponseDTO() {}
+    public DtApiResponse() {}
 
-    public ResponseDTO(boolean success, int status, String message) {
+    public DtApiResponse(boolean success, int status, String message) {
         this.success = success;
         this.status = status;
         this.message = message;
     }
 
-    public ResponseDTO(boolean success, int status, String message, T data) {
+    public DtApiResponse(boolean success, int status, String message, T data) {
         this.success = success;
         this.status = status;
         this.message = message;

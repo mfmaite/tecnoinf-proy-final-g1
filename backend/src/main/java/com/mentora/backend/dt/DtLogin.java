@@ -1,4 +1,4 @@
-package com.mentora.backend.dto;
+package com.mentora.backend.dt;
 
 public class DtLogin {
     private String ci;

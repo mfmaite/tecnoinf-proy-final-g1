@@ -1,6 +1,6 @@
 package com.mentora.backend.service;
 
-import com.mentora.backend.dto.DtCourse;
+import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Course;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.UserCourse;

@@ -1,10 +1,11 @@
 package com.mentora.backend.service;
 
-import com.mentora.backend.dto.CreateCourseRequest;
-import com.mentora.backend.dto.DtCourse;
+import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Course;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.repository.CourseRepository;
+import com.mentora.backend.requests.CreateCourseRequest;
+
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;

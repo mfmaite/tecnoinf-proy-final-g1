@@ -1,4 +1,4 @@
-package com.mentora.backend.request;
+package com.mentora.backend.requests;
 
 public class EmailRequest {
   private String recipient;

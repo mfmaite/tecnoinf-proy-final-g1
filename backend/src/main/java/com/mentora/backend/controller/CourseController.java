@@ -1,10 +1,11 @@
 package com.mentora.backend.controller;
 
-import com.mentora.backend.dto.CreateCourseRequest;
-import com.mentora.backend.dto.DtCourse;
-import com.mentora.backend.dto.ResponseDTO;
+import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
+import com.mentora.backend.requests.CreateCourseRequest;
+import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.CourseService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -36,11 +37,11 @@ public class CourseController {
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseDTO<DtCourse>> createCourse(@RequestBody CreateCourseRequest req) {
+    public ResponseEntity<DtApiResponse<DtCourse>> createCourse(@RequestBody CreateCourseRequest req) {
         try {
             DtCourse created = courseService.createCourse(req);
 
-            ResponseDTO<DtCourse> response = new ResponseDTO<>(
+            DtApiResponse<DtCourse> response = new DtApiResponse<>(
                     true,
                     200,
                     "Curso creado correctamente",
@@ -49,7 +50,7 @@ public class CourseController {
 
             return ResponseEntity.ok(response);
         } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(new ResponseDTO<>(
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
                 false,
                 e.getStatusCode().value(),
                 e.getReason(),
@@ -64,7 +65,7 @@ public class CourseController {
     @ApiResponse(responseCode = "200", description = "Cursos obtenidos correctamente")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<DtCourse>>> listCourses(Authentication authentication) {
+    public ResponseEntity<DtApiResponse<List<DtCourse>>> listCourses(Authentication authentication) {
         try {
             String ci = authentication.getName();
             String roleString = authentication.getAuthorities().stream()
@@ -75,7 +76,7 @@ public class CourseController {
 
             List<DtCourse> courses = courseService.getCoursesForUser(ci, role);
 
-            ResponseDTO<List<DtCourse>> response = new ResponseDTO<>(
+            DtApiResponse<List<DtCourse>> response = new DtApiResponse<>(
                     true,
                     200,
                     "Cursos obtenidos correctamente",
@@ -83,7 +84,7 @@ public class CourseController {
             );
             return ResponseEntity.ok(response);
         } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(new ResponseDTO<>(
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
                 false,
                 e.getStatusCode().value(),
                 e.getReason(),

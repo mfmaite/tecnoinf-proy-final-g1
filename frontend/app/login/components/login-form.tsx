@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { signIn, getSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
 import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { Button } from '@/components/button/button';
-import { authController } from '@/controllers/authController';
 import { UserLoginData } from '@/types/user';
 
 const LoginForm = () => {
@@ -46,12 +46,22 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await authController.login(formData);
+      const result = await signIn('credentials', {
+        ci: formData.ci,
+        password: formData.password,
+        redirect: false,
+      });
 
-      if (response.success) {
-        router.push('/');
-      } else {
-        setError(response.message || 'Error al iniciar sesión');
+      if (result?.error) {
+        setError('Credenciales incorrectas');
+      } else if (result?.ok) {
+        // Verificar que la sesión se haya creado correctamente
+        const session = await getSession();
+        if (session) {
+          router.push('/');
+        } else {
+          setError('Error al crear la sesión');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Error al conectar con el servidor');

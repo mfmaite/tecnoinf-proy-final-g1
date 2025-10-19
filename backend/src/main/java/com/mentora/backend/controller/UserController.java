@@ -5,8 +5,10 @@ import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,10 +64,18 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Usuarios listados exitosamente")
     @ApiResponse(responseCode = "403", description = "Acceso denegado")
     public ResponseEntity<DtApiResponse<List<DtUser>>> listUsers(
+            @Parameter(
+                    description = "Orden de listado",
+                    schema = @Schema(allowableValues = {"name_asc", "name_desc", "ci_asc", "ci_desc"})
+            )
             @RequestParam(required = false) String order,
+            @Parameter(
+                    description = "Filtro por rol",
+                    schema = @Schema(allowableValues = {"todos", "administradores", "profesores", "estudiantes"})
+            )
             @RequestParam(required = false) String filter) {
 
-        List<DtUser> users = userService.listUsers(order, filter);
+        List<DtUser> users = userService.getUsers(order, filter);
         return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(),
                 "Usuarios listados correctamente", users));
     }

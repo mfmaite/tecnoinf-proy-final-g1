@@ -1,7 +1,6 @@
 package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtLogin;
-import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.AuthService;
 

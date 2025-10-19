@@ -65,7 +65,7 @@ public class UserService {
         return getUserDto(user);
     }
 
-    public List<DtUser> listUsers(String order, String filter) {
+    public List<DtUser> getUsers(String order, String filter) {
         List<User> users = userRepository.findAll();
 
         String f = (filter == null ? "todos" : filter.toLowerCase());

@@ -26,14 +26,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (ci: string, password: string) => {
-    const { token } = await loginService(ci, password);
-    setToken(token);
-    await SecureStore.setItemAsync("token", token);
+    try {
+      const { token } = await loginService(ci, password);
+      if (!token) throw new Error("No se recibió token del servidor");
+      setToken(token);
+      await SecureStore.setItemAsync("token", token);
+    } catch (error) {
+      console.error("Error en login:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    setToken(null);
-    await SecureStore.deleteItemAsync("token");
+    try {
+      setToken(null);
+      await SecureStore.deleteItemAsync("token");
+    } catch (error) {
+      console.error("Error en logout:", error);
+    }
   };
 
   return (

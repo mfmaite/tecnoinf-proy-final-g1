@@ -8,7 +8,7 @@ export default function HomeScreen() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("./(auth)/login");
+    router.replace("/(auth)/login");
   };
 
   return (

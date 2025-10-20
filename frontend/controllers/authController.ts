@@ -5,7 +5,7 @@ import { UserLoginData, LoginResponse, ApiError } from '../types/user';
 class AuthController {
   async login(credentials: UserLoginData): Promise<LoginResponse> {
     try {
-      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
+      const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

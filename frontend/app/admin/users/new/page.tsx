@@ -1,11 +1,10 @@
-import React from 'react'
+import React from 'react';
+import CreateUserForm from './components/create-user-form';
 
 const NewUserPage = () => {
   return (
-    <div>
-      ola
-    </div>
-  )
-}
+    <CreateUserForm />
+  );
+};
 
 export default NewUserPage;

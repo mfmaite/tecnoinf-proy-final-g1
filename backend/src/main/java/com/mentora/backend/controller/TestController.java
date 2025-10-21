@@ -1,8 +1,9 @@
 package com.mentora.backend.controller;
 
-import com.mentora.backend.dto.ResponseDTO;
 import com.mentora.backend.model.User;
 import com.mentora.backend.repository.UserRepository;
+import com.mentora.backend.responses.DtApiResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,8 +31,8 @@ public class TestController {
     @Operation(summary = "Endpoint público de prueba",
                description = "No requiere autenticación. Útil para verificar que el servidor está funcionando.")
     @ApiResponse(responseCode = "200", description = "Servidor funcionando correctamente")
-    public ResponseEntity<ResponseDTO<String>> publicEndpoint() {
-        return ResponseEntity.ok(new ResponseDTO<>(
+    public ResponseEntity<DtApiResponse<String>> publicEndpoint() {
+        return ResponseEntity.ok(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),
             "Endpoint público - No requiere autenticación",
@@ -45,7 +46,7 @@ public class TestController {
                security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario autenticado correctamente")
     @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
-    public ResponseEntity<ResponseDTO<Map<String, Object>>> protectedEndpoint() {
+    public ResponseEntity<DtApiResponse<Map<String, Object>>> protectedEndpoint() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         String ci = auth.getName();
@@ -61,7 +62,7 @@ public class TestController {
             data.put("rol", user.getRole());
         }
 
-        return ResponseEntity.ok(new ResponseDTO<>(
+        return ResponseEntity.ok(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),
             "Autenticación verificada exitosamente ✓",
@@ -77,7 +78,7 @@ public class TestController {
     @ApiResponse(responseCode = "200", description = "Usuario admin autenticado")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene permisos de administrador")
-    public ResponseEntity<ResponseDTO<Map<String, String>>> adminEndpoint() {
+    public ResponseEntity<DtApiResponse<Map<String, String>>> adminEndpoint() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         Map<String, String> data = new HashMap<>();
@@ -85,7 +86,7 @@ public class TestController {
         data.put("ci", auth.getName());
         data.put("rol", "ADMIN");
 
-        return ResponseEntity.ok(new ResponseDTO<>(
+        return ResponseEntity.ok(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),
             "Bienvenido, Administrador 👑",
@@ -101,7 +102,7 @@ public class TestController {
     @ApiResponse(responseCode = "200", description = "Usuario profesor autenticado")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene permisos de profesor")
-    public ResponseEntity<ResponseDTO<Map<String, String>>> profesorEndpoint() {
+    public ResponseEntity<DtApiResponse<Map<String, String>>> profesorEndpoint() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         Map<String, String> data = new HashMap<>();
@@ -109,7 +110,7 @@ public class TestController {
         data.put("ci", auth.getName());
         data.put("rol", "PROFESOR");
 
-        return ResponseEntity.ok(new ResponseDTO<>(
+        return ResponseEntity.ok(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),
             "Bienvenido, Profesor 👨‍🏫",
@@ -125,7 +126,7 @@ public class TestController {
     @ApiResponse(responseCode = "200", description = "Usuario estudiante autenticado")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene permisos de estudiante")
-    public ResponseEntity<ResponseDTO<Map<String, String>>> estudianteEndpoint() {
+    public ResponseEntity<DtApiResponse<Map<String, String>>> estudianteEndpoint() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         Map<String, String> data = new HashMap<>();
@@ -133,7 +134,7 @@ public class TestController {
         data.put("ci", auth.getName());
         data.put("rol", "ESTUDIANTE");
 
-        return ResponseEntity.ok(new ResponseDTO<>(
+        return ResponseEntity.ok(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),
             "Bienvenido, Estudiante 📚",
@@ -149,7 +150,7 @@ public class TestController {
     @ApiResponse(responseCode = "200", description = "Usuario con permisos correctos")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene los permisos requeridos")
-    public ResponseEntity<ResponseDTO<Map<String, String>>> adminOrProfesorEndpoint() {
+    public ResponseEntity<DtApiResponse<Map<String, String>>> adminOrProfesorEndpoint() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         Map<String, String> data = new HashMap<>();
@@ -157,7 +158,7 @@ public class TestController {
         data.put("ci", auth.getName());
         data.put("authorities", auth.getAuthorities().toString());
 
-        return ResponseEntity.ok(new ResponseDTO<>(
+        return ResponseEntity.ok(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),
             "Acceso concedido ✓",

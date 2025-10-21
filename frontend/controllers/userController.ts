@@ -49,8 +49,6 @@ class UserController {
         },
       });
 
-      console.log(response);
-
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -58,10 +56,10 @@ class UserController {
         }
       }
 
-      console.error('Error al cargar profesores:', response.statusText);
+      console.error('Error al cargar usuarios:', response.statusText);
       return [];
     } catch (error) {
-      console.error('Error al cargar profesores:', error);
+      console.error('Error al cargar usuarios:', error);
       return [];
     }
   }

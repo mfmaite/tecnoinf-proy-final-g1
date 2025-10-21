@@ -1,6 +1,6 @@
 import { ApiError } from '../types/user';
 import { API_ENDPOINTS } from '../config/api';
-import { CourseFormData } from '../app/admin/courses/new/components/create-course-form';
+import { CourseFormData } from '../app/admin/courses/components/create-course-form';
 
 class CourseController {
   async createCourse(courseData: CourseFormData, accessToken: string) {

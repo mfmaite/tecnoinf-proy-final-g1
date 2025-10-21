@@ -1,5 +1,5 @@
 import React from 'react';
-import CreateCourseForm from './components/create-course-form';
+import CreateCourseForm from '../components/create-course-form';
 
 const NewCoursePage = () => {
   return <CreateCourseForm />;

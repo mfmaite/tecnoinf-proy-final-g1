@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { Button } from '@/components/button/button';
-import { Navbar } from '@/components/navbar/navbar';
 import { UserSignUpData } from '@/types/user';
 import { SelectField } from '@/components/select-field/select-field';
 import { userController } from '@/controllers/userController';
@@ -93,9 +92,7 @@ const CreateUserForm = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
+    <div>
       <div className="w-full flex items-center justify-center p-6">
         <div className="w-full max-w-2xl bg-surface-light-10 rounded-2xl shadow-lg p-8 border-4 border-surface-dark-70">
         <div className="flex flex-col items-center mb-8">

@@ -6,22 +6,30 @@ export const createUser = async (userData: any) => {
     try {
         const response = await api.post("/users", userData);
         return response.data;
-    }catch (e: any) {
-        console.log("Error al crear usuario:", e.response?.data || e.message);
-
-        // Si el backend devuelve un array de errores, mostrarlos todos
+    } catch (e: any) {
         const data = e.response?.data;
         let message = "No se pudo crear el usuario";
 
         if (Array.isArray(data)) {
-        message = data.join("\n");
-        } else if (typeof data === "object" && data?.message) {
-        message = data.message;
+          // Si es un array, lo concatenamos
+          message = data.join("\n");
+        } else if (typeof data === "object") {
+          // Si es un objeto, chequeo si tiene subcampo 'data' con errores específicos
+          if (data.data && typeof data.data === "object") {
+            // Convertimos los pares clave/valor en texto legible
+            const detalles = Object.entries(data.data)
+              .map(([campo, error]) => `• ${error}`)
+              .join("\n");
+            message = `${data.message || "Error de validación"}:\n${detalles}`;
+          } else if (data.message) {
+            message = data.message;
+          }
         } else if (typeof data === "string") {
-        message = data;
+          message = data;
         }
-        Alert.alert("Error", message);
-    }
+        console.log("Error al crear usuario:", message);
+        throw new Error(message);
+      }
 
 };
 

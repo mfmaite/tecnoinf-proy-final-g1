@@ -1,6 +1,5 @@
 'use client'
 
-import { UserInfo } from '@/components/auth/user-info'
 import { LogoutButton } from '@/components/auth/logout-button'
 import { Navbar } from '@/components/navbar/navbar'
 
@@ -8,6 +7,7 @@ export default function Dashboard() {
   return (
     <>
       <Navbar />
+
       <div className="min-h-screen p-8">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow p-6">

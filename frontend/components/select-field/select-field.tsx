@@ -6,11 +6,11 @@ interface SelectFieldProps {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  disabled: boolean;
+  disabled?: boolean;
   options: { value: string; label: string }[];
 }
 
-const SelectField = ({ label, name, value, onChange, disabled, options }: SelectFieldProps) => {
+const SelectField = ({ label, name, value, onChange, disabled = false, options }: SelectFieldProps) => {
   return (
     <div>
       <label className="block text-text-neutral-50 mb-1 text-small font-bold">

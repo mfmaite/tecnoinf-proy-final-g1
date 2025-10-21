@@ -6,6 +6,7 @@ import com.mentora.backend.dto.QuizQuestionDto;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.ContentRepository;
 import com.mentora.backend.repository.CourseRepository;
+import com.mentora.backend.repository.UserCourseRepository;
 import com.mentora.backend.repository.FileResourceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,15 +25,18 @@ public class ContentService {
     private final FileStorageService storage;
     private final FileResourceRepository fileRepo;
     private final CourseRepository courseRepo;
+    private final UserCourseRepository userCourseRepository;
 
     public ContentService(ContentRepository contentRepo,
                           FileStorageService storage,
                           FileResourceRepository fileRepo,
-                          CourseRepository courseRepo) {
+                          CourseRepository courseRepo,
+                          UserCourseRepository userCourseRepo) {
         this.contentRepo = contentRepo;
         this.storage = storage;
         this.fileRepo = fileRepo;
         this.courseRepo = courseRepo;
+        this.userCourseRepository = userCourseRepo;
     }
 
     @Transactional
@@ -43,9 +47,8 @@ public class ContentService {
         Course course = courseRepo.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
-        // Validar que profesor esté asignado al curso
-        boolean isAssigned = course.getProfessors().stream()
-                .anyMatch(p -> p.getCi().equals(user.getCi()));
+        // Validar que profesor esté asignado al curso usando UserCourseRepository
+        boolean isAssigned = userCourseRepository.existsByCourseAndUser(course, user);
         if (!isAssigned) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Profesor no asignado al curso");
         }

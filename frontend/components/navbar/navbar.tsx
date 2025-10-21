@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Dropdown } from './dropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { UserInfo } from '@/components/auth/user-info';
-import { LogoutButton } from '@/components/auth/logout-button';
 
 export function Navbar() {
   const { user } = useAuth();
@@ -17,8 +16,8 @@ export function Navbar() {
   ];
 
   const courseDropdownItems = [
-    { href: '/admin/courses', label: 'Listado', adminOnly: true },
-    { href: '/admin/courses/new', label: 'Crear', adminOnly: true },
+    { href: '/courses', label: 'Listado' },
+    { href: '/courses/new', label: 'Crear', adminOnly: true },
   ];
 
   return (

@@ -6,6 +6,8 @@ import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { userController } from '@/controllers/userController';
 import { SelectField } from '@/components/select-field/select-field';
 import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
+import { ChevronDown } from '@/public/assets/icons/chevron-down';
+import Link from 'next/link';
 
 interface User {
   ci: string;
@@ -185,6 +187,7 @@ const UsersListPage = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Descripción
                   </th>
+                  <th />
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -231,6 +234,11 @@ const UsersListPage = () => {
                         <div className="max-w-xs truncate">
                           {user.description || '-'}
                         </div>
+                      </td>
+                      <td>
+                        <Link href={`/users/${user.ci}`} className="text-primary-color-80 hover:text-primary-color-90 font-medium">
+                          <ChevronDown className="w-4 h-4 -rotate-90" />
+                        </Link>
                       </td>
                     </tr>
                   ))

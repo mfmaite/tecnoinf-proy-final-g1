@@ -1,6 +1,6 @@
 'use client'
-import Image from 'next/image';
 import { useAuth } from '../../hooks/useAuth';
+import UserProfilePicture from '../user-profile-picture/user-profile-picture';
 
 export function UserInfo() {
   const { user, isLoading } = useAuth()
@@ -20,12 +20,10 @@ export function UserInfo() {
         <p className="text-xs text-gray-500">{user.ci}</p>
       </div>
 
-      <Image
-        src={user.pictureUrl || "/assets/images/default-user.png"}
-        alt={user.name}
-        className="w-8 h-8 rounded-full"
-        width={45}
-        height={45}
+      <UserProfilePicture
+        name={user.name}
+        pictureUrl={user.pictureUrl}
+        size="md"
       />
     </div>
   )

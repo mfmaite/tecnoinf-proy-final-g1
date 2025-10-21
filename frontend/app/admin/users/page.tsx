@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { userController } from '@/controllers/userController';
 import { SelectField } from '@/components/select-field/select-field';
+import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
 
 interface User {
   ci: string;
@@ -201,20 +202,12 @@ const UsersListPage = () => {
                     <tr key={user.ci} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            {user.pictureUrl ? (
-                              <img
-                                className="h-10 w-10 rounded-full"
-                                src={user.pictureUrl}
-                                alt={user.name}
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span className="text-sm font-medium text-gray-700">
-                                  {user.name.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
+                          <div className="flex-shrink-0">
+                            <UserProfilePicture
+                              name={user.name}
+                              pictureUrl={user.pictureUrl}
+                              size="md"
+                            />
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">

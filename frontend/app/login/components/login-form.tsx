@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { signIn, getSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
 import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { Button } from '@/components/button/button';
-import { authController } from '@/controllers/authController';
 import { UserLoginData } from '@/types/user';
+import MentoraLogo from '@/public/assets/icons/mentora-logo.svg';
 
 const LoginForm = () => {
   const router = useRouter();
@@ -46,12 +47,22 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await authController.login(formData);
+      const result = await signIn('credentials', {
+        ci: formData.ci,
+        password: formData.password,
+        redirect: false,
+      });
 
-      if (response.success) {
-        router.push('/');
-      } else {
-        setError(response.message || 'Error al iniciar sesión');
+      if (result?.error) {
+        setError('Credenciales incorrectas');
+      } else if (result?.ok) {
+        // Verificar que la sesión se haya creado correctamente
+        const session = await getSession();
+        if (session) {
+          router.push('/');
+        } else {
+          setError('Error al crear la sesión');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Error al conectar con el servidor');
@@ -69,7 +80,7 @@ const LoginForm = () => {
       <div className="w-full max-w-md bg-surface-light-10 rounded-2xl shadow-lg p-8 border-4 border-surface-dark-70">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Image src="/assets/images/logo-mentora.png" alt="Mentora" width={100} height={100} />
+            <Image src={MentoraLogo} alt="Mentora" width={100} height={100} />
           </div>
           <h1 className="text-6xl font-bold text-secondary-color-70">
             Mentora

@@ -36,7 +36,7 @@ public class User {
         this.password = password;
         this.description = description;
         this.pictureUrl = pictureUrl;
-        this.role = role;
+        this.role = role; // ADMIN, PROFESOR, ESTUDIANTE
     }
 
     // === Getters y Setters ===

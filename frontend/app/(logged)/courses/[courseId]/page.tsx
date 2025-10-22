@@ -32,7 +32,7 @@ export default async function CourseView({ params }: Params) {
   const { course, contents } = data
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-4xl font-bold text-secondary-color-70">{course.name}</h1>

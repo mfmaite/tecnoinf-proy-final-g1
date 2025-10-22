@@ -1,6 +1,10 @@
+"use client";
 import React from 'react'
 import { formatDate, isImage, isVideo } from '@/helpers/utils';
 import { SimpleContent } from '@/types/content';
+import dynamic from 'next/dynamic';
+
+const MarkdownPreview = dynamic<any>(() => import('@uiw/react-markdown-preview').then(m => m.default), { ssr: false });
 
 interface ContentCardProps {
   content: SimpleContent
@@ -15,7 +19,9 @@ const ContentCard = ({ content }: ContentCardProps) => {
       </div>
 
       {content.content ? (
-        <div className="prose max-w-none whitespace-pre-wrap">{content.content}</div>
+        <div className="prose max-w-none" data-color-mode="light">
+          <MarkdownPreview source={content.content} />
+        </div>
       ) : null}
 
       {content.fileUrl ? (

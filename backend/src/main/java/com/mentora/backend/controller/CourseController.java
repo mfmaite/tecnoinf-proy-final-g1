@@ -1,11 +1,12 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtCourse;
+import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.service.CourseService;
-import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.requests.CreateCourseRequest;
-import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
+import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
@@ -135,6 +136,29 @@ public class CourseController {
                 false,
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 e.getMessage(),
+                null
+            ));
+        }
+    }
+
+    @PostMapping(value = "/{courseId}/participants")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<String>> addParticipants(@PathVariable String courseId, @RequestBody ParticipantsRequest req) {
+        try {
+            System.out.println("entra con los ids: " + req.getParticipantIds());
+            String result = courseService.addParticipants(courseId, req.getParticipantIds());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Participantes agregados correctamente",
+                result
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
                 null
             ));
         }

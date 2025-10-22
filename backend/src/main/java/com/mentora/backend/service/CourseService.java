@@ -18,6 +18,7 @@ import com.mentora.backend.model.SimpleContent;
 import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.dt.DtFileResource;
 
+
 @Service
 public class CourseService {
 
@@ -93,5 +94,9 @@ public class CourseService {
         SimpleContent saved = simpleContentRepository.save(newSimpleContent);
 
         return new DtSimpleContent(saved.getId(), saved.getTitle(), saved.getContent(), saved.getFileName(), saved.getFileUrl(), saved.getCreatedDate());
+    }
+
+    public String addParticipants(String courseId, String[] participantIds) {
+        return userCourseService.addUsersToCourse(courseId, participantIds);
     }
 }

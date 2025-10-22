@@ -13,7 +13,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       await login(ci, password);
-      router.replace("./(main)/home");
+      router.replace("/(main)/home");
     } catch (e) {
       setError("Credenciales inválidas");
     }

@@ -10,3 +10,6 @@
 .env.test
 .env.production
 backend/credentialsGCS.json
+**/node_modules
+/mobile/.expo
+/mobile/expo-env.d.ts

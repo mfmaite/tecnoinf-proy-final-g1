@@ -1,9 +1,11 @@
-import { ApiError } from '../types/user';
+import { ApiResponse } from '@/types/api-response';
 import { API_ENDPOINTS } from '../config/api';
 import { CourseFormData } from '@/app/(logged)/admin/courses/new/components/create-course-form';
+import { CourseViewData } from '@/types/content';
+import { Course } from '@/types/course';
 
 class CourseController {
-  async getCourseById(courseId: string, accessToken: string) {
+  async getCourseById(courseId: string, accessToken: string): Promise<ApiResponse<CourseViewData>> {
     try {
       const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}`, {
         headers: {
@@ -21,7 +23,7 @@ class CourseController {
     }
   }
 
-  async createCourse(courseData: CourseFormData, accessToken: string) {
+  async createCourse(courseData: CourseFormData, accessToken: string): Promise<ApiResponse<Course>> {
     try {
       const response = await fetch(API_ENDPOINTS.COURSES, {
         method: 'POST',
@@ -37,14 +39,17 @@ class CourseController {
       if (response.ok && data.success) {
         return {
           success: true,
-          data,
+          code: response.status,
+          data: data.data,
           message: 'Curso creado exitosamente',
         };
       } else {
         console.error('Error al crear el curso:', data);
         return {
           success: false,
+          code: response.status,
           message: data.message || 'Error al crear el curso',
+          data: undefined,
         };
       }
     } catch (error) {
@@ -76,11 +81,11 @@ class CourseController {
     }
   }
 
-  private handleError(error: unknown): ApiError {
+  private handleError(error: unknown): { message: string, code?: number } {
     if (error instanceof Error) {
-      return { message: error.message };
+      return { message: error.message, code: (error as any).code ?? 500 };
     }
-    return { message: 'Error inesperado' };
+    return { message: 'Error inesperado', code: (error as any).code ?? 500 };
   }
 }
 

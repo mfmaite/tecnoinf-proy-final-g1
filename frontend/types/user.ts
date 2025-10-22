@@ -28,15 +28,3 @@ export interface UserResponse {
   pictureUrl?: string;
   role: 'ADMIN' | 'PROFESOR' | 'ESTUDIANTE';
 }
-
-export interface ApiResponse<T> {
-  success: boolean;
-  code: number;
-  message: string;
-  data: T;
-}
-
-export interface ApiError {
-  message: string;
-  status?: number;
-}

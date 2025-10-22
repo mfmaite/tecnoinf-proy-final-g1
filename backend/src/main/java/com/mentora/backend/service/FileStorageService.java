@@ -1,13 +1,16 @@
 package com.mentora.backend.service;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.SignUrlOption;
 import com.mentora.backend.config.GCSConfig;
 import com.mentora.backend.dt.DtFileResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class FileStorageService {
@@ -38,9 +41,16 @@ public class FileStorageService {
 
         storage.create(blobInfo, file.getBytes());
 
+        URL signedUrl = storage.signUrl(
+                blobInfo,
+                7,
+                TimeUnit.DAYS,
+                SignUrlOption.withV4Signature()
+        );
+
         DtFileResource fr = new DtFileResource();
         fr.setFilename(originalFilename);
-        fr.setStoragePath("https://storage.googleapis.com/" + gcsConfig.getBucketName() + "/" + gcsFileName);
+        fr.setStoragePath(signedUrl.toString());
         fr.setSize(file.getSize());
 
         return fr;

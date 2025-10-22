@@ -19,7 +19,7 @@ public class SimpleContent {
     @Column(name = "fileName")
     private String fileName;
 
-    @Column(name = "fileUrl")
+    @Column(name = "fileUrl", length = 2048)
     private String fileUrl;
 
     @Lob

@@ -30,8 +30,8 @@ const CoursesListPage = () => {
       try {
         setIsLoading(true);
         const coursesData = await courseController.getCourses(accessToken!);
-        setCourses(coursesData);
-        setFilteredCourses(coursesData);
+        setCourses(coursesData.data ?? []);
+        setFilteredCourses(coursesData.data ?? []);
       } catch (err: any) {
         setError(err.message || 'Error al cargar cursos');
       } finally {

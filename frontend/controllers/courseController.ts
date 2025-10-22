@@ -1,9 +1,40 @@
-import { ApiError } from '../types/user';
+import { ApiResponse } from '@/types/api-response';
 import { API_ENDPOINTS } from '../config/api';
-import { CourseFormData } from '../app/(logged)/courses/components/create-course-form';
+import { CourseFormData } from '@/app/(logged)/admin/courses/new/components/create-course-form';
+import { CourseViewData } from '@/types/content';
+import { Course } from '@/types/course';
 
 class CourseController {
-  async createCourse(courseData: CourseFormData, accessToken: string) {
+  async getCourseById(courseId: string, accessToken: string): Promise<ApiResponse<CourseViewData>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        cache: 'no-store',
+      });
+
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
+    } catch (error) {
+      console.error('Error al obtener el curso:', error);
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al obtener el curso',
+        data: undefined,
+      };
+    }
+  }
+
+  async createCourse(courseData: CourseFormData, accessToken: string): Promise<ApiResponse<Course>> {
     try {
       const response = await fetch(API_ENDPOINTS.COURSES, {
         method: 'POST',
@@ -14,28 +45,27 @@ class CourseController {
         body: JSON.stringify(courseData),
       });
 
-      const data = await response.json();
+      const { success, code, message, data } = await response.json();
 
-      if (response.ok && data.success) {
-        return {
-          success: true,
-          data,
-          message: 'Curso creado exitosamente',
-        };
-      } else {
-        console.error('Error al crear el curso:', data);
-        return {
-          success: false,
-          message: data.message || 'Error al crear el curso',
-        };
-      }
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
     } catch (error) {
       console.error('Error al crear el curso:', error);
-      throw this.handleError(error);
+
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al crear el curso',
+        data: undefined,
+      };
     }
   }
 
-  async getCourses(accessToken: string): Promise<any[]> {
+  async getCourses(accessToken: string): Promise<ApiResponse<Course[]>> {
     try {
       const response = await fetch(API_ENDPOINTS.COURSES, {
         headers: {
@@ -46,23 +76,31 @@ class CourseController {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          return data.data;
+          return {
+            success: true,
+            code: response.status,
+            data: data.data,
+            message: 'Cursos obtenidos correctamente',
+          };
         }
       }
 
       console.error('Error al cargar cursos:', response.statusText);
-      return [];
+      return {
+        success: false,
+        code: response.status,
+        message: 'Error al cargar cursos',
+        data: undefined,
+      };
     } catch (error) {
       console.error('Error al cargar cursos:', error);
-      return [];
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al cargar cursos',
+        data: undefined,
+      };
     }
-  }
-
-  private handleError(error: unknown): ApiError {
-    if (error instanceof Error) {
-      return { message: error.message };
-    }
-    return { message: 'Error inesperado' };
   }
 }
 

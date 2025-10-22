@@ -1,11 +1,12 @@
-import { UserSignUpData, ApiError, UserResponse } from '../types/user';
 import { API_ENDPOINTS } from '../config/api';
+import { ApiResponse } from '@/types/api-response';
+import { UserSignUpData, UserResponse } from '@/types/user';
 
 type UserFilter = "todos" | "profesores" | "estudiantes" | "administradores";
 
 type UserOrder = "name_asc" | "name_desc" | "ci_asc" | "ci_desc";
 class UserController {
-  async createUser(userData: UserSignUpData, accessToken: string) {
+  async createUser(userData: UserSignUpData, accessToken: string): Promise<ApiResponse<UserResponse>> {
     try {
       const response = await fetch(API_ENDPOINTS.USERS, {
         method: 'POST',
@@ -16,24 +17,22 @@ class UserController {
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
+      const { success, code, message, data } = await response.json();
 
-      if (response.ok && data.success) {
-        return {
-          success: true,
-          data,
-          message: 'Usuario creado exitosamente',
-        };
-      } else {
-        console.error('Error al crear el usuario:', data);
-        return {
-          success: false,
-          message: data.message || 'Error al crear el usuario',
-        };
-      }
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
     } catch (error) {
       console.error('Error al crear el usuario:', error);
-      throw this.handleError(error);
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al crear el usuario',
+        data: undefined,
+      };
     }
   }
 
@@ -41,7 +40,7 @@ class UserController {
     accessToken: string,
     filter: UserFilter = "todos",
     order?: UserOrder
-  ): Promise<UserResponse[]> {
+  ): Promise<ApiResponse<UserResponse[]>> {
     try {
       const response = await fetch(`${API_ENDPOINTS.USERS}?${filter ? `filter=${filter}` : ''}${order ? filter ? `&order=${order}` : `order=${order}` : ''}`, {
         headers: {
@@ -49,26 +48,23 @@ class UserController {
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          return data.data;
-        }
-      }
+      const { success, code, message, data } = await response.json();
 
-      console.error('Error al cargar usuarios:', response.statusText);
-      return [];
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
-      return [];
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al cargar usuarios',
+        data: undefined,
+      };
     }
-  }
-
-  private handleError(error: unknown): ApiError {
-    if (error instanceof Error) {
-      return { message: error.message };
-    }
-    return { message: 'Error inesperado' };
   }
 }
 

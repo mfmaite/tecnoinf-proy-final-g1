@@ -99,4 +99,8 @@ public class CourseService {
     public String addParticipants(String courseId, String[] participantIds) {
         return userCourseService.addUsersToCourse(courseId, participantIds);
     }
+
+    public String deleteParticipants(String courseId, String[] participantIds) {
+        return userCourseService.deleteUsersFromCourse(courseId, participantIds);
+    }
 }

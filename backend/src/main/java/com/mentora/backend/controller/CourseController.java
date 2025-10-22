@@ -141,17 +141,52 @@ public class CourseController {
         }
     }
 
+    @Operation(summary = "Agregar participantes a un curso",
+            description = "Agrega participantes a un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Participantes agregados correctamente")
+    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error al agregar participantes")
     @PostMapping(value = "/{courseId}/participants")
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<String>> addParticipants(@PathVariable String courseId, @RequestBody ParticipantsRequest req) {
         try {
-            System.out.println("entra con los ids: " + req.getParticipantIds());
             String result = courseService.addParticipants(courseId, req.getParticipantIds());
 
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,
                 200,
                 "Participantes agregados correctamente",
+                result
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
+    @Operation(summary = "Eliminar participantes de un curso",
+            description = "Elimina participantes de un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Participantes eliminados correctamente")
+    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error al eliminar participantes")
+    @DeleteMapping(value = "/{courseId}/participants")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<String>> deleteParticipants(@PathVariable String courseId, @RequestBody ParticipantsRequest req) {
+        try {
+            String result = courseService.deleteParticipants(courseId, req.getParticipantIds());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Participantes eliminados correctamente",
                 result
             ));
         } catch (ResponseStatusException e) {

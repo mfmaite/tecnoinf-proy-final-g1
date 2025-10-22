@@ -1,10 +1,10 @@
 package com.mentora.backend.repository;
 
-import com.mentora.backend.model.FileResource;
+import com.mentora.backend.model.SimpleContent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FileResourceRepository extends JpaRepository<FileResource, Long> {
+public interface SimpleContentRepository extends JpaRepository<SimpleContent, Long> {
 
 }

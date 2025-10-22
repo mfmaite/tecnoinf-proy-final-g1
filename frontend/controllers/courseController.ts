@@ -3,6 +3,7 @@ import { API_ENDPOINTS } from '../config/api';
 import { CourseFormData } from '@/app/(logged)/admin/courses/new/components/create-course-form';
 import { CourseViewData } from '@/types/content';
 import { Course } from '@/types/course';
+import { UserResponse } from '@/types/user';
 
 class CourseController {
   async getCourseById(courseId: string, accessToken: string): Promise<ApiResponse<CourseViewData>> {
@@ -100,6 +101,41 @@ class CourseController {
         message: 'Error al cargar cursos',
         data: undefined,
       };
+    }
+  }
+
+  async getParticipants(courseId: string, accessToken: string): Promise<ApiResponse<UserResponse[]>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        cache: 'no-store',
+      });
+      const { success, code, message, data } = await response.json();
+      return { success, code, message, data };
+    } catch (error) {
+      console.error('Error al obtener participantes:', error);
+      return { success: false, code: 500, message: 'Error al obtener participantes', data: undefined };
+    }
+  }
+
+  async addParticipants(courseId: string, cis: string[], accessToken: string) {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participantIds: cis }),
+      });
+      const { success, code, message, data } = await response.json();
+      return { success, code, message, data };
+    } catch (error) {
+      console.error('Error al agregar participantes:', error);
+      return { success: false, code: 500, message: 'Error al agregar participantes', data: undefined };
     }
   }
 }

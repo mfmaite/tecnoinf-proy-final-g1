@@ -1,6 +1,7 @@
 package com.mentora.backend.service;
 
 import com.mentora.backend.dt.DtCourse;
+import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Course;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.repository.CourseRepository;
@@ -117,5 +118,9 @@ public class CourseService {
 
     public String deleteParticipants(String courseId, String[] participantIds) {
         return userCourseService.deleteUsersFromCourse(courseId, participantIds);
+    }
+
+    public List<DtUser> getParticipants(String courseId) {
+        return userCourseService.getUsersFromCourse(courseId);
     }
 }

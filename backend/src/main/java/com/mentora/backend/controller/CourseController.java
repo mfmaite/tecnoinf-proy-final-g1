@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.model.Role;
@@ -215,6 +216,32 @@ public class CourseController {
                 200,
                 "Participantes eliminados correctamente",
                 result
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
+    @Operation(summary = "Listar participantes de un curso",
+            description = "Lista todos los participantes de un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Participantes obtenidos correctamente")
+    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
+    @GetMapping(value = "/{courseId}/participants")
+    public ResponseEntity<DtApiResponse<List<DtUser>>> getParticipants(@PathVariable String courseId) {
+        try {
+            List<DtUser> participants = courseService.getParticipants(courseId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Participantes obtenidos correctamente",
+                participants
             ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(

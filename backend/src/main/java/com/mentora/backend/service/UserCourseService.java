@@ -67,4 +67,28 @@ public class UserCourseService {
             .map(userCourse -> new DtCourse(userCourse.getCourse().getId(), userCourse.getCourse().getName(), userCourse.getCourse().getCreatedDate()))
             .collect(Collectors.toCollection(ArrayList::new));
     }
+
+    public String deleteUsersFromCourse(String courseId, String[] usersCis) {
+        List<String> errorUsers = new ArrayList<>();
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        for (String userCi : usersCis) {
+            User user = userRepository.findById(userCi).orElse(null);
+            if (user == null) {
+                errorUsers.add(userCi + " no existe");
+                continue;
+            }
+
+            UserCourse userCourse = userCourseRepository.findByCourseAndUser(course, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no matriculado en el curso"));
+            userCourseRepository.delete(userCourse);
+        }
+
+        if (!errorUsers.isEmpty()) {
+            return "Algunos usuarios no se pudieron desmatricular: " + String.join(", ", errorUsers);
+        }
+        return "Usuarios desmatriculados correctamente";
+    }
 }

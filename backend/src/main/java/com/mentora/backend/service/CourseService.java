@@ -19,6 +19,7 @@ import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.responses.GetCourseResponse;
 
+
 @Service
 public class CourseService {
 
@@ -108,5 +109,13 @@ public class CourseService {
 
     private DtSimpleContent getDtSimpleContent(SimpleContent sc) {
         return new DtSimpleContent(sc.getId(), sc.getTitle(), sc.getContent(), sc.getFileName(), sc.getFileUrl(), sc.getCreatedDate());
+    }
+
+    public String addParticipants(String courseId, String[] participantIds) {
+        return userCourseService.addUsersToCourse(courseId, participantIds);
+    }
+
+    public String deleteParticipants(String courseId, String[] participantIds) {
+        return userCourseService.deleteUsersFromCourse(courseId, participantIds);
     }
 }

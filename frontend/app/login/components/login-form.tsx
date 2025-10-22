@@ -56,7 +56,6 @@ const LoginForm = () => {
       if (result?.error) {
         setError('Credenciales incorrectas');
       } else if (result?.ok) {
-        // Verificar que la sesión se haya creado correctamente
         const session = await getSession();
         if (session) {
           router.push('/');

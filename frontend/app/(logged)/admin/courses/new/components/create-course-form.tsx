@@ -6,6 +6,7 @@ import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { Button } from '@/components/button/button';
 import { courseController } from '@/controllers/courseController';
 import { userController } from '@/controllers/userController';
+import { UserResponse } from '@/types/user';
 
 export interface CourseFormData {
   id: string;
@@ -19,15 +20,10 @@ const initialFormData: CourseFormData = {
   professorsCis: [],
 }
 
-interface Professor {
-  ci: string;
-  name: string;
-}
-
 const CreateCourseForm = () => {
   const { accessToken } = useAuth();
   const [formData, setFormData] = useState<CourseFormData>(initialFormData);
-  const [professors, setProfessors] = useState<Professor[]>([]);
+  const [professors, setProfessors] = useState<UserResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProfessors, setIsLoadingProfessors] = useState(true);
   const [error, setError] = useState<string>('');
@@ -37,7 +33,7 @@ const CreateCourseForm = () => {
     const loadProfessors = async () => {
       try {
         const professorsData = await userController.getUsers(accessToken!, "profesores");
-        setProfessors(professorsData);
+        setProfessors(professorsData.data ?? []);
       } catch (err) {
         console.error('Error al cargar profesores:', err);
       } finally {

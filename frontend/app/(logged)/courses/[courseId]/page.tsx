@@ -4,8 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { courseController } from '@/controllers/courseController';
-import { formatDate, isImage, isVideo } from "@/helpers/utils";
-import { CourseViewData } from '@/types/content';
+import { formatDate } from "@/helpers/utils";
 import { ContentCard } from './components/content-card';
 
 type Params = { params: { courseId: string } }
@@ -19,13 +18,13 @@ export default async function CourseView({ params }: Params) {
   }
 
   const payload = await courseController.getCourseById(params.courseId, accessToken!);
-  const { data, message, code, success } = payload;
+  const { data, message, success } = payload;
 
   if (!success || !data) {
     return (
       <div className="p-6">
         <h1 className="text-xl font-semibold mb-2">No se pudo cargar el curso</h1>
-        <p className="text-sm text-red-600">{payload.message ?? 'Error desconocido'}</p>
+        <p className="text-sm text-red-600">{message ?? 'Error desconocido'}</p>
       </div>
     )
   }

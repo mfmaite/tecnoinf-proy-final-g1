@@ -15,11 +15,22 @@ class CourseController {
         cache: 'no-store',
       });
 
-      const data = await response.json();
-      return data;
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
     } catch (error) {
       console.error('Error al obtener el curso:', error);
-      throw this.handleError(error);
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al obtener el curso',
+        data: undefined,
+      };
     }
   }
 
@@ -34,31 +45,27 @@ class CourseController {
         body: JSON.stringify(courseData),
       });
 
-      const data = await response.json();
+      const { success, code, message, data } = await response.json();
 
-      if (response.ok && data.success) {
-        return {
-          success: true,
-          code: response.status,
-          data: data.data,
-          message: 'Curso creado exitosamente',
-        };
-      } else {
-        console.error('Error al crear el curso:', data);
-        return {
-          success: false,
-          code: response.status,
-          message: data.message || 'Error al crear el curso',
-          data: undefined,
-        };
-      }
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
     } catch (error) {
       console.error('Error al crear el curso:', error);
-      throw this.handleError(error);
+
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al crear el curso',
+        data: undefined,
+      };
     }
   }
 
-  async getCourses(accessToken: string): Promise<any[]> {
+  async getCourses(accessToken: string): Promise<ApiResponse<Course[]>> {
     try {
       const response = await fetch(API_ENDPOINTS.COURSES, {
         headers: {
@@ -69,23 +76,31 @@ class CourseController {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          return data.data;
+          return {
+            success: true,
+            code: response.status,
+            data: data.data,
+            message: 'Cursos obtenidos correctamente',
+          };
         }
       }
 
       console.error('Error al cargar cursos:', response.statusText);
-      return [];
+      return {
+        success: false,
+        code: response.status,
+        message: 'Error al cargar cursos',
+        data: undefined,
+      };
     } catch (error) {
       console.error('Error al cargar cursos:', error);
-      return [];
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al cargar cursos',
+        data: undefined,
+      };
     }
-  }
-
-  private handleError(error: unknown): { message: string, code?: number } {
-    if (error instanceof Error) {
-      return { message: error.message, code: (error as any).code ?? 500 };
-    }
-    return { message: 'Error inesperado', code: (error as any).code ?? 500 };
   }
 }
 

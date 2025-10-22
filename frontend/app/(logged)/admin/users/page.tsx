@@ -8,6 +8,7 @@ import { SelectField } from '@/components/select-field/select-field';
 import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import Link from 'next/link';
+import { UserResponse } from '@/types/user';
 
 interface User {
   ci: string;
@@ -23,12 +24,10 @@ type RoleFilter = 'todos' | 'profesores' | 'estudiantes' | 'administradores';
 
 const UsersListPage = () => {
   const { accessToken } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<UserResponse[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserResponse[]>([]);
   const [error, setError] = useState<string>('');
 
-  // Filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('todos');
   const [sortOrder, setSortOrder] = useState<SortOrder>('name_asc');
@@ -36,14 +35,11 @@ const UsersListPage = () => {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        setIsLoading(true);
         const usersData = await userController.getUsers(accessToken!, roleFilter, sortOrder);
-        setUsers(usersData);
-        setFilteredUsers(usersData);
+        setUsers(usersData.data ?? []);
+        setFilteredUsers(usersData.data ?? []);
       } catch (err: any) {
-        setError(err.message || 'Error al cargar usuarios');
-      } finally {
-        setIsLoading(false);
+        setError(err.message ?? 'Error al cargar usuarios');
       }
     };
 

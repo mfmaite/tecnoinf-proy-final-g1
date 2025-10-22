@@ -7,6 +7,7 @@ import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.responses.DtApiResponse;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -103,11 +104,11 @@ public class CourseController {
     @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
     @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
-    @PostMapping("/{courseId}/content/simple")
+    @PostMapping(value = "/{courseId}/content/simple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<DtSimpleContent>> createSimpleContent(
             @PathVariable String courseId,
-            @RequestBody CreateSimpleContentRequest req,
+            @ModelAttribute CreateSimpleContentRequest req,
             Authentication authentication
     ) {
         try {

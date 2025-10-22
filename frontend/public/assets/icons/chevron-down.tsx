@@ -10,7 +10,7 @@ interface ChevronDownProps {
 const ChevronDown = ({ className, width = 16, height = 16, strokeWidth = 2 }: ChevronDownProps) => {
   return (
     <svg width={width} height={height} viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width={strokeWidth} d="M19 9l-7 7-7-7" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M19 9l-7 7-7-7" />
     </svg>
   )
 }

@@ -1,8 +1,26 @@
 import { ApiError } from '../types/user';
 import { API_ENDPOINTS } from '../config/api';
-import { CourseFormData } from '../app/(logged)/courses/components/create-course-form';
+import { CourseFormData } from '@/app/(logged)/admin/courses/new/components/create-course-form';
 
 class CourseController {
+  async getCourseById(courseId: string, accessToken: string) {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        cache: 'no-store',
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al obtener el curso:', error);
+      throw this.handleError(error);
+    }
+  }
+
   async createCourse(courseData: CourseFormData, accessToken: string) {
     try {
       const response = await fetch(API_ENDPOINTS.COURSES, {

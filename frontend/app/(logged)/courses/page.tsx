@@ -86,7 +86,6 @@ const CoursesListPage = () => {
             </p>
           </div>
 
-          {/* Filtros */}
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextField

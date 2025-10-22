@@ -17,6 +17,7 @@ import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.model.SimpleContent;
 import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.dt.DtFileResource;
+import com.mentora.backend.responses.GetCourseResponse;
 
 @Service
 public class CourseService {
@@ -62,9 +63,15 @@ public class CourseService {
         return getDtCourse(saved);
     }
 
+    public GetCourseResponse getCourseAndContents(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
-    private DtCourse getDtCourse(Course c) {
-        return new DtCourse(c.getId(), c.getName(), c.getCreatedDate());
+        List<DtSimpleContent> contents = simpleContentRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
+                .map(this::getDtSimpleContent)
+                .collect(Collectors.toList());
+
+        return new GetCourseResponse(getDtCourse(course), contents);
     }
 
     public DtSimpleContent createSimpleContent(String courseId, CreateSimpleContentRequest req) throws IOException {
@@ -92,6 +99,14 @@ public class CourseService {
         SimpleContent newSimpleContent = new SimpleContent(req.getTitle(), course, fileName, fileUrl, content);
         SimpleContent saved = simpleContentRepository.save(newSimpleContent);
 
-        return new DtSimpleContent(saved.getId(), saved.getTitle(), saved.getContent(), saved.getFileName(), saved.getFileUrl(), saved.getCreatedDate());
+        return getDtSimpleContent(saved);
+    }
+
+    private DtCourse getDtCourse(Course c) {
+        return new DtCourse(c.getId(), c.getName(), c.getCreatedDate());
+    }
+
+    private DtSimpleContent getDtSimpleContent(SimpleContent sc) {
+        return new DtSimpleContent(sc.getId(), sc.getTitle(), sc.getContent(), sc.getFileName(), sc.getFileUrl(), sc.getCreatedDate());
     }
 }

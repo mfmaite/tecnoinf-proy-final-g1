@@ -18,10 +18,10 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import com.mentora.backend.responses.GetCourseResponse;
 
 import java.io.IOException;
 import java.util.List;
-
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
@@ -97,6 +97,33 @@ public class CourseController {
         }
     }
 
+    @Operation(summary = "Vista de curso",
+            description = "Retorna un curso y todos sus contenidos",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Curso y contenidos obtenidos correctamente")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @GetMapping(value = "/{courseId}")
+    public ResponseEntity<DtApiResponse<GetCourseResponse>> getCourse(@PathVariable String courseId) {
+        try {
+            GetCourseResponse course = courseService.getCourseAndContents(courseId);
+
+            DtApiResponse<GetCourseResponse> response = new DtApiResponse<>(
+                true,
+                200,
+                "Curso y contenidos obtenidos correctamente",
+                course
+            );
+            return ResponseEntity.ok(response);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
     @Operation(summary = "Crear contenido simple",
             description = "Crea un contenido simple para un curso. Solo profesores",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -104,7 +131,7 @@ public class CourseController {
     @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
     @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
-    @PostMapping(value = "/{courseId}/content/simple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{courseId}/contents/simple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<DtSimpleContent>> createSimpleContent(
             @PathVariable String courseId,

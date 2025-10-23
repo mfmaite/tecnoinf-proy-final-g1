@@ -1,26 +1,40 @@
 package com.mentora.backend.config;
 
+import com.mentora.backend.model.Course;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.model.User;
+import com.mentora.backend.model.UserCourse;
 import com.mentora.backend.repository.UserRepository;
+//import com.mentora.backend.requests.CreateCourseRequest;
+//import com.mentora.backend.requests.ParticipantsRequest;
+import com.mentora.backend.repository.UserCourseRepository;
+import com.mentora.backend.repository.CourseRepository;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
+import java.util.Collections;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CourseRepository courseRepository;
+    private final UserCourseRepository userCourseRepository;
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder
+            , UserCourseRepository userCourseRepository
+            , CourseRepository courseRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userCourseRepository = userCourseRepository;
+        this.courseRepository = courseRepository;
     }
 
     @Override
     public void run(String... args) {
         seedUsers();
+        seedCourses();
     }
 
     private void seedUsers() {
@@ -71,5 +85,29 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("=== Seed de usuarios completado ===");
     }
+    private void seedCourses() {
+
+        User estudiante = new User(
+                "33333333",
+                "María González",
+                "estudiante@mentora.com",
+                passwordEncoder.encode("estudiante123"),
+                "Estudiante de segundo año",
+                null,
+                Role.ESTUDIANTE
+        );
+        Course curso = new Course(
+        "mate1995", 
+        "Matematicas 1995",
+        null
+        );
+        courseRepository.save(curso);
+
+        UserCourse uc = new UserCourse(curso, estudiante,100.00);
+        userCourseRepository.save(uc);
+
+        System.out.println("=== Seed de curso y usuario participante completado ===");
+    }
+
 }
 

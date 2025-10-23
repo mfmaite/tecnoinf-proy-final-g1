@@ -97,14 +97,17 @@ public class DataSeeder implements CommandLineRunner {
                 Role.ESTUDIANTE
         );
         Course curso = new Course(
-        "mate1995", 
-        "Matematicas 1995",
-        null
+            "mate1995", 
+            "Matematicas 1995",
+            null
         );
-        courseRepository.save(curso);
-
-        UserCourse uc = new UserCourse(curso, estudiante,100.00);
-        userCourseRepository.save(uc);
+        if (courseRepository.findById("mate1995").isEmpty()) {
+            courseRepository.save(curso);
+        }
+        if (userCourseRepository.findByCourseAndUser(curso, estudiante).isEmpty()) {
+            UserCourse uc = new UserCourse(curso, estudiante,100.00);
+            userCourseRepository.save(uc);
+        }
 
         System.out.println("=== Seed de curso y usuario participante completado ===");
     }

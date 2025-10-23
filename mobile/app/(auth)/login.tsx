@@ -11,7 +11,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../styles/colors";
-
 import logo from "../../assets/logo.svg";
 
 export default function LoginScreen() {
@@ -106,7 +105,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,

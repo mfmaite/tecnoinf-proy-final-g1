@@ -1,14 +1,14 @@
 package com.mentora.backend.repository;
 
-import com.mentora.backend.model.Advert;
+import com.mentora.backend.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface AdvertRepository extends JpaRepository<Advert, String> {
+public interface PostRepository extends JpaRepository<Post, String> {
 
-    List<Advert> findByForumIdOrderByCreatedAtDesc(String forumId);
+    List<Post> findByForumIdOrderByCreatedDateDesc(String forumId);
 
 }

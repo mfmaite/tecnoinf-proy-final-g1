@@ -2,14 +2,14 @@ package com.mentora.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "Forums")
 public class Forum {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(length = 20, nullable = false, unique = true)
+    @Column
     private String id;
 
     @Enumerated(EnumType.STRING)
@@ -20,20 +20,21 @@ public class Forum {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @OneToMany(mappedBy = "forum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts; // posts del foro
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // === Constructores ===
     public Forum() {}
 
     public Forum(String id, ForumType type, Course course) {
-        this.id = id;
         this.type = type;
         this.course = course;
         this.createdAt = LocalDateTime.now();
     }
 
-    // === Getters y Setters ===
+    // Getters y setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -42,6 +43,9 @@ public class Forum {
 
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
+
+    public List<Post> getPosts() { return posts; }
+    public void setPosts(List<Post> posts) { this.posts = posts; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

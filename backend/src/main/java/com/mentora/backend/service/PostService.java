@@ -1,7 +1,7 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dt.DtPost;
 import com.mentora.backend.dt.DtUser;
-import com.mentora.backend.dto.DtAdvert;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.*;
 import org.springframework.http.HttpStatus;
@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class AdvertService {
+public class PostService {
 
-    private final AdvertRepository advertRepository;
+    private final PostRepository postRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final ForumRepository forumRepository;
@@ -24,15 +24,15 @@ public class AdvertService {
     private final NotificationService notificationService;
     private final UserCourseService userCourseService;
 
-    public AdvertService(
-            AdvertRepository advertRepository,
+    public PostService(
+            PostRepository postRepository,
             CourseRepository courseRepository,
             UserRepository userRepository,
             ForumRepository forumRepository,
             EmailService emailService,
             NotificationService notificationService,
             UserCourseService userCourseService) {
-        this.advertRepository = advertRepository;
+        this.postRepository = postRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.forumRepository = forumRepository;
@@ -42,19 +42,16 @@ public class AdvertService {
     }
 
     // ============================
-    // PUBLICAR ANUNCIO
+    // PUBLICAR POST EN FORO
     // ============================
     @Transactional
-    public DtAdvert publishAdvert(String courseId, String professorCi, DtAdvert dto) {
-        // Validar curso
+    public DtPost publishPost(String courseId, String professorCi, DtPost dto) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
-        // Validar profesor
         User professor = userRepository.findById(professorCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
 
-        // Validar que el profesor esté asignado al curso
         boolean isProfessor = userCourseService.getUsersFromCourse(courseId).stream()
                 .filter(u -> u.getRole() == Role.PROFESOR)
                 .anyMatch(p -> p.getCi().equals(professorCi));
@@ -63,20 +60,18 @@ public class AdvertService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No autorizado para publicar en este curso");
         }
 
-        // Obtener foro de anuncios
         Forum forum = forumRepository.findByCourseIdAndType(courseId, ForumType.ANNOUNCEMENTS)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Foro de anuncios no encontrado"));
 
-        // Crear anuncio
-        Advert advert = new Advert();
-        advert.setForum(forum);
-        advert.setAuthor(professor);
-        advert.setContent(dto.getContent());
-        advert.setCreatedAt(LocalDateTime.now());
+        Post post = new Post();
+        post.setForum(forum);
+        post.setAuthor(professor);
+        post.setMessage(dto.getMessage());
+        post.setCreatedDate(LocalDateTime.now());
 
-        advertRepository.save(advert);
+        postRepository.save(post);
 
-        // Notificar a los estudiantes del curso
+        // Notificar a los estudiantes
         List<DtUser> studentsDto = userCourseService.getUsersFromCourse(courseId).stream()
                 .filter(u -> u.getRole() == Role.ESTUDIANTE)
                 .toList();
@@ -85,44 +80,42 @@ public class AdvertService {
             User student = userRepository.findById(studentDto.getCi())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no encontrado"));
 
-            // Enviar correo
             emailService.sendEmail(student.getEmail(),
                     "Nuevo anuncio en " + course.getName(),
-                    dto.getContent());
+                    dto.getMessage());
 
-            // Crear notificación específica
-            String link = "/forum/" + forum.getId() + "/message/" + advert.getId();
+            String link = "/forum/" + forum.getId() + "/post/" + post.getId();
             notificationService.createNotification(student,
                     "Nuevo anuncio en " + course.getName(),
                     link);
         }
 
-        return toDto(advert);
+        return toDto(post);
     }
 
     // ============================
-    // OBTENER ANUNCIOS DE UN CURSO
+    // OBTENER POSTS DE UN CURSO
     // ============================
     @Transactional(readOnly = true)
-    public List<DtAdvert> getAdvertsByCourse(String courseId) {
+    public List<DtPost> getPostsByCourse(String courseId) {
         Forum forum = forumRepository.findByCourseIdAndType(courseId, ForumType.ANNOUNCEMENTS)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Foro de anuncios no encontrado"));
 
-        List<Advert> adverts = advertRepository.findByForumIdOrderByCreatedAtDesc(forum.getId());
-        return adverts.stream().map(this::toDto).collect(Collectors.toList());
+        List<Post> posts = postRepository.findByForumIdOrderByCreatedDateDesc(forum.getId());
+        return posts.stream().map(this::toDto).collect(Collectors.toList());
     }
 
     // ============================
     // MAPPER ENTIDAD → DTO
     // ============================
-    private DtAdvert toDto(Advert advert) {
-        DtAdvert dto = new DtAdvert();
-        dto.setId(advert.getId());
-        dto.setAuthorCi(advert.getAuthor().getCi());
-        dto.setAuthorName(advert.getAuthor().getName());
-        dto.setCourseId(advert.getForum().getCourse().getId());
-        dto.setContent(advert.getContent());
-        dto.setCreatedAt(advert.getCreatedAt());
+    private DtPost toDto(Post post) {
+        DtPost dto = new DtPost();
+        dto.setId(post.getId());
+        dto.setAuthorCi(post.getAuthor().getCi());
+        dto.setAuthorName(post.getAuthor().getName());
+        dto.setForumId(post.getForum().getId());
+        dto.setMessage(post.getMessage());
+        dto.setCreatedDate(post.getCreatedDate());
         return dto;
     }
 }

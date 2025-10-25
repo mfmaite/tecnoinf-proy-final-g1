@@ -43,6 +43,7 @@ public class SecurityConfig {
                             "/test/public"
                             )
                             .permitAll()
+                        .requestMatchers("OPTIONS", "/**").permitAll() // Permitir peticiones OPTIONS para CORS
                         .anyRequest().authenticated()
                 )
 

@@ -21,7 +21,6 @@ public class GCSController {
     @Autowired
     private GCSConfig gcsConfig;
 
-    // Endpoint para subir archivos
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
 
@@ -32,16 +31,14 @@ public class GCSController {
 
         Storage storage = gcsConfig.getStorage();
         String bucketName = gcsConfig.getBucketName();
-        BlobId blobId = BlobId.of(bucketName, originalFilename); // esto es decirle en que bucket va a subir y con que nombre
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build(); // aca lo seteas
+        BlobId blobId = BlobId.of(bucketName, originalFilename);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
 
-        // aca se sube el archivo
         storage.create(blobInfo, file.getBytes());
 
         return "Archivo subido correctamente: " + originalFilename;
     }
 
-    // Endpoint para descargar archivos
     @GetMapping("/download/{filename}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable String filename) {
         try {

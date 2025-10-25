@@ -2,20 +2,20 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtUser;
-import com.mentora.backend.model.Course;
-import com.mentora.backend.model.Role;
+import com.mentora.backend.model.*;
 import com.mentora.backend.repository.CourseRepository;
+import com.mentora.backend.repository.ForumRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
 import java.util.*;
 import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
-import com.mentora.backend.model.SimpleContent;
 import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.responses.GetCourseResponse;
@@ -28,12 +28,14 @@ public class CourseService {
     private final UserCourseService userCourseService;
     private final SimpleContentRepository simpleContentRepository;
     private final FileStorageService fileStorageService;
+    private final ForumRepository  forumRepository;
 
-    public CourseService(CourseRepository courseRepository, UserCourseService userCourseService, SimpleContentRepository simpleContentRepository, FileStorageService fileStorageService) {
+    public CourseService(CourseRepository courseRepository, UserCourseService userCourseService, SimpleContentRepository simpleContentRepository, FileStorageService fileStorageService, ForumRepository forumRepository) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
         this.fileStorageService = fileStorageService;
+        this.forumRepository = forumRepository;
     }
 
     public List<DtCourse> getCoursesForUser(String ci, Role role) {
@@ -47,19 +49,29 @@ public class CourseService {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
         }
 
         Course c = new Course(
-            req.getId(),
-            req.getName(),
-            LocalDateTime.now()
+                req.getId(),
+                req.getName(),
+                LocalDateTime.now()
         );
 
         Course saved = courseRepository.save(c);
 
+        // Crear foro de anuncios automaticamente al crear el curso, hay que agregarle el de consultas
+        Forum announcementsForum = new Forum(
+                "FORUM_" + saved.getId(),
+                ForumType.ANNOUNCEMENTS,
+                saved
+        );
+        forumRepository.save(announcementsForum);
+
+        // Asignar profesores
         userCourseService.addUsersToCourse(req.getId(), req.getProfessorsCis());
 
         return getDtCourse(saved);

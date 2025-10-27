@@ -26,12 +26,11 @@ public class CorsConfig {
         config.addAllowedMethod("PUT");
         config.addAllowedMethod("DELETE");
         config.addAllowedMethod("OPTIONS");
+        config.addAllowedMethod("PATCH");
 
         // Permitir headers comunes
-        config.addAllowedHeader("Origin");
-        config.addAllowedHeader("Content-Type");
-        config.addAllowedHeader("Accept");
-        config.addAllowedHeader("Authorization");
+        config.addAllowedHeader("*"); // Permitir todos los headers
+        config.addExposedHeader("Authorization"); // Exponer el header de autorización
 
         // Aplicar la configuración a todas las rutas
         source.registerCorsConfiguration("/**", config);

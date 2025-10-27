@@ -53,7 +53,7 @@ public class JwtService {
     // Valida token (firma + expiración)
     public boolean isTokenValid(String token) {
         try {
-            getClaims(token); // parseClaimsJws ya lanza excepción si es inválido o expiró
+            getClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
             System.out.println("Token expirado: " + e.getMessage());
@@ -63,7 +63,6 @@ public class JwtService {
         return false;
     }
 
-    // Obtiene claims y lanza excepción si el token es inválido
     private Claims getClaims(String token) throws JwtException {
         return Jwts.parserBuilder()
                 .setSigningKey(key)

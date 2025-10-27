@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Lato } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "../components/providers/auth-provider";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${lato.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

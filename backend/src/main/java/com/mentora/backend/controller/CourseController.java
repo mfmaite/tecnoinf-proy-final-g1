@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtSimpleContent;
@@ -9,6 +10,7 @@ import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.service.GradeService;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,9 +32,11 @@ import java.util.List;
 public class CourseController {
 
     private final CourseService courseService;
+    private final GradeService gradeService;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(CourseService courseService, GradeService gradeService) {
         this.courseService = courseService;
+        this.gradeService = gradeService;
     }
 
     @Operation(summary = "Crear curso",
@@ -252,4 +257,68 @@ public class CourseController {
             ));
         }
     }
+
+    @Operation(
+            summary = "Publicar calificación final individual",
+            description = "Permite a un profesor publicar la calificación final de un estudiante.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/{courseId}/final-grades")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<Void>> publishFinalGrade(
+            @PathVariable String courseId,
+            @RequestBody DtFinalGrade gradeDto) {
+
+        try {
+            gradeService.publishFinalGrade(courseId, gradeDto);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Calificación publicada correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Publicar calificaciones finales masivas desde CSV",
+            description = "Permite a un profesor publicar las calificaciones finales de varios estudiantes mediante un archivo CSV.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/{courseId}/final-grades/csv")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<Void>> publishFinalGradesCsv(
+            @PathVariable String courseId,
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+            gradeService.publishFinalGradesCsv(courseId, file.getInputStream());
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Calificaciones publicadas correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo CSV",
+                    null
+            ));
+        }
+    }
+
 }

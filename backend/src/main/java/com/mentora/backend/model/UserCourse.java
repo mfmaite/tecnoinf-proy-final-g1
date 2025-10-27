@@ -7,8 +7,8 @@ import jakarta.persistence.*;
 public class UserCourse {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(length = 20)
+    private String id; // Generado manualmente, por ejemplo UUID
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "courseId", referencedColumnName = "id")
@@ -19,17 +19,20 @@ public class UserCourse {
     private User user;
 
     @Column(name = "finalGrade")
-    private Double finalGrade;
+    private Integer finalGrade;
 
-    public UserCourse() {}
+    public UserCourse() {
+        this.id = java.util.UUID.randomUUID().toString();
+    }
 
-    public UserCourse(Course course, User user, Double finalGrade) {
+    public UserCourse(Course course, User user, Integer finalGrade) {
+        this();
         this.course = course;
         this.user = user;
         this.finalGrade = finalGrade;
     }
 
-    public Long getId() { return id; }
+    public String getId() { return id; }
 
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
@@ -37,6 +40,7 @@ public class UserCourse {
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
-    public Double getFinalGrade() { return finalGrade; }
-    public void setFinalGrade(Double finalGrade) { this.finalGrade = finalGrade; }
-  }
+    public Integer getFinalGrade() { return finalGrade; }
+    public void setFinalGrade(Integer finalGrade) { this.finalGrade = finalGrade; }
+}
+

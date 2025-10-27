@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,4 +60,51 @@ public class PostController {
         List<DtPost> posts = postService.getPostsByCourse(courseId);
         return ResponseEntity.ok(posts);
     }
+
+    @Operation(
+            summary = "Editar un post existente",
+            description = "Permite al autor del post en foros de anuncios editar su anuncio, solo el profesor que publicó el anuncio puede modificarlo.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Post editado correctamente",
+                    content = @Content(schema = @Schema(implementation = DtPost.class))),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos para editar este post"),
+            @ApiResponse(responseCode = "404", description = "Post no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/{postId}")
+    public ResponseEntity<DtPost> editPost(
+            @PathVariable String postId,
+            @RequestBody DtPost postDto,
+            Authentication authentication) {
+
+        String userCi = authentication.getName();
+        DtPost updated = postService.editPost(postId, userCi, postDto);
+        return ResponseEntity.ok(updated);
+    }
+
+    @Operation(
+            summary = "Eliminar un post existente",
+            description = "Permite al autor del post eliminarlo. Solo el profesor que publicó el anuncio puede borrarlo.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Post eliminado correctamente"),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos para eliminar este post"),
+            @ApiResponse(responseCode = "404", description = "Post no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(
+            @PathVariable String postId,
+            Authentication authentication) {
+
+        String userCi = authentication.getName();
+        postService.deletePost(postId, userCi);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 }

@@ -93,9 +93,8 @@ public class PostService {
         return toDto(post);
     }
 
-    // ============================
     // OBTENER POSTS DE UN CURSO
-    // ============================
+
     @Transactional(readOnly = true)
     public List<DtPost> getPostsByCourse(String courseId) {
         Forum forum = forumRepository.findByCourseIdAndType(courseId, ForumType.ANNOUNCEMENTS)
@@ -105,17 +104,37 @@ public class PostService {
         return posts.stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    // ============================
-    // MAPPER ENTIDAD → DTO
-    // ============================
     private DtPost toDto(Post post) {
         DtPost dto = new DtPost();
         dto.setId(post.getId());
         dto.setAuthorCi(post.getAuthor().getCi());
         dto.setAuthorName(post.getAuthor().getName());
-        dto.setForumId(post.getForum().getId());
         dto.setMessage(post.getMessage());
         dto.setCreatedDate(post.getCreatedDate());
         return dto;
     }
+
+    public DtPost editPost(String postId, String userCi, DtPost postDto) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));
+
+        if (!post.getAuthor().getCi().equals(userCi))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos para editar este post");
+
+        post.setMessage(postDto.getMessage());
+        Post updated = postRepository.save(post);
+        return toDto(updated);
+    }
+
+    public void deletePost(String postId, String userCi) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));
+
+        if (!post.getAuthor().getCi().equals(userCi))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos para eliminar este post");
+
+        postRepository.delete(post);
+    }
+
+
 }

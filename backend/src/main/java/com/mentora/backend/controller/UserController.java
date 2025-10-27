@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.requests.ChangePasswordRequest;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -75,8 +77,73 @@ public class UserController {
             )
             @RequestParam(required = false) String filter) {
 
-        List<DtUser> users = userService.getUsers(order, filter);
-        return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(),
-                "Usuarios listados correctamente", users));
+        try {
+            List<DtUser> users = userService.getUsers(order, filter);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Usuarios listados correctamente",
+                users
+            ));
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
+                            "Error al listar usuarios", null));
+        }
+    }
+
+
+    @Operation(summary = "Cambiar contraseña",
+               description = "Cambia la contraseña de un usuario. Solo administradores.",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Contraseña cambiada exitosamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "400", description = "Contraseña actual incorrecta o nueva contraseña no cumple requisitos")
+    @PostMapping("/change-password")
+    public ResponseEntity<DtApiResponse<Object>> changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            // Tomar ci directamente del token JWT ya procesado por JwtAuthenticationFilter
+            String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
+            System.err.println("userCi: " + userCi);
+
+            userService.changePassword(
+                    request.getNewPassword(),
+                    request.getConfirmPassword(),
+                    request.getOldPassword(),
+                    userCi
+            );
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(
+                            true,
+                            HttpStatus.OK.value(),
+                            "Contraseña cambiada correctamente",
+                            null
+                    )
+            );
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                .body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+                )
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new DtApiResponse<>(
+                    false,
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Error al cambiar contraseña",
+                    null
+                )
+            );
+        }
     }
 }

@@ -11,6 +11,16 @@ export default withAuth(
     if (req.nextUrl.pathname.startsWith('/admin') && req.nextauth.token && req.nextauth.token.role !== 'ADMIN') {
       return Response.redirect(new URL('/', req.url))
     }
+
+    // Si está loggeado y entra a /courses/[courseId]/participants/(enroll|unenroll), redirigir a /courses/[courseId]/participants
+    if (req.nextauth.token) {
+      const path = req.nextUrl.pathname
+      const match = path.match(/^\/courses\/([^/]+)\/participants\/(enroll|unenroll)\/?$/)
+      if (match) {
+        const courseId = match[1]
+        return Response.redirect(new URL(`/courses/${courseId}/participants`, req.url))
+      }
+    }
   },
   {
     callbacks: {

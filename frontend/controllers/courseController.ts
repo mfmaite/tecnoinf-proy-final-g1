@@ -154,6 +154,24 @@ class CourseController {
       return { success: false, code: 500, message: 'Error al agregar participantes', data: undefined };
     }
   }
+
+  async deleteParticipants(courseId: string, cis: string[], accessToken: string) {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participantIds: cis }),
+      });
+      const { success, code, message, data } = await response.json();
+      return { success, code, message, data };
+    } catch (error) {
+      console.error('Error al eliminar participantes:', error);
+      return { success: false, code: 500, message: 'Error al eliminar participantes', data: undefined };
+    }
+  }
 }
 
 export const courseController = new CourseController();

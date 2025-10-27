@@ -48,6 +48,9 @@ public class UserService {
         if (findByEmail(dto.getEmail()) != null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese email");
 
+        if (!isValidPassword(dto.getPassword()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña no cumple los requisitos");
+
         User user = new User(
                 dto.getCi(),
                 dto.getName(),
@@ -158,5 +161,30 @@ public class UserService {
         String body = "Haz clic en el siguiente enlace para restablecer tu contraseña (válido por 2 horas): " + link;
 
         emailService.sendEmail(user.getEmail(), subject, body);
+    }
+
+    public void resetPassword(String token, String newPassword, String confirmPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token inválido"));
+
+        if (resetToken.getExpiryDate().isBefore(Instant.now())) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expirado");
+        }
+
+        if (!Objects.equals(newPassword, confirmPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva contraseña y la confirmación no coinciden");
+        }
+
+        if (!isValidPassword(newPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva contraseña no cumple los requisitos");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Invalidate token after use
+        passwordResetTokenRepository.delete(resetToken);
     }
 }

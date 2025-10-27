@@ -65,7 +65,6 @@ export default function EnrollStudentsPage({ params }: Params) {
         return;
       }
       setSuccess('Estudiantes matriculados correctamente');
-
       const reload = await courseController.getNonParticipants(params.courseId, accessToken!);
       if (reload.success && reload.data) {
         setAllUsers(reload.data);

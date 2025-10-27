@@ -40,7 +40,7 @@ public class SecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html",
                             "/swagger-ui/index.html",
-                            "/test/public"
+                            "/users/password-recovery"
                             )
                             .permitAll()
                         .requestMatchers("OPTIONS", "/**").permitAll() // Permitir peticiones OPTIONS para CORS

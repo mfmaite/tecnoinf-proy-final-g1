@@ -105,6 +105,21 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
+  buttonPrimary: {
+    backgroundColor: colors.primary[60],
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 3,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.secondary[60],
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    elevation: 3,
+  },
   listContainer: {
     width: "100%",
     //alignItems: "center",
@@ -138,4 +153,5 @@ export const styles = StyleSheet.create({
     contentText: { fontSize: 14, marginBottom: 4 },
     contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
     contentDate: { fontSize: 12, color: colors.textNeutral[40] },
+    
 });

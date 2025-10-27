@@ -15,18 +15,21 @@ import { api } from "../../services/api";
 
 const router = useRouter();
 
-function openCourse(id: string, name: string) {
-  router.push({
-    pathname: "/(courses)/[courseId]",
-    params: { courseId: String(id), courseName: String(name) },
-  });
-}
 interface Course {
   id?: string;
   name?: string;
   createdDate?: string;
 }
 
+function formatDate(date?: string | null) {
+  if (!date) return "-";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return date;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 
 export default function CoursesList() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -96,7 +99,7 @@ export default function CoursesList() {
     <View style={styles.row}>
       <Text style={styles.cellId}>{item.id ?? "-"}</Text>
       <Text style={styles.cellName}>{item.name ?? "-"}</Text>
-      <Text style={styles.cellDate}>{item.createdDate ?? "-"}</Text>
+      <Text style={styles.cellDate}>{formatDate(item.createdDate) ?? "-"}</Text>
       <TouchableOpacity
         style={styles.button} onPress={() => router.push(`/(courses)/${item.id}`)} 
         //onPress={() => console.log(`Ver curso ${item.id}`)} // luego -> router.push(`/courses/${item.id}`)

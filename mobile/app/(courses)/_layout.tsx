@@ -9,7 +9,7 @@ export default function ListLayout() {
       <Stack.Screen
         name="coursesList"
         options={{
-          title: "Listado de cursos",
+          title: "Cursos",
           headerTitleStyle: styles.title, 
         }}
       />

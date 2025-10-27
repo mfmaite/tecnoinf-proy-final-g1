@@ -4,6 +4,7 @@ import com.mentora.backend.requests.ChangePasswordRequest;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
+import com.mentora.backend.requests.ResetPasswordRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -99,7 +100,7 @@ public class UserController {
 
 
     @Operation(summary = "Cambiar contraseña",
-               description = "Cambia la contraseña de un usuario. Solo administradores.",
+               description = "Cambia la contraseña de un usuario.",
                security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Contraseña cambiada exitosamente")
     @ApiResponse(responseCode = "401", description = "No autenticado")
@@ -109,7 +110,6 @@ public class UserController {
         try {
             // Tomar ci directamente del token JWT ya procesado por JwtAuthenticationFilter
             String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
-            System.err.println("userCi: " + userCi);
 
             userService.changePassword(
                     request.getNewPassword(),
@@ -144,6 +144,58 @@ public class UserController {
                     null
                 )
             );
+        }
+    }
+
+    @Operation(summary = "Recuperar contraseña",
+               description = "Recupera la contraseña de un usuario.")
+    @ApiResponse(responseCode = "200", description = "Contraseña recuperada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Error al enviar el correo de recuperación de contraseña")
+    @GetMapping("/password-recovery")
+    public ResponseEntity<DtApiResponse<Void>> forgotPassword(@RequestParam String email) {
+        try {
+            userService.forgotPassword(email);
+            return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(), "Si el usuario existe, recibirás un correo electrónico con instrucciones", null));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), "Error al enviar el correo de recuperación de contraseña", null));
+        }
+    }
+
+    @Operation(summary = "Restablecer contraseña",
+               description = "Restablece la contraseña usando un token de recuperación")
+    @ApiResponse(responseCode = "200", description = "Contraseña restablecida exitosamente")
+    @ApiResponse(responseCode = "400", description = "Token inválido/expirado o contraseña inválida")
+    @PostMapping("/reset-password")
+    public ResponseEntity<DtApiResponse<Object>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            userService.resetPassword(request.getToken(), request.getNewPassword(), request.getConfirmPassword());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Contraseña restablecida correctamente",
+                null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                .body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+                ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new DtApiResponse<>(
+                    false,
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Error al restablecer la contraseña",
+                    null
+                ));
         }
     }
 }

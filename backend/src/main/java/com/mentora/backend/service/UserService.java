@@ -107,15 +107,15 @@ public class UserService {
         return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
     }
 
-    public void changePassword(String oldPwd, String newPwd, String confirmPwd, String userCi) {
+    public void changePassword(String newPwd, String confirmPwd, String oldPwd, String userCi) {
         User user = Optional.ofNullable(findByCI(userCi))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario no encontrado"));
 
-        if (!passwordEncoder.matches(oldPwd, user.getPassword()))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Contraseña actual incorrecta");
-
         if (!newPwd.equals(confirmPwd))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las contraseñas no coinciden");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva contraseña y la confirmación no coinciden");
+
+        if (!passwordEncoder.matches(oldPwd, user.getPassword()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña actual no es correcta");
 
         if (!isValidPassword(newPwd))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva contraseña no cumple los requisitos");

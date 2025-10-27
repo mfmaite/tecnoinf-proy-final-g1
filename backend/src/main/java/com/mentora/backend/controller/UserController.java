@@ -1,12 +1,15 @@
 package com.mentora.backend.controller;
 
-import com.mentora.backend.dto.ChangePasswordRequest;
-import com.mentora.backend.dto.DtUser;
-import com.mentora.backend.dto.ResponseDTO;
+import com.mentora.backend.requests.ChangePasswordRequest;
+import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,19 +32,28 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear un usuario",
-            description = "Crea un usuario con nombre, email y password. Solo administradores.",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<ResponseDTO<DtUser>> createUser(@Valid @RequestBody DtUser dtUser) {
+               description = "Crea un usuario con nombre, email y password. Solo administradores.",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos de administrador")
+    @ApiResponse(responseCode = "409", description = "Usuario ya existe o rol inválido")
+    public ResponseEntity<DtApiResponse<DtUser>> createUser(@Valid @RequestBody DtUser dtUser) {
         try {
             DtUser createdUser = userService.createUser(dtUser);
-            return ResponseEntity.ok(new ResponseDTO<>(true, HttpStatus.OK.value(),
-                    "Usuario creado exitosamente", createdUser));
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Usuario creado exitosamente",
+                createdUser
+            ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(new ResponseDTO<>(false, e.getStatusCode().value(), e.getReason(), null));
+                    .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseDTO<>(false, HttpStatus.BAD_REQUEST.value(),
+                    .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
                             "Error al crear usuario", null));
         }
     }
@@ -53,17 +65,25 @@ public class UserController {
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuarios listados exitosamente")
     @ApiResponse(responseCode = "403", description = "Acceso denegado")
-    public ResponseEntity<ResponseDTO<List<DtUser>>> listUsers(
+    public ResponseEntity<DtApiResponse<List<DtUser>>> listUsers(
+            @Parameter(
+                    description = "Orden de listado",
+                    schema = @Schema(allowableValues = {"name_asc", "name_desc", "ci_asc", "ci_desc"})
+            )
             @RequestParam(required = false) String order,
+            @Parameter(
+                    description = "Filtro por rol",
+                    schema = @Schema(allowableValues = {"todos", "administradores", "profesores", "estudiantes"})
+            )
             @RequestParam(required = false) String filter) {
 
-        List<DtUser> users = userService.listUsers(order, filter);
-        return ResponseEntity.ok(new ResponseDTO<>(true, HttpStatus.OK.value(),
+        List<DtUser> users = userService.getUsers(order, filter);
+        return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(),
                 "Usuarios listados correctamente", users));
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<ResponseDTO<Object>> changePassword(@RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<DtApiResponse<Object>> changePassword(@RequestBody ChangePasswordRequest request) {
         // Tomar ci directamente del token JWT ya procesado por JwtAuthenticationFilter
         String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -73,8 +93,9 @@ public class UserController {
                 request.getConfirmPassword(),
                 userCi
         );
+
         return ResponseEntity.ok(
-                new ResponseDTO<>(
+                new DtApiResponse<>(
                         true,
                         HttpStatus.OK.value(),
                         "Contraseña cambiada correctamente",

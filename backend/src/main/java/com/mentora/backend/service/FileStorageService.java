@@ -1,15 +1,17 @@
 package com.mentora.backend.service;
 
-import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.mentora.backend.config.GCSConfig;
-import com.mentora.backend.model.FileResource;
+import com.google.cloud.storage.Storage.SignUrlOption;
+import com.mentora.backend.dt.DtFileResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class FileStorageService {
@@ -22,15 +24,11 @@ public class FileStorageService {
         this.gcsConfig = gcsConfig;
     }
 
-    /**
-     * Guarda el archivo en Google Cloud Storage y devuelve un FileResource con la URL.
-     */
-    public FileResource store(MultipartFile file) throws IOException {
+    public DtFileResource store(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Archivo vacío");
         }
 
-        // Generar nombre único en GCS
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
@@ -38,18 +36,22 @@ public class FileStorageService {
         }
         String gcsFileName = UUID.randomUUID() + extension;
 
-        // Crear objeto blob en el bucket
         BlobInfo blobInfo = BlobInfo.newBuilder(gcsConfig.getBucketName(), gcsFileName)
                 .setContentType(file.getContentType())
                 .build();
 
-        Blob blob = storage.create(blobInfo, file.getBytes());
+        storage.create(blobInfo, file.getBytes());
 
-        // Construir FileResource
-        FileResource fr = new FileResource();
+        URL signedUrl = storage.signUrl(
+                blobInfo,
+                7,
+                TimeUnit.DAYS,
+                SignUrlOption.withV4Signature()
+        );
+
+        DtFileResource fr = new DtFileResource();
         fr.setFilename(originalFilename);
-        fr.setStoragePath("https://storage.googleapis.com/" + gcsConfig.getBucketName() + "/" + gcsFileName);
-        fr.setContentType(file.getContentType());
+        fr.setStoragePath(signedUrl.toString());
         fr.setSize(file.getSize());
 
         return fr;

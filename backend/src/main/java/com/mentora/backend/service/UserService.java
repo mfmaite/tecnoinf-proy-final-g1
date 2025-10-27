@@ -1,13 +1,12 @@
 package com.mentora.backend.service;
 
-import com.mentora.backend.dto.DtUser;
+import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.model.User;
 import com.mentora.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
@@ -63,14 +62,12 @@ public class UserService {
             );
         } catch (Exception ignored) {}
 
-        return toDto(user);
+        return getUserDto(user);
     }
 
-    @Transactional(readOnly = true)
-    public List<DtUser> listUsers(String order, String filter) {
+    public List<DtUser> getUsers(String order, String filter) {
         List<User> users = userRepository.findAll();
 
-        // Filtro
         String f = (filter == null ? "todos" : filter.toLowerCase());
         switch (f) {
             case "administradores":
@@ -83,10 +80,9 @@ public class UserService {
                 users = users.stream().filter(u -> u.getRole() == Role.ESTUDIANTE).collect(Collectors.toList());
                 break;
             default:
-                break; // "todos"
+                break;
         }
 
-        // Orden
         String o = (order == null ? "name_asc" : order.toLowerCase());
         Comparator<User> comparator;
         switch (o) {
@@ -104,7 +100,11 @@ public class UserService {
         }
         users = users.stream().sorted(comparator).collect(Collectors.toList());
 
-        return users.stream().map(this::toDto).collect(Collectors.toList());
+        return users.stream().map(this::getUserDto).collect(Collectors.toList());
+    }
+
+    public DtUser getUserDto(User u) {
+        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
     }
 
     public void changePassword(String oldPwd, String newPwd, String confirmPwd, String userCi) {
@@ -127,9 +127,5 @@ public class UserService {
     private boolean isValidPassword(String password) {
         return password != null &&
                 password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$");
-    }
-
-    private DtUser toDto(User u) {
-        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
     }
 }

@@ -121,6 +121,22 @@ class CourseController {
     }
   }
 
+  async getNonParticipants(courseId: string, accessToken: string): Promise<ApiResponse<UserResponse[]>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/non-participants`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const { success, code, message, data } = await response.json();
+      return { success, code, message, data };
+    } catch (error) {
+      console.error('Error al obtener no participantes:', error);
+      return { success: false, code: 500, message: 'Error al obtener no participantes', data: undefined };
+    }
+  }
+
   async addParticipants(courseId: string, cis: string[], accessToken: string) {
     try {
       const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants`, {

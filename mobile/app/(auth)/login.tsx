@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   error: {
-    color: colors.accent[40],
+    color: colors.accent[50],
     marginBottom: 8,
     textAlign: "center",
   },

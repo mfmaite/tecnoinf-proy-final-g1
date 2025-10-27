@@ -44,7 +44,7 @@ public class DataSeeder implements CommandLineRunner {
                 "11111111",
                 "Administrador",
                 "admin@mentora.com",
-                passwordEncoder.encode("admin123"),
+                passwordEncoder.encode("Admin123"),
                 "Usuario administrador del sistema",
                 null,
                 Role.ADMIN
@@ -59,7 +59,7 @@ public class DataSeeder implements CommandLineRunner {
                 "22222222",
                 "Juan Pérez",
                 "profesor@mentora.com",
-                passwordEncoder.encode("profesor123"),
+                passwordEncoder.encode("Profesor123"),
                 "Profesor de matemáticas con 10 años de experiencia",
                 null,
                 Role.PROFESOR
@@ -74,7 +74,7 @@ public class DataSeeder implements CommandLineRunner {
                 "33333333",
                 "María González",
                 "estudiante@mentora.com",
-                passwordEncoder.encode("estudiante123"),
+                passwordEncoder.encode("Estudiante123"),
                 "Estudiante de segundo año",
                 null,
                 Role.ESTUDIANTE

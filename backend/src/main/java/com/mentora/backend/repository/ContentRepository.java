@@ -1,14 +1,14 @@
-package com.mentora.backend.repository;
+// package com.mentora.backend.repository;
 
-import com.mentora.backend.model.Content;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+// import com.mentora.backend.model.Content;
+// import org.springframework.data.jpa.repository.JpaRepository;
+// import org.springframework.stereotype.Repository;
 
-import java.util.List;
+// import java.util.List;
 
-@Repository
-public interface ContentRepository extends JpaRepository<Content, Long> {
+// @Repository
+// public interface ContentRepository extends JpaRepository<Content, Long> {
 
-    List<Content> findByCourseIdOrderByCreatedAtDesc(String courseId);
+//     List<Content> findByCourseIdOrderByCreatedAtDesc(String courseId);
 
-}
+// }

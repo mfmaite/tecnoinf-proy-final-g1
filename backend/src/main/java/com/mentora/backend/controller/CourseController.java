@@ -1,6 +1,6 @@
 package com.mentora.backend.controller;
 
-import com.mentora.backend.dt.CreateCourseRequest;
+import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.service.CourseService;
@@ -16,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;

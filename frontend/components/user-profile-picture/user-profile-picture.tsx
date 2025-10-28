@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 interface UserProfilePictureProps {
   name: string;
   pictureUrl?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   className?: string;
 }
 
@@ -79,6 +79,8 @@ const UserProfilePicture: React.FC<UserProfilePictureProps> = ({
     md: 'h-10 w-10 text-sm',
     lg: 'h-12 w-12 text-base',
     xl: 'h-16 w-16 text-lg',
+    '2xl': 'h-20 w-20 text-2xl',
+    '3xl': 'h-24 w-24 text-3xl',
   };
 
   const sizeClass = sizeClasses[size];

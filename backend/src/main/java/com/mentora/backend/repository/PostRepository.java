@@ -7,8 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PostRepository extends JpaRepository<Post, String> {
-
-    List<Post> findByForumIdOrderByCreatedDateDesc(String forumId);
-
+public interface PostRepository extends JpaRepository<Post, Long> {
+    List<Post> findByForum_IdOrderByCreatedDateDesc(Long forumId);
 }

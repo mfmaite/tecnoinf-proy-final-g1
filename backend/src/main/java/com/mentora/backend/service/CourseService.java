@@ -63,15 +63,20 @@ public class CourseService {
 
         Course saved = courseRepository.save(c);
 
-        // Crear foro de anuncios automaticamente al crear el curso, hay que agregarle el de consultas
+        // Crear foros automaticamente al crear el curso
         Forum announcementsForum = new Forum(
-                "FORUM_" + saved.getId(),
                 ForumType.ANNOUNCEMENTS,
                 saved
         );
         forumRepository.save(announcementsForum);
 
-        // Asignar profesores
+        Forum consultsForum = new Forum(
+                ForumType.CONSULTS,
+                saved
+        );
+        forumRepository.save(consultsForum);
+
+        // Asignar profesores al curso
         userCourseService.addUsersToCourse(req.getId(), req.getProfessorsCis());
 
         return getDtCourse(saved);

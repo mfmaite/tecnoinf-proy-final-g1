@@ -4,14 +4,14 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Notifications")
+@Table(name = "notifications")
 public class Notification {
 
     @Id
     private String id = UUID.randomUUID().toString();
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_ci", nullable = false)
+    @JoinColumn(name = "userCi", referencedColumnName = "ci", nullable = false)
     private User user;
 
     @Column(nullable = false, length = 255)
@@ -21,7 +21,7 @@ public class Notification {
     private String link;
 
     @Column(nullable = false)
-    private Boolean read = false;
+    private Boolean isRead = false;
 
     // === Constructores ===
     public Notification() {}
@@ -30,7 +30,7 @@ public class Notification {
         this.user = user;
         this.message = message;
         this.link = link;
-        this.read = false;
+        this.isRead = false;
     }
 
     // === Getters y Setters ===
@@ -45,6 +45,6 @@ public class Notification {
     public String getLink() { return link; }
     public void setLink(String link) { this.link = link; }
 
-    public Boolean getRead() { return read; }
-    public void setRead(Boolean read) { this.read = read; }
+    public Boolean getRead() { return isRead; }
+    public void setRead(Boolean isRead) { this.isRead = isRead; }
 }

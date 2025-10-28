@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface ForumRepository extends JpaRepository<Forum, String> {
-    Optional<Forum> findByCourseIdAndType(String courseId, ForumType type);
+public interface ForumRepository extends JpaRepository<Forum, Long> {
+    Optional<Forum> findByCourse_IdAndType(String courseId, ForumType type);
 }

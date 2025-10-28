@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
@@ -31,6 +31,7 @@ export default function HomeScreen() {
       <TouchableOpacity style={styles.buttonSecondary} onPress={handleLogout}>
         <Text style={styles.buttonText}>🚪 Cerrar Sesión</Text>
       </TouchableOpacity>
+      
       <TouchableOpacity style={styles.buttonSecondary} onPress={goToChangePassword}>
         <Text style={styles.buttonText}> Cambiar contraseña </Text>
       </TouchableOpacity>

@@ -1,11 +1,14 @@
 package com.mentora.backend.dt;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DtCourse {
     private String id;
     private String name;
     private LocalDateTime createdDate;
+    private List<DtForum> forums = new ArrayList<>();
 
     public DtCourse() {}
 
@@ -15,7 +18,7 @@ public class DtCourse {
         this.createdDate = createdDate;
     }
 
-    // getters y setters
+    // Getters y setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -25,4 +28,10 @@ public class DtCourse {
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
+    public List<DtForum> getForums() { return forums; }
+    public void setForums(List<DtForum> forums) { this.forums = forums; }
+
+    public void addForum(DtForum forum) {
+        forums.add(forum);
+    }
 }

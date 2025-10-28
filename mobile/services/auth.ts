@@ -2,12 +2,12 @@ import { api } from "./api";
 
 export async function login(ci: string, password: string) {
   const response = await api.post("/auth/login", { ci, password });
-  const { success, message, data } = response.data;
 
-  if (!success) {
-    throw new Error(message || "Error de autenticación");
+  if (!response.data.success) {
+    throw new Error(response.data.message || "Error de autenticación");
   }
 
-  const { token, user } = data;
+  const { token, user } = response.data.data;
+
   return { token, user };
 }

@@ -1,5 +1,8 @@
 package com.mentora.backend.controller;
 
+import com.google.cloud.storage.Blob;
+import com.mentora.backend.config.GCSConfig;
+import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
@@ -9,6 +12,9 @@ import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.model.SimpleContent;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +36,16 @@ import com.mentora.backend.responses.GetCourseResponse;
 public class CourseController {
 
     private final CourseService courseService;
+    private final SimpleContentRepository simpleContentRepository;
+    private final GCSConfig gcsConfig;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(CourseService courseService,
+                            SimpleContentRepository simpleContentRepository,
+                            GCSConfig gcsConfig) {
+
         this.courseService = courseService;
+        this.simpleContentRepository = simpleContentRepository;
+        this.gcsConfig = gcsConfig;
     }
 
     @Operation(summary = "Crear curso",
@@ -252,5 +265,51 @@ public class CourseController {
                 null
             ));
         }
+    }
+
+    @Operation(
+            summary = "Descargar archivo de contenido",
+            description = "Permite a un usuario autenticado descargar el archivo asociado a un contenido de un curso. " +
+                    "Se puede usar este endpoint no importa en que tipo de contenido este. " +
+                    "El nombre del archivo se mantendrá como el original.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Archivo descargado correctamente"),
+            @ApiResponse(responseCode = "400", description = "El contenido no tiene archivo asociado"),
+            @ApiResponse(responseCode = "404", description = "Contenido o archivo no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error al descargar el archivo")
+    })
+    @GetMapping("/download/content/{contentId}")
+    public ResponseEntity<byte[]> downloadContentFile(@PathVariable Long contentId) {
+        // Obtener el contenido desde la BD
+        SimpleContent content = simpleContentRepository.findById(contentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado"));
+
+        // Validar que tenga archivo
+        if (content.getGcsFileName() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El contenido no tiene archivo asociado");
+        }
+
+        // Obtener blob desde GCS
+        Blob blob;
+        try {
+            String bucketName = gcsConfig.getBucketName();
+            blob = gcsConfig.getStorage().get(bucketName, content.getGcsFileName());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al obtener archivo de GCS", e);
+        }
+
+        if (blob == null || !blob.exists()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Archivo no encontrado en GCS");
+        }
+
+        // Devolver archivo como descarga
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + content.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType(
+                        blob.getContentType() != null ? blob.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE
+                ))
+                .body(blob.getContent());
     }
 }

@@ -51,6 +51,7 @@ public class FileStorageService {
 
         DtFileResource fr = new DtFileResource();
         fr.setFilename(originalFilename);
+        fr.setGcsFileName(gcsFileName);
         fr.setStoragePath(signedUrl.toString());
         fr.setSize(file.getSize());
 

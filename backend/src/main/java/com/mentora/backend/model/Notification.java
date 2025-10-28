@@ -11,7 +11,7 @@ public class Notification {
     private String id = UUID.randomUUID().toString();
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_ci", nullable = false)
+    @JoinColumn(name = "userCi", referencedColumnName = "ci", nullable = false)
     private User user;
 
     @Column(nullable = false, length = 255)

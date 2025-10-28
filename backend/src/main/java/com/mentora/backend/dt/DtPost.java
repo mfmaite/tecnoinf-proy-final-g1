@@ -3,7 +3,7 @@ package com.mentora.backend.dt;
 import java.time.LocalDateTime;
 
 public class DtPost {
-    private String id;
+    private Long id;
     private String authorCi;
     private String authorName;
     private String message;
@@ -11,7 +11,7 @@ public class DtPost {
 
     public DtPost() {}
 
-    public DtPost(String id, String authorCi, String authorName, String message, LocalDateTime createdDate) {
+    public DtPost(Long id, String authorCi, String authorName, String message, LocalDateTime createdDate) {
         this.id = id;
         this.authorCi = authorCi;
         this.authorName = authorName;
@@ -20,8 +20,8 @@ public class DtPost {
     }
 
     // Getters y setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getAuthorCi() { return authorCi; }
     public void setAuthorCi(String authorCi) { this.authorCi = authorCi; }

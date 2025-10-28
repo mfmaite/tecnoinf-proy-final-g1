@@ -9,21 +9,22 @@ public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "forum_id", nullable = false)
-    private Forum forum;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "author_ci", nullable = false)
-    private User author;
+    @Column(nullable = false, unique = true)
+    private Long id;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String message; // antes content
+    private String message;
 
     @Column(nullable = false)
     private LocalDateTime createdDate = LocalDateTime.now();
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "forumId", referencedColumnName = "id", nullable = false)
+    private Forum forum;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "authorCi", referencedColumnName = "ci", nullable = false)
+    private User author;
 
     public Post() {}
 
@@ -34,8 +35,8 @@ public class Post {
         this.createdDate = LocalDateTime.now();
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public Forum getForum() { return forum; }
     public void setForum(Forum forum) { this.forum = forum; }

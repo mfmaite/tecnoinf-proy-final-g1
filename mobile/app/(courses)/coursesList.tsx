@@ -11,9 +11,6 @@ import { useRouter } from "expo-router";
 import { colors } from "../../styles/colors";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
-//import { CourseView } from "/courseView";
-
-const router = useRouter();
 
 interface Course {
   id?: string;
@@ -58,9 +55,6 @@ export default function CoursesList() {
     const response = await api.get("/courses");
     const data = response.data.data || [];
     setCourses(data);
-    //grabo respuesta
-    console.log("Respuesta del backend:", response.data);
-    // inicializamos filteredCourses
     setFilteredCourses(data);
   } catch (err) {
     console.error("Error al obtener cursos:", err);
@@ -101,9 +95,8 @@ export default function CoursesList() {
       <Text style={styles.cellName}>{item.name ?? "-"}</Text>
       <Text style={styles.cellDate}>{formatDate(item.createdDate) ?? "-"}</Text>
       <TouchableOpacity
-        style={styles.button} 
-        //onPress={() => router.push(`/(courses)/${item.id}`)} 
-        onPress={() => console.log(`Ver curso ${item.id}`)} // luego -> router.push(`/courses/${item.id}`)
+        style={styles.button}
+        onPress={() => router.push(`/(courses)/${item.id}`)}
         >
         <Text style={styles.buttonText}>Ver</Text>
       </TouchableOpacity>
@@ -128,7 +121,7 @@ export default function CoursesList() {
 
   return (
     <View style={styles.container}>
-      
+
       {/* Campo de búsqueda */}
       <TextInput
         style={styles.searchInput}

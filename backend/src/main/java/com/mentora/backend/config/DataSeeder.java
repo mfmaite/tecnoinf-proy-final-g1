@@ -5,15 +5,13 @@ import com.mentora.backend.model.Role;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.UserCourse;
 import com.mentora.backend.repository.UserRepository;
-//import com.mentora.backend.requests.CreateCourseRequest;
-//import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.repository.UserCourseRepository;
 import com.mentora.backend.repository.CourseRepository;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import java.util.Collections;
+
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -97,7 +95,7 @@ public class DataSeeder implements CommandLineRunner {
                 Role.ESTUDIANTE
         );
         Course curso = new Course(
-            "mate1995", 
+            "mate1995",
             "Matematicas 1995",
             null
         );

@@ -138,6 +138,10 @@ public class CourseService {
     }
 
     public List<DtUser> getParticipants(String courseId) {
-        return userCourseService.getUsersFromCourse(courseId);
+        return userCourseService.getParticipantsFromCourse(courseId);
+    }
+
+    public List<DtUser> getNonParticipants(String courseId) {
+        return userCourseService.getNonParticipantsFromCourse(courseId);
     }
 }

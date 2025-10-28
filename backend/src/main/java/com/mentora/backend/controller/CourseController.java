@@ -253,4 +253,30 @@ public class CourseController {
             ));
         }
     }
+
+    @Operation(summary = "Listar participantes no matriculados de un curso",
+            description = "Lista todos los participantes no matriculados de un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Participantes no matriculados obtenidos correctamente")
+    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
+    @GetMapping(value = "/{courseId}/non-participants")
+    public ResponseEntity<DtApiResponse<List<DtUser>>> getNonParticipants(@PathVariable String courseId) {
+        try {
+            List<DtUser> nonParticipants = courseService.getNonParticipants(courseId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Participantes no matriculados obtenidos correctamente",
+                nonParticipants
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
 }

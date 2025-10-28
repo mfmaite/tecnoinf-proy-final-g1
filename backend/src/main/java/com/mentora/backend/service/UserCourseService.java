@@ -3,6 +3,7 @@ package com.mentora.backend.service;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Course;
+import com.mentora.backend.model.Role;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.UserCourse;
 import com.mentora.backend.repository.CourseRepository;
@@ -93,12 +94,27 @@ public class UserCourseService {
         return "Usuarios desmatriculados correctamente";
     }
 
-    public List<DtUser> getUsersFromCourse(String courseId) {
+    public List<DtUser> getParticipantsFromCourse(String courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         return userCourseRepository.findAllByCourse(course).stream()
             .map(userCourse -> new DtUser(userCourse.getUser().getCi(), userCourse.getUser().getName(), userCourse.getUser().getEmail(), userCourse.getUser().getDescription(), userCourse.getUser().getPictureUrl(), userCourse.getUser().getRole()))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public List<DtUser> getNonParticipantsFromCourse(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        return userRepository.findAll().stream()
+            .filter(user -> user.getRole() == Role.ESTUDIANTE)
+            .filter(user -> !userCourseRepository.existsByCourseAndUser(course, user))
+            .map(this::getDtUser)
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private DtUser getDtUser(User user) {
+        return new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureUrl(), user.getRole());
     }
 }

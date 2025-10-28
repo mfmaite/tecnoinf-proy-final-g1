@@ -59,10 +59,21 @@ function ParticipantsTable({ courseId }: Props) {
         </div>
 
         {user?.role === 'PROFESOR' && (
-          // courses/${courseId}/participants/enroll
-          <Link href={`/`}>
-            <Button color="secondary">Matricular</Button>
-          </Link>
+          <div className='flex items-center gap-3'>
+            <Link
+              href={`/courses/${courseId}/participants/unenroll`}
+              className="text-sm text-secondary-color-70 hover:text-secondary-color-50 underline"
+            >
+              Desmatricular
+            </Link>
+
+            <Link
+              href={`/courses/${courseId}/participants/enroll`}
+              className="text-sm text-secondary-color-70 hover:text-secondary-color-50 underline"
+            >
+              Matricular
+            </Link>
+          </div>
         )}
       </div>
 

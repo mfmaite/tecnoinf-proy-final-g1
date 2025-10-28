@@ -56,7 +56,7 @@ public class ForumService {
 
         postRepository.save(post);
 
-        List<DtUser> studentsDto = userCourseService.getUsersFromCourse(forum.getCourse().getId()).stream()
+        List<DtUser> studentsDto = userCourseService.getParticipantsFromCourse(forum.getCourse().getId()).stream()
                 .filter(u -> u.getRole() == Role.ESTUDIANTE)
                 .toList();
 

@@ -66,6 +66,31 @@ class UserController {
       };
     }
   }
+
+  async forgotPassword(email: string): Promise<ApiResponse<void>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.PASSWORD_RECOVERY}?email=${email}`, {
+        method: 'GET',
+      });
+
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
+    } catch (error) {
+      console.error('Error al enviar el email de recuperación de contraseña:', error);
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al enviar el email de recuperación de contraseña',
+        data: undefined,
+      };
+    }
+  }
 }
 
 export const userController = new UserController();

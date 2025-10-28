@@ -103,7 +103,7 @@ public class DataSeeder implements CommandLineRunner {
             courseRepository.save(curso);
         }
         if (userCourseRepository.findByCourseAndUser(curso, estudiante).isEmpty()) {
-            UserCourse uc = new UserCourse(curso, estudiante,100.00);
+            UserCourse uc = new UserCourse(curso, estudiante,12);
             userCourseRepository.save(uc);
         }
 

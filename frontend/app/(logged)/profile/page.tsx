@@ -1,15 +1,17 @@
 'use client';
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth';
-import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
+
 import { Button } from '@/components/button/button';
-import Link from 'next/link';
 import RoleLabel from '@/components/role-label/role-label';
 import { LogoutButton } from '@/components/auth/logout-button';
+import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
+import { ChangePasswordModal } from './components/change-password-modal';
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
@@ -21,11 +23,9 @@ const ProfilePage = () => {
               <Button variant="outline" color="secondary" disabled>
                 Editar
               </Button>
-              <Link href="/users/change-password">
-                <Button>
-                  Cambiar contraseña
-                </Button>
-              </Link>
+              <Button onClick={() => setIsOpen(true)}>
+                Cambiar contraseña
+              </Button>
             </div>
           </div>
 
@@ -70,6 +70,12 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      <ChangePasswordModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        accessToken={accessToken || ''}
+      />
     </div>
   );
 }

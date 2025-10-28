@@ -8,7 +8,5 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-
-    List<Post> findByForumIdOrderByCreatedDateDesc(Long forumId);
-
+    List<Post> findByForum_IdOrderByCreatedDateDesc(Long forumId);
 }

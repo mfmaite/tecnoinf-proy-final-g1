@@ -33,7 +33,7 @@ public class NotificationService {
 
     public void markAsRead(String notificationId) {
         notificationRepository.findById(notificationId).ifPresent(n -> {
-            n.setRead(true);
+            n.setRead(Boolean.TRUE);
             notificationRepository.save(n);
         });
     }

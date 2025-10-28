@@ -39,22 +39,21 @@ public class ForumService {
     }
 
 
-    public DtPost publishPost(Long forumId, String authorCi, DtPost dto) {
+    public DtPost publishPost(Long forumId, String authorCi, String message) {
         Forum forum = forumRepository.findById(forumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         User author = userRepository.findById(authorCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
 
-
         if (forum.getType() == ForumType.ANNOUNCEMENTS && author.getRole() != Role.PROFESOR) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No autorizado para publicar en este curso");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes publicar en este foro");
         }
 
         Post post = new Post(
             forum,
             author,
-            dto.getMessage()
+            message
         );
 
         postRepository.save(post);
@@ -67,7 +66,7 @@ public class ForumService {
         for (DtUser studentDto : studentsDto) {
             emailService.sendEmail(studentDto.getEmail(),
                 "Nuevo anuncio en " + forum.getCourse().getName(),
-                dto.getMessage()
+                message
             );
 
             String link = "/forum/" + forum.getId() + "/post/" + post.getId();

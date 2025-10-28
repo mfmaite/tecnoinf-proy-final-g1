@@ -101,8 +101,9 @@ export default function CoursesList() {
       <Text style={styles.cellName}>{item.name ?? "-"}</Text>
       <Text style={styles.cellDate}>{formatDate(item.createdDate) ?? "-"}</Text>
       <TouchableOpacity
-        style={styles.button} onPress={() => router.push(`/(courses)/${item.id}`)} 
-        //onPress={() => console.log(`Ver curso ${item.id}`)} // luego -> router.push(`/courses/${item.id}`)
+        style={styles.button} 
+        //onPress={() => router.push(`/(courses)/${item.id}`)} 
+        onPress={() => console.log(`Ver curso ${item.id}`)} // luego -> router.push(`/courses/${item.id}`)
         >
         <Text style={styles.buttonText}>Ver</Text>
       </TouchableOpacity>

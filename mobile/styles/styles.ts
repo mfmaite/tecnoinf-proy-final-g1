@@ -1,0 +1,157 @@
+import {  StyleSheet, } from "react-native";
+import { colors } from "./colors";
+
+export const styles = StyleSheet.create({
+  container: {
+    
+    flex: 1,
+    backgroundColor: colors.surfaceLight[20],
+    paddingTop: 10,
+    paddingHorizontal: 10, 
+    //alignItems: "center", //rompe todo
+  },
+
+  title: {
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.secondary[60],
+    marginBottom: 16,
+  },
+   subtitle: {
+    textAlign: "left",
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textNeutral[40],
+    marginBottom: 16,
+  },
+  searchInput: {
+    backgroundColor: "#fff",
+    width: "90%",
+    padding: 10,
+    borderRadius: 8,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  sortContainer: {
+    width: "90%",
+    marginBottom: 12,
+  },
+  sortLabel: {
+    fontWeight: "600",
+    marginBottom: 6,
+    color: colors.textNeutral[40],
+  },
+  sortButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.primary[40],
+    marginVertical: 3,
+  },
+  sortButtonActive: {
+    backgroundColor: colors.primary[60],
+  },
+  sortButtonText: {
+    color: colors.primary[60],
+  },
+  sortButtonTextActive: {
+    color: "#fff",
+  },
+  headerRow: {
+    flexDirection: "row",
+    backgroundColor: colors.primary[20],
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    //width: "90%",
+  },
+  headerCell: {
+    fontWeight: "700",
+    color: colors.textNeutral[40],
+    textAlign: "center",
+  },
+  row: {
+    //fontWeight: "700",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    //width: "80%",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+    //flexWrap: "wrap",
+  },
+  cell: {
+    //flex: 1,
+    textAlign: "center",
+    color: colors.textNeutral[50],
+    paddingHorizontal: 5,
+    //flexWrap: "wrap", 
+  },
+  button: {
+    //flex: 1,
+    backgroundColor: colors.primary[60],
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    marginHorizontal: 4,
+  },
+  buttonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  buttonPrimary: {
+    backgroundColor: colors.primary[60],
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 3,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.secondary[60],
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    elevation: 3,
+  },
+  listContainer: {
+    width: "100%",
+    //alignItems: "center",
+    textAlign: "center",
+    //paddingBottom: 20, 
+    //paddingVertical: 5,
+    //paddingHorizontal: 10,
+  },
+  error: {
+    color: colors.accent.danger[40],
+    fontSize: 16,
+    textAlign: "center",
+  },
+  cellId: { flex: 2, textAlign: "center" },
+  cellName: { flex: 3, textAlign: "left" },
+  cellDate: { flex: 2, textAlign: "center" },
+  header: { backgroundColor: colors.primary[20], padding: 16, borderRadius: 8, marginBottom: 16 },
+  headerTitle: { fontSize: 24, fontWeight: "700", color: colors.secondary[60], marginBottom: 16 },
+    contentCard: {
+    backgroundColor: colors.primary[10],
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 2,
+  },
+    loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+    contentText: { fontSize: 14, marginBottom: 4 },
+    contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
+    contentDate: { fontSize: 12, color: colors.textNeutral[40] },
+    
+});

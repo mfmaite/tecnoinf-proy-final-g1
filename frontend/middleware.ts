@@ -13,13 +13,10 @@ export default withAuth(
     }
 
     // Si está loggeado y entra a /courses/[courseId]/participants/(enroll|unenroll), redirigir a /courses/[courseId]/participants
-    if (req.nextauth.token) {
-      const path = req.nextUrl.pathname
-      const match = path.match(/^\/courses\/([^/]+)\/participants\/(enroll|unenroll)\/?$/)
-      if (match) {
-        const courseId = match[1]
-        return Response.redirect(new URL(`/courses/${courseId}/participants`, req.url))
-      }
+    const enrollPages = req.nextUrl.pathname.match(/^\/courses\/([^/]+)\/participants\/(enroll|unenroll)\/?$/)
+
+    if (enrollPages && req.nextauth.token?.role !== 'PROFESOR') {
+      return Response.redirect(new URL('/', req.url))
     }
   },
   {

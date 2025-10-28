@@ -91,6 +91,30 @@ class UserController {
       };
     }
   }
+
+  async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<ApiResponse<void>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.RESET_PASSWORD}`, {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword, confirmPassword }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
+    } catch (error) {
+      console.error('Error al restablecer la contraseña:', error);
+      throw error;
+    }
+  }
 }
 
 export const userController = new UserController();

@@ -26,18 +26,23 @@ public class GradeService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
-    public GradeService(UserCourseRepository userCourseRepository,
-                        CourseRepository courseRepository,
-                        UserRepository userRepository,
-                        NotificationService notificationService) {
+    public GradeService(
+        UserCourseRepository userCourseRepository,
+        CourseRepository courseRepository,
+        UserRepository userRepository,
+        NotificationService notificationService,
+        EmailService emailService
+
+    ) {
         this.userCourseRepository = userCourseRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
-    // Publicación individual
     public void publishFinalGrade(String courseId, DtFinalGrade gradeDto) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
@@ -61,6 +66,11 @@ public class GradeService {
             "Su calificación final del curso " + course.getName() + " ha sido publicada: " + grade,
             "/courses/" + course.getId() + "/grades"
         );
+
+        emailService.sendEmail(user.getEmail(),
+                "Su calificación final del curso " + course.getName() + " ha sido publicada",
+                "Accede a la plataforma para ver tu calificación"
+            );
     }
 
     // Publicación masiva desde CSV

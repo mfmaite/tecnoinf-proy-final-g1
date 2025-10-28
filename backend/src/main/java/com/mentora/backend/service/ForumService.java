@@ -6,11 +6,9 @@ import com.mentora.backend.model.*;
 import com.mentora.backend.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ForumService {
@@ -41,10 +39,10 @@ public class ForumService {
 
     public DtPost publishPost(Long forumId, String authorCi, String message) {
         Forum forum = forumRepository.findById(forumId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Foro no encontrado"));
 
         User author = userRepository.findById(authorCi)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Profesor no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         if (forum.getType() == ForumType.ANNOUNCEMENTS && author.getRole() != Role.PROFESOR) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes publicar en este foro");
@@ -81,14 +79,10 @@ public class ForumService {
         return getDtPost(post);
     }
 
-    // @Transactional(readOnly = true)
-    // public List<DtPost> getPostsByCourse(String courseId) {
-    //     Forum forum = forumRepository.findByCourseIdAndType(courseId, ForumType.ANNOUNCEMENTS)
-    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Foro de anuncios no encontrado"));
-
-    //     List<Post> posts = postRepository.findByForumIdOrderByCreatedDateDesc(forum.getId());
-    //     return posts.stream().map(this::getDtPost).collect(Collectors.toList());
-    // }
+    public List<DtPost> getPostsByForum(Long forumId) {
+        List<Post> posts = postRepository.findByForum_IdOrderByCreatedDateDesc(forumId);
+        return posts.stream().map(this::getDtPost).toList();
+    }
 
     private DtPost getDtPost(Post post) {
         DtPost dto = new DtPost(

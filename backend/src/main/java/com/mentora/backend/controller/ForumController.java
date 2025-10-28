@@ -4,8 +4,6 @@ import com.mentora.backend.dt.DtPost;
 import com.mentora.backend.requests.CreatePostRequest;
 import com.mentora.backend.service.ForumService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -33,8 +31,9 @@ public class ForumController {
             summary = "Publicar un nuevo post en un foro",
             description = "Permite publicar un post en un foro.",
             security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Post publicado correctamente",
-            content = @Content(schema = @Schema(implementation = DtPost.class)))
+    @ApiResponse(responseCode = "200", description = "Post publicado correctamente")
+    @ApiResponse(responseCode = "403", description = "No tienes permisos para publicar en este foro")
+    @ApiResponse(responseCode = "404", description = "Foro no encontrado")
     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     @PreAuthorize("hasAnyRole('PROFESOR','ESTUDIANTE')")
     @PostMapping("/{forumId}")
@@ -63,20 +62,33 @@ public class ForumController {
                 ));
             }
         }
-}
 
-//     @Operation(
-//             summary = "Obtener posts de un curso",
-//             description = "Devuelve todos los posts publicados en la cartelera de un curso.",
-//             security = @SecurityRequirement(name = "bearerAuth"))
-//     @ApiResponse(responseCode = "200", description = "Lista de posts obtenida correctamente",
-//             content = @Content(schema = @Schema(implementation = DtPost.class)))
-//     @ApiResponse(responseCode = "404", description = "Curso no encontrado")
-//     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
-//     @PreAuthorize("isAuthenticated()")
-//     @GetMapping("/{courseId}")
-//     public ResponseEntity<List<DtPost>> getPostsByCourse(@PathVariable String courseId) {
-//         List<DtPost> posts = postService.getPostsByCourse(courseId);
-//         return ResponseEntity.ok(posts);
-//     }
+    @Operation(
+            summary = "Obtener posts de un foro",
+            description = "Devuelve todos los posts publicados en el foro.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Lista de posts obtenida correctamente")
+    @ApiResponse(responseCode = "404", description = "Foro no encontrado")
+    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    @PreAuthorize("hasAnyRole('PROFESOR','ESTUDIANTE')")
+    @GetMapping("/{forumId}")
+    public ResponseEntity<DtApiResponse<List<DtPost>>> getPostsByForum(@PathVariable Long forumId) {
+        try {
+            List<DtPost> posts = forumService.getPostsByForum(forumId);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Lista de posts obtenida correctamente",
+                posts
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+}
 

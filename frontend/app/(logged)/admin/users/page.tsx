@@ -9,6 +9,7 @@ import UserProfilePicture from '@/components/user-profile-picture/user-profile-p
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import Link from 'next/link';
 import { UserResponse } from '@/types/user';
+import RoleLabel from '@/components/role-label/role-label';
 
 interface User {
   ci: string;
@@ -64,32 +65,6 @@ const UsersListPage = () => {
 
   const handleSort = (order: SortOrder) => {
     setSortOrder(order);
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return 'bg-red-100 text-red-800';
-      case 'PROFESOR':
-        return 'bg-blue-100 text-blue-800';
-      case 'ESTUDIANTE':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return 'Administrador';
-      case 'PROFESOR':
-        return 'Profesor';
-      case 'ESTUDIANTE':
-        return 'Estudiante';
-      default:
-        return role;
-    }
   };
 
   return (
@@ -222,9 +197,7 @@ const UsersListPage = () => {
                         {user.ci}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                          {getRoleLabel(user.role)}
-                        </span>
+                        <RoleLabel role={user.role} />
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="max-w-xs truncate">

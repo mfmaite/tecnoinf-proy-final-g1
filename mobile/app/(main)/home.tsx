@@ -12,6 +12,9 @@ export default function HomeScreen() {
     await logout();
     router.replace("/(auth)/login");
   };
+  const goToChangePassword = () => {
+    router.push("/(main)/profile/change-password");
+  };
 
   const handleCourses = () => {
     router.push("/(courses)/coursesList");
@@ -28,7 +31,11 @@ export default function HomeScreen() {
       <TouchableOpacity style={styles.buttonSecondary} onPress={handleLogout}>
         <Text style={styles.buttonText}>🚪 Cerrar Sesión</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.buttonSecondary} onPress={goToChangePassword}>
+        <Text style={styles.buttonText}> Cambiar contraseña </Text>
+      </TouchableOpacity>
     </View>
+    
   );
 }
 

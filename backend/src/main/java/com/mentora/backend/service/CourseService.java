@@ -104,10 +104,12 @@ public class CourseService {
         String fileName = null;
         String fileUrl = null;
         String content = null;
+        String gcsFileName = null;
 
         if (req.getFile() != null) {
             DtFileResource file = fileStorageService.store(req.getFile());
             fileName = file.getFilename();
+            gcsFileName = file.getGcsFileName();
             fileUrl = file.getStoragePath();
         }
 
@@ -115,7 +117,7 @@ public class CourseService {
             content = req.getContent();
         }
 
-        SimpleContent newSimpleContent = new SimpleContent(req.getTitle(), course, fileName, fileUrl, content);
+        SimpleContent newSimpleContent = new SimpleContent(req.getTitle(), course, fileName, gcsFileName,  fileUrl, content);
         SimpleContent saved = simpleContentRepository.save(newSimpleContent);
 
         return getDtSimpleContent(saved);
@@ -126,7 +128,7 @@ public class CourseService {
     }
 
     private DtSimpleContent getDtSimpleContent(SimpleContent sc) {
-        return new DtSimpleContent(sc.getId(), sc.getTitle(), sc.getContent(), sc.getFileName(), sc.getFileUrl(), sc.getCreatedDate());
+        return new DtSimpleContent(sc.getId(), sc.getTitle(), sc.getContent(), sc.getFileName(), sc.getGcsFileName(), sc.getFileUrl(), sc.getCreatedDate());
     }
 
     public String addParticipants(String courseId, String[] participantIds) {

@@ -19,6 +19,9 @@ public class SimpleContent {
     @Column(name = "fileName")
     private String fileName;
 
+    @Column(name = "gcs_file_name", nullable = true)
+    private String gcsFileName;
+
     @Column(name = "fileUrl", length = 2048)
     private String fileUrl;
 
@@ -31,12 +34,13 @@ public class SimpleContent {
     private Course course;
 
     public SimpleContent() {}
-    public SimpleContent(String title, Course course, String fileName, String fileUrl, String content) {
+    public SimpleContent(String title, Course course, String fileName, String fileUrl, String content, String gcsFileName) {
         this.title = title;
         this.course = course;
         this.fileName = fileName;
         this.fileUrl = fileUrl;
         this.content = content;
+        this.gcsFileName = gcsFileName;
     }
 
     // ====== Getters y Setters ======
@@ -60,4 +64,7 @@ public class SimpleContent {
 
     public String getFileUrl() { return fileUrl; }
     public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+
+    public String getGcsFileName() { return gcsFileName; }
+    public void setGcsFileName(String gcsFileName) { this.gcsFileName = gcsFileName; }
 }

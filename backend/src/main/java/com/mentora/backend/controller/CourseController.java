@@ -2,11 +2,11 @@ package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.dt.DtCourse;
-import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.service.CourseService;
-import com.mentora.backend.requests.CreateCourseRequest;
+import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
@@ -19,14 +19,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.mentora.backend.responses.GetCourseResponse;
-
-import java.io.IOException;
-import java.util.List;
 @RestController
 @RequestMapping("/courses")
 public class CourseController {

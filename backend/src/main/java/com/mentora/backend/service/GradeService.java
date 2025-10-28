@@ -56,9 +56,11 @@ public class GradeService {
         userCourseRepository.save(uc);
 
         // Envío de notificación
-        notificationService.createNotification(user,
-                "Su calificación final del curso " + course.getName() + " ha sido publicada: " + grade,
-                "/courses/" + course.getId() + "/grades");
+        notificationService.createNotification(
+            user.getCi(),
+            "Su calificación final del curso " + course.getName() + " ha sido publicada: " + grade,
+            "/courses/" + course.getId() + "/grades"
+        );
     }
 
     // Publicación masiva desde CSV
@@ -107,9 +109,11 @@ public class GradeService {
             uc.setFinalGrade(g.getGrade());
             userCourseRepository.save(uc);
 
-            notificationService.createNotification(user,
-                    "Su calificación final del curso " + course.getName() + " ha sido publicada: " + g.getGrade(),
-                    "/courses/" + course.getId() + "/grades");
+            notificationService.createNotification(
+                user.getCi(),
+                "Su calificación final del curso " + course.getName() + " ha sido publicada: " + g.getGrade(),
+                "/courses/" + course.getId() + "/grades"
+            );
         }
     }
 }

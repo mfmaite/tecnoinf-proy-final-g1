@@ -5,81 +5,77 @@ import Link from 'next/link';
 
 import { useAuth } from '@/hooks/useAuth';
 import { courseController } from '@/controllers/courseController';
-import { Button } from '@/components/button/button';
 import type { UserResponse } from '@/types/user';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
-import { UserTableSelectable } from './components/user-table-selectable';
-import { SelectionToolbar } from './components/selection-toolbar';
+import { SelectionToolbar } from '../enroll/components/selection-toolbar';
+import { UserTableSelectable } from '../enroll/components/user-table-selectable';
+import { Button } from '@/components/button/button';
 
 type Params = { params: { courseId: string } }
 
-export default function EnrollStudentsPage({ params }: Params) {
+export default function UnenrollStudentsPage({ params }: Params) {
   const { accessToken } = useAuth();
 
-  const [allUsers, setAllUsers] = useState<UserResponse[]>([]);
+  const [participants, setParticipants] = useState<UserResponse[]>([]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+
+  const load = async () => {
+    if (!accessToken) return;
+    const res = await courseController.getParticipants(params.courseId, accessToken);
+    if (!res.success || !res.data) {
+      setError(res.message ?? 'No se pudieron cargar los participantes');
+      return;
+    }
+    setParticipants(res.data);
+  };
 
   useEffect(() => {
-    const load = async () => {
-      if (!accessToken) return;
-      const res = await courseController.getNonParticipants(params.courseId, accessToken);
-      if (!res.success || !res.data) {
-        setError(res.message ?? 'No se pudieron cargar los estudiantes');
-        return;
-      }
-      setAllUsers(res.data);
-    };
     load();
   }, [accessToken, params.courseId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return allUsers;
-    return allUsers.filter(u =>
+    if (!q) return participants;
+    return participants.filter(u =>
       u.ci.toLowerCase().includes(q) ||
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q)
     );
-  }, [allUsers, query]);
+  }, [participants, query]);
 
   const toggle = (ci: string) => setSelected(prev => ({ ...prev, [ci]: !prev[ci] }));
 
-  const enroll = async () => {
+  const unenroll = async () => {
     try {
       setSubmitting(true);
       setError(null);
       setSuccess(null);
       const cis = Object.keys(selected).filter(ci => selected[ci]);
-      if (!cis.length && !csvFile) {
+      if (!cis.length) {
         setError('Seleccione al menos un estudiante');
         return;
       }
-      const res = await courseController.addParticipants(params.courseId, cis, accessToken!);
+      const res = await courseController.deleteParticipants(params.courseId, cis, accessToken!);
       if (!res.success) {
-        setError(res.message ?? 'Error al matricular');
+        setError(res.message ?? 'Error al desmatricular');
         return;
       }
-      setSuccess('Estudiantes matriculados correctamente');
-      const reload = await courseController.getNonParticipants(params.courseId, accessToken!);
-      if (reload.success && reload.data) {
-        setAllUsers(reload.data);
-        setSelected({});
-      }
-      setCsvFile(null);
+      setSuccess('Estudiantes desmatriculados correctamente');
+      await load();
+      setSelected({});
     } finally {
       setSubmitting(false);
     }
   };
 
-  const canEnroll = useMemo(() => {
+  const canUnenroll = useMemo(() => {
     const anySelected = Object.values(selected).some(Boolean);
-    return anySelected || !!csvFile;
-  }, [selected, csvFile]);
+    return anySelected;
+  }, [selected]);
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -88,12 +84,12 @@ export default function EnrollStudentsPage({ params }: Params) {
           <Link href={`/courses/${params.courseId}/participants`} className="text-secondary-color-70">
             <ChevronDown className="w-6 h-6 rotate-90" />
           </Link>
-          <h1 className="text-4xl font-bold text-secondary-color-70">Matricular estudiantes</h1>
+          <h1 className="text-4xl font-bold text-secondary-color-70">Desmatricular estudiantes</h1>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button onClick={enroll} disabled={submitting || !canEnroll}>
-            {submitting ? 'Matriculando...' : 'Matricular'}
+          <Button onClick={unenroll} disabled={submitting || !canUnenroll}>
+            {submitting ? 'Desmatriculando...' : 'Desmatricular'}
           </Button>
         </div>
       </div>
@@ -102,7 +98,6 @@ export default function EnrollStudentsPage({ params }: Params) {
         query={query}
         onQueryChange={setQuery}
         showCsv
-        onCsvChange={setCsvFile}
       />
 
       {error && (

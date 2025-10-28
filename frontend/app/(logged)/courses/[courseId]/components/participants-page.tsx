@@ -61,7 +61,7 @@ function ParticipantsTable({ courseId }: Props) {
         {user?.role === 'PROFESOR' && (
           <div className='flex items-center gap-3'>
             <Link
-              href={`/courses/${courseId}/participants/enroll`}
+              href={`/courses/${courseId}/participants/unenroll`}
               className="text-sm text-secondary-color-70 hover:text-secondary-color-50 underline"
             >
               Desmatricular

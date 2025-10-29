@@ -2,6 +2,7 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtForum;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.CourseRepository;
 import com.mentora.backend.repository.ForumRepository;
@@ -90,7 +91,13 @@ public class CourseService {
                 .map(this::getDtSimpleContent)
                 .collect(Collectors.toList());
 
-        return new GetCourseResponse(getDtCourse(course), contents);
+        List<Forum> forums = forumRepository.findByCourse_Id(course.getId());
+
+        List<DtForum> dtForums = forums.stream()
+                .map(forum -> new DtForum(forum.getId().toString(), forum.getType().name(), course.getId()))
+                .collect(Collectors.toList());
+
+        return new GetCourseResponse(getDtCourse(course), contents, dtForums);
     }
 
     public DtSimpleContent createSimpleContent(String courseId, CreateSimpleContentRequest req) throws IOException {

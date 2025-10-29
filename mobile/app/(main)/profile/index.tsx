@@ -19,10 +19,6 @@ export default function ProfileScreen() {
     router.push("/(main)/profile/edit-profile");
   };
 
-  const goToChangePassword = () => {
-    router.push("/(auth)/reset-password");
-  };
-
   return (
     <View style={globalStyles.container}>
       <Text style={globalStyles.title}>Mi Perfil</Text>
@@ -57,10 +53,6 @@ export default function ProfileScreen() {
 
       <TouchableOpacity style={globalStyles.buttonPrimary} onPress={goToEditProfile}>
         <Text style={globalStyles.buttonText}>Editar perfil</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={globalStyles.buttonSecondary} onPress={goToChangePassword}>
-        <Text style={globalStyles.buttonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

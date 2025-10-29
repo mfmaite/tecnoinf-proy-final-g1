@@ -13,7 +13,7 @@ export default function HomeScreen() {
     router.replace("/(auth)/login");
   };
   const goToChangePassword = () => {
-    router.push("/(auth)/reset-password");
+    router.push("/(main)/profile/change-password");
   };
   const goToProfilePage = () => {
     router.push("/(main)/profile/");

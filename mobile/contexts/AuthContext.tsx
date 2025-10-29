@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
 import { login as loginService } from "../services/auth";
 // import { updateProfile as updateProfileService } from "../services/user";
+import { changePassword } from "../services/userService";
 
 type User = {
   ci: string;
@@ -18,6 +19,11 @@ type AuthContextType = {
   login: (ci: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => Promise<void>;
+  changePassword: (
+        oldPassword: string,
+        newPassword: string,
+        confirmPassword: string
+      ) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -86,8 +92,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+    const changePassword = async (
+        oldPassword: string,
+        newPassword: string,
+        confirmPassword: string
+      ) => {
+      if (!token) throw new Error("No autenticado");
+
+      try {
+        await changePassword(oldPassword, newPassword, confirmPassword);
+      } catch (error) {
+        console.error("Error al cambiar contraseña:", error);
+        throw error;
+      }
+    };
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUser, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

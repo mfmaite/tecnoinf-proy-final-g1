@@ -6,33 +6,57 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
+import { changePassword } from "@/services/userService";
 
-const EditProfileScreen = () => {
-  const { user, updateUser } = useAuth();
+export default function ChangePasswordScreen() {
+  const { updateUser } = useAuth();
   const router = useRouter();
 
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSave = async () => {
-    if (!name || !email) {
-      Alert.alert("Error", "Por favor completa todos los campos.");
+  const validatePassword = (password: string) => {
+    // Al menos 8 caracteres, una mayúscula, una minúscula y un número
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return regex.test(password);
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Error", "Por favor completá todos los campos.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Las contraseñas nuevas no coinciden.");
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      Alert.alert(
+        "Error de validación",
+        "La nueva contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula y un número."
+      );
       return;
     }
 
     try {
       setLoading(true);
-      await updateUser({ name, email });
-      Alert.alert("Éxito", "Tu perfil ha sido actualizado.");
-      router.back();
+      // Aquí se llamaría al backend para cambiar la contraseña
+      await changePassword( currentPassword, newPassword, confirmPassword);
+      Alert.alert("Éxito", "Contraseña cambiada correctamente.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "No se pudo actualizar el perfil.");
+      Alert.alert("Error", "No se pudo cambiar la contraseña.");
     } finally {
       setLoading(false);
     }
@@ -41,50 +65,54 @@ const EditProfileScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Editar perfil</Text>
+        <Text style={styles.title}>Cambiar contraseña</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Tu nombre"
-          placeholderTextColor="#999"
-          value={name}
-          onChangeText={setName}
+          placeholder="Contraseña actual"
+          secureTextEntry
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
         />
 
         <TextInput
           style={styles.input}
-          placeholder="tu@email.com"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
+          placeholder="Nueva contraseña"
+          secureTextEntry
+          value={newPassword}
+          onChangeText={setNewPassword}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar nueva contraseña"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
         />
 
         <TouchableOpacity
           style={[styles.button, loading && { opacity: 0.6 }]}
-          onPress={handleSave}
+          onPress={handleChangePassword}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? "Guardando..." : "Guardar cambios"}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Guardar cambios</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => router.push("/(main)/profile/change-password")}
+          onPress={() => router.back()}
         >
-          <Text style={styles.secondaryButtonText}>
-            Cambiar contraseña
-          </Text>
+          <Text style={styles.secondaryButtonText}>Cancelar</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
-};
-
-export default EditProfileScreen;
+}
 
 const styles = StyleSheet.create({
   container: {

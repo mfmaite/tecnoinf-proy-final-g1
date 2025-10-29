@@ -92,7 +92,7 @@ export default function EditProfileScreen() {
   };
 
   const goToChangePassword = () => {
-    router.push("/(auth)/reset-password");
+    router.push("/(main)/profile/change-password")
   };
 
   return (

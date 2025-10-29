@@ -8,16 +8,22 @@ import { ContentCard } from './components/content-card';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { CourseViewData } from '@/types/content';
+import { Button } from '@/components/button/button';
+import { Modal } from '@/components/modal/modal';
 
 type Params = { params: { courseId: string } }
 
 export default function CourseView({ params }: Params) {
-  const { accessToken, isLoading, isAuthenticated } = useAuth();
+  const { accessToken, isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+
   const [data, setData] = useState<CourseViewData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAddContentOpen, setIsAddContentOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -62,6 +68,11 @@ export default function CourseView({ params }: Params) {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {searchParams.get('created') === '1' ? (
+        <div className="rounded-md border border-green-200 bg-green-50 p-4 text-green-800">
+          Contenido temático creado correctamente.
+        </div>
+      ) : null}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-4xl font-bold text-secondary-color-70">{course.name}</h1>
@@ -80,8 +91,11 @@ export default function CourseView({ params }: Params) {
             Participantes
           </Link>
         </div>
-
       </div>
+
+      {user?.role === 'PROFESOR' && (
+        <Button onClick={() => setIsAddContentOpen(true)} color="secondary">Agregar contenido temático</Button>
+      )}
 
       <div className="space-y-4">
         {contents?.length ? (
@@ -94,6 +108,35 @@ export default function CourseView({ params }: Params) {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isAddContentOpen}
+        onClose={() => setIsAddContentOpen(false)}
+        title="Agregar contenido temático"
+        description="Seleccione el tipo de contenido que desea crear"
+        size="md"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            onClick={() => {
+              setIsAddContentOpen(false);
+              router.push(`/courses/${params.courseId}/contents/simple`);
+            }}
+            className="rounded-lg border border-gray-200 hover:border-secondary-color-60 hover:shadow-sm p-4 text-left transition-colors"
+          >
+            <div className="font-semibold text-secondary-color-70">Contenido Simple</div>
+            <div className="text-sm text-gray-500 mt-1">Texto en Markdown o archivo</div>
+          </button>
+          <div className="rounded-lg border border-gray-200 p-4 text-left opacity-60">
+            <div className="font-semibold">Evaluación</div>
+            <div className="text-sm text-gray-500 mt-1">Próximamente</div>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4 text-left opacity-60">
+            <div className="font-semibold">Quiz</div>
+            <div className="text-sm text-gray-500 mt-1">Próximamente</div>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

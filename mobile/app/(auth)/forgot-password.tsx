@@ -6,28 +6,45 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { api } from "../../services/api";
 import { colors } from "../../styles/colors";
+// ⚠️ Asegurate de que sea un .png o .jpg, Expo no soporta SVG sin configuración extra
 import Logo from "../../assets/logo.svg";
 
-export default function LoginScreen() {
-  const { login } = useAuth();
+export default function ForgotPasswordScreen() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const [ci, setCi] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const handleForgotPassword = async (): Promise<void> => {
+    if (!email.trim()) {
+      setError("Por favor ingresá tu correo electrónico");
+      return;
+    }
 
-  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+
     try {
-      await login(ci, password);
-      router.replace("/(main)/home");
-    } catch (e) {
-      setError("Credenciales inválidas");
+      //  Llamada GET con parámetro en query string
+      await api.get("/users/password-recovery", { params: { email } });
+
+      Alert.alert(
+        "Solicitud enviada",
+        "Si el correo existe, recibirás un email con instrucciones para restablecer tu contraseña."
+      );
+
+      router.push("/(auth)/login");
+    } catch (err) {
+      console.error("Error en forgot-password:", err);
+      setError("No se pudo enviar el correo. Intentá nuevamente más tarde.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,49 +54,34 @@ export default function LoginScreen() {
         <Logo style={styles.logo} />
         <Text style={styles.title}>Mentora</Text>
 
+        <Text style={styles.subtitle}>Recuperar contraseña</Text>
+
         <TextInput
           style={styles.input}
-          placeholder="Cédula"
+          placeholder="Correo electrónico"
           placeholderTextColor="#999"
-          value={ci}
-          onChangeText={setCi}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={[styles.input, styles.passwordInput]}
-            placeholder="Contraseña"
-            placeholderTextColor="#999"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#266C35" // $secondary-color-60
-            />
-          </TouchableOpacity>
-        </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.7 }]}
+          onPress={handleForgotPassword}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Enviar instrucciones</Text>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-          <Text className="text-blue-500 text-center mt-3">
-            ¿Olvidaste tu contraseña?
-          </Text>
+        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+          <Text style={styles.back}>Volver al inicio de sesión</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -117,6 +119,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     color: colors.secondary[60],
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textNeutral[50],
     marginBottom: 24,
   },
   input: {
@@ -128,18 +135,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 16,
     backgroundColor: colors.surfaceLight[20],
-  },
-  passwordContainer: {
-    width: "100%",
-    position: "relative",
-  },
-  passwordInput: {
-    paddingRight: 40, // espacio para el ícono
-  },
-  eyeIcon: {
-    position: "absolute",
-    right: 12,
-    top: 14,
   },
   button: {
     backgroundColor: colors.primary[60],
@@ -155,7 +150,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-  forgot: {
+  back: {
     color: colors.secondary[60],
     fontSize: 14,
     textDecorationLine: "underline",

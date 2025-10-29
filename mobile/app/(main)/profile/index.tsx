@@ -72,10 +72,12 @@ const localStyles = StyleSheet.create({
     borderRadius: 60,
     marginBottom: 20,
     backgroundColor: colors.surfaceLight[30],
+    alignSelf: "center",
   },
   avatarPlaceholder: {
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "center"
   },
   avatarInitial: {
     fontSize: 40,

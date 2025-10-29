@@ -54,8 +54,8 @@ function AppNavigator() {
       const url = event.url;
       const { path, queryParams } = Linking.parse(url);
 
-      console.log("🔗 Deep link recibido:", url);
-      console.log("📄 Path:", path, "🧩 Params:", queryParams);
+      // console.log("🔗 Deep link recibido:", url);
+      // console.log("📄 Path:", path, "🧩 Params:", queryParams);
 
       if (path === "reset-password" && queryParams?.token) {
         router.push(`/reset-password?token=${queryParams.token}`);

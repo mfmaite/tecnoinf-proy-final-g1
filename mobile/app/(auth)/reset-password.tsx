@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
-import { API_URL } from "../../constants/config"; // Asegurate de tener esto configurado
+import { API_URL } from "../../constants/config";
 import { styles as globalStyles } from "../../styles/styles";
 
 export default function ResetPasswordScreen() {
@@ -19,7 +19,6 @@ export default function ResetPasswordScreen() {
       return;
     }
 
-    // Validaciones simples
     if (!newPassword || !confirmPassword) {
       Alert.alert("Error", "Por favor completa todos los campos.");
       return;
@@ -29,7 +28,6 @@ export default function ResetPasswordScreen() {
       return;
     }
 
-    // Validación de formato
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
       Alert.alert(

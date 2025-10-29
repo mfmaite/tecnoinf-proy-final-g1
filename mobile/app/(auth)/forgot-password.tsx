@@ -12,7 +12,6 @@ import {
 import { useRouter } from "expo-router";
 import { api } from "../../services/api";
 import { colors } from "../../styles/colors";
-// ⚠️ Asegurate de que sea un .png o .jpg, Expo no soporta SVG sin configuración extra
 import Logo from "../../assets/logo.svg";
 
 export default function ForgotPasswordScreen() {
@@ -20,7 +19,7 @@ export default function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-
+  const logo = require("../../assets/images/mentora-logo-small.png");
   const handleForgotPassword = async (): Promise<void> => {
     if (!email.trim()) {
       setError("Por favor ingresá tu correo electrónico");
@@ -31,9 +30,7 @@ export default function ForgotPasswordScreen() {
     setError("");
 
     try {
-      //  Llamada GET con parámetro en query string
       await api.get("/users/password-recovery", { params: { email } });
-
       Alert.alert(
         "Solicitud enviada",
         "Si el correo existe, recibirás un email con instrucciones para restablecer tu contraseña."
@@ -41,7 +38,6 @@ export default function ForgotPasswordScreen() {
 
       router.push("/(auth)/login");
     } catch (err) {
-      console.error("Error en forgot-password:", err);
       setError("No se pudo enviar el correo. Intentá nuevamente más tarde.");
     } finally {
       setLoading(false);
@@ -51,7 +47,8 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Logo style={styles.logo} />
+        {/* <Logo style={styles.logo} /> */}
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Mentora</Text>
 
         <Text style={styles.subtitle}>Recuperar contraseña</Text>

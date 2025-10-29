@@ -16,7 +16,7 @@ import Logo from "../../assets/logo.svg";
 export default function LoginScreen() {
   const { login } = useAuth();
   const router = useRouter();
-
+  const logo = require("../../assets/images/mentora-logo-small.png");
   const [ci, setCi] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,7 +34,8 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Logo style={styles.logo} />
+        {/* <Logo style={styles.logo} /> */}
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Mentora</Text>
 
         <TextInput
@@ -70,10 +71,6 @@ export default function LoginScreen() {
 
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Iniciar sesión</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity>
-          <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={() => router.push("/forgot-password")}>
@@ -111,7 +108,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    marginBottom: 10,
   },
   title: {
     fontSize: 28,

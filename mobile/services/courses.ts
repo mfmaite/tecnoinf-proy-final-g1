@@ -20,14 +20,12 @@ export interface CourseResponse {
 }
 
 export async function getCourseById(courseId: string): Promise<CourseResponse> {
-  // Resolver base URL seguro (compatible con axios instance que tenga getUri o defaults.baseURL)
   const base =
     typeof (api as any).getUri === "function"
       ? (api as any).getUri()
       : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
 
   const url = `${base.replace(/\/+$/,"")}/courses/${encodeURIComponent(courseId)}`;
-  //console.log("[getCourseById] REQUEST URL:", url);
 
   const res = await fetch(url, {
     method: "GET",
@@ -37,17 +35,11 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
     },
   });
 
-  //console.log("[getCourseById] RESPONSE STATUS:", res.status, res.statusText);
-  //console.log("[getCourseById] RESPONSE HEADERS:", Array.from(res.headers.entries()));
-
   const text = await res.text();
-  //console.log("[getCourseById] RESPONSE TEXT:", text);
 
   if (!res.ok) {
     throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
   }
-
-  // Intentar parsear JSON y soportar distintos shapes de respuesta
   try {
     const parsed = JSON.parse(text);
 
@@ -55,13 +47,10 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
     let contents: Content[] = [];
 
   if (parsed.course) {
-      // formato { course: {...}, contents: [...] } en top-level
       course = parsed.course;
       contents = parsed.contents || [];
     } else if (parsed.data) {
-      // formato { data: ... } puede ser objeto (curso), array (listado) o { course, contents }
       if (Array.isArray(parsed.data)) {
-        // si backend devolvió listado, intentar encontrar el curso por id
         const found = parsed.data.find((c: any) => String(c.id) === String(courseId));
         if (found) {
           course = {
@@ -72,7 +61,6 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
         }
       } else if (typeof parsed.data === "object" && parsed.data !== null) {
         const d = parsed.data;
-        // Manejar caso data.course (estructura que devuelve tu backend en Postman)
         if (d.course) {
           const c = d.course;
           course = {
@@ -82,7 +70,6 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
           };
           contents = d.contents || [];
         } else {
-          // data es directamente el curso
           course = {
             id: String(d.id),
             name: d.name,
@@ -92,7 +79,6 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
         }
       }
     } else {
-      // intentar casos menos comunes: respuesta directa con campos del curso
       if (parsed.id) {
         course = {
           id: String(parsed.id),
@@ -115,7 +101,6 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
   }
 }
 
-// Traer todos los cursos
 export interface CourseListItem {
   id: string;
   name?: string;

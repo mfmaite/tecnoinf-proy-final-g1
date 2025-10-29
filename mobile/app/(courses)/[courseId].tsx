@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
-import { useRouter,useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { colors } from "../../styles/colors";
 import { getCourseById, CourseData, Content } from "../../services/courses";
 import { styles } from "../../styles/styles";
 import { useNavigation } from "@react-navigation/native";
 
 export default function CourseView() {
-  const router = useRouter();
-  const { courseId } = useLocalSearchParams<{ courseId?: string }>(); // <-- usar params
+  const { courseId } = useLocalSearchParams<{ courseId?: string }>();
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,17 +15,12 @@ export default function CourseView() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (!courseId) return; // espera hasta que esté disponible
-    //console.log("Cargando curso con ID:", courseId);
+    if (!courseId) return;
     const fetchCourse = async () => {
-      //console.log("fetchCourse llamado con courseId:", courseId);
       try {
-        //console.log("Antes de llamar a getCourseById con ID:", courseId);
         const data = await getCourseById(String(courseId));
         setCourseData(data.course);
-        //console.log("Datos del curso:", data);
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
-        
       } catch (err) {
         setError("No se pudieron cargar los datos del curso.");
       } finally {
@@ -35,7 +29,7 @@ export default function CourseView() {
     };
 
     fetchCourse();
-  }, [courseId]); // <-- depende de courseId
+  }, [courseId]); 
   useLayoutEffect(() => {
   if (courseData?.name) {
     (navigation as any).setOptions?.({ title: courseData.name });
@@ -79,4 +73,3 @@ export default function CourseView() {
     </ScrollView>
   );
 }
-

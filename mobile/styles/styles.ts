@@ -149,9 +149,24 @@ export const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-    loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-    contentText: { fontSize: 14, marginBottom: 4 },
-    contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
-    contentDate: { fontSize: 12, color: colors.textNeutral[40] },
-    
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  contentText: { fontSize: 14, marginBottom: 4 },
+  contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
+  contentDate: { fontSize: 12, color: colors.textNeutral[40] },
+  sortContainerBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 8,
+  },
+  sortLabelBox: {
+    marginRight: 8,
+    fontWeight: "600",
+  },
+  pickerWrapper: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    overflow: "hidden",
+  },
 });

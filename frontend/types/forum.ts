@@ -8,3 +8,17 @@ export type Forum = {
   type: ForumType;
   courseId: string;
 }
+
+export type ForumPost = {
+  id: number;
+  authorCi: string;
+  authorName: string;
+  authorPictureUrl: string | null;
+  message: string;
+  createdDate: string;
+}
+
+export type ForumPageData = {
+  forum: Forum;
+  posts: ForumPost[];
+}

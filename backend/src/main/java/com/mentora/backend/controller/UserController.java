@@ -13,9 +13,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -56,6 +58,29 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
                             "Error al crear usuario", null));
+        }
+    }
+
+    @PutMapping(value = "/users/{ci}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Editar Perfil de Usuario",
+            description = "Recibe los datos del perfil editado y lo guarda en la base de datos",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    public ResponseEntity<DtApiResponse<DtUser>> updateUser(
+            @PathVariable String ci,
+            @RequestPart("user") @Valid DtUser dto,
+            @RequestPart(value = "picture", required = false) MultipartFile picture) {
+        try {
+            DtUser updated = userService.updateUser(ci, dto, picture);
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(true, 200, "Usuario actualizado", updated)
+            );
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
         }
     }
 

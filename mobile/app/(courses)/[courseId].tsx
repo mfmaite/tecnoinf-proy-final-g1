@@ -108,7 +108,10 @@ function renderContentWithLinks(content?: string | null) {
   if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.surfaceLight[20] }}
+      contentContainerStyle={{ paddingTop: 10, paddingHorizontal: 10 }}
+    >
       <View style={styles.header}>
         
         <Text style={styles.subtitle}>ID: {courseData.id},
@@ -122,29 +125,6 @@ function renderContentWithLinks(content?: string | null) {
       <Text style={styles.title}>Contenidos</Text>
       {contents.map((item) => (
         <View key={item.id} style={styles.contentCard}>
-          <Text style={styles.title}>Foros</Text>
-            {courseData.forums && courseData.forums.length > 0 ? (
-              courseData.forums.map((forum) => (
-                <TouchableOpacity
-                  key={forum.id}
-                  style={styles.contentCard}
-                  onPress={() => router.push(`/courses/${courseData.id}/forums/${forum.id}`)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.subtitle}>
-                    {forum.type === "ANNOUNCEMENTS"
-                      ? "Foro de Anuncios"
-                      : "Foro de Consultas"}
-                  </Text>
-                  <Text style={styles.contentText}>
-                    {forum.posts?.length || 0} posts
-                  </Text>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text style={styles.contentText}>No hay foros disponibles.</Text>
-            )}
-
           <Text style={styles.subtitle}>{item.title || ""}</Text>
           <Text style={styles.contentText}>{item.content || ""}</Text>
           {renderContentWithLinks(item.content)}
@@ -169,6 +149,29 @@ function renderContentWithLinks(content?: string | null) {
           </Text>
         </View>
       ))}
+
+      <Text style={styles.title}>Foros</Text>
+          {courseData.forums && courseData.forums.length > 0 ? (
+            courseData.forums.map((forum) => (
+              <TouchableOpacity
+                key={forum.id}
+                style={styles.contentCard}
+                onPress={() => router.push(`/courses/${courseData.id}/forums/${forum.id}`)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.subtitle}>
+                  {forum.type === "ANNOUNCEMENTS"
+                    ? "Foro de Anuncios"
+                    : "Foro de Consultas"}
+                </Text>
+                <Text style={styles.contentText}>
+                  {forum.posts?.length || 0} posts
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.contentText}>No hay foros disponibles.</Text>
+          )}
     </ScrollView>
   );
 }

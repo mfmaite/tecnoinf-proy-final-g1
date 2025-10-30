@@ -99,7 +99,7 @@ public class UserCourseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         return userCourseRepository.findAllByCourse(course).stream()
-            .map(userCourse -> new DtUser(userCourse.getUser().getCi(), userCourse.getUser().getName(), userCourse.getUser().getEmail(), userCourse.getUser().getDescription(), userCourse.getUser().getPictureUrl(), userCourse.getUser().getRole()))
+            .map(userCourse -> new DtUser(userCourse.getUser().getCi(), userCourse.getUser().getName(), userCourse.getUser().getEmail(), userCourse.getUser().getDescription(), userCourse.getUser().getPictureFileName(), userCourse.getUser().getRole()))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -115,6 +115,6 @@ public class UserCourseService {
     }
 
     private DtUser getDtUser(User user) {
-        return new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureUrl(), user.getRole());
+        return new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureFileName(), user.getRole());
     }
 }

@@ -54,6 +54,12 @@ export const styles = StyleSheet.create({
   sortButtonActive: {
     backgroundColor: colors.primary[60],
   },
+    msgButton: {
+    backgroundColor: colors.secondary[60],
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+  },
   sortButtonText: {
     color: colors.primary[60],
   },

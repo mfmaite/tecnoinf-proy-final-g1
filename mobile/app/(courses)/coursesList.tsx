@@ -7,11 +7,12 @@ import {
   ActivityIndicator,
   TextInput,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { colors } from "../../styles/colors";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
 import { Picker } from '@react-native-picker/picker';
+import { push } from "expo-router/build/global-state/routing";
+import { useRouter } from "expo-router";
 
 interface Course {
   id?: string;
@@ -19,6 +20,7 @@ interface Course {
   createdDate?: string;
 }
 
+const router = useRouter();
 function formatDate(date?: string | null) {
   if (!date) return "-";
   const d = new Date(date);
@@ -35,11 +37,10 @@ export default function CoursesList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"name-asc" | "name-desc" | "id-asc" | "id-desc"
-  | "fecha-asc"| "fecha-desc">(
+  const [sortOrder, setSortOrder] = useState<"name-asc" | "name-desc" | "fecha-asc"| "fecha-desc"
+  >(
     "name-asc"
   );
-  const router = useRouter();
 
   useEffect(() => {
     fetchCourses();
@@ -57,6 +58,7 @@ export default function CoursesList() {
     const response = await api.get("/courses");
     const data = response.data.data || [];
     setCourses(data);
+    console.log("Respuesta del backend:", response.data);
     setFilteredCourses(data);
   } catch (err) {
     console.error("Error al obtener cursos:", err);
@@ -80,18 +82,12 @@ export default function CoursesList() {
       case "name-desc":
         filtered.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
         break;
-      case "id-asc":
-        filtered.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
-        break;
-      case "id-desc":
-        filtered.sort((a, b) => (b.id || "").localeCompare(a.id || ""));
-        break;
       case "fecha-asc":
         filtered.sort((a, b) => (a.createdDate || "").localeCompare(b.createdDate || ""));
         break;
       case "fecha-desc":
         filtered.sort((a, b) => (b.createdDate || "").localeCompare(a.createdDate || ""));
-        break;
+        break;       
     }
 
     setFilteredCourses(filtered);
@@ -103,8 +99,7 @@ export default function CoursesList() {
       <Text style={styles.cellName}>{item.name ?? "-"}</Text>
       <Text style={styles.cellDate}>{formatDate(item.createdDate) ?? "-"}</Text>
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push(`/(courses)/${item.id}`)}
+        style={styles.button} onPress={() => router.push(`/(courses)/${item.id}`)}
         >
         <Text style={styles.buttonText}>Ver</Text>
       </TouchableOpacity>
@@ -129,17 +124,17 @@ export default function CoursesList() {
 
   return (
     <View style={styles.container}>
+      
       {/* Campo de búsqueda */}
       <TextInput
         style={styles.searchInput}
         placeholder="Buscar por nombre o ID..."
         value={search}
         onChangeText={setSearch}
-      />
-
-      {/* Selector de ordenamiento */}
-      <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>Ordenar por:</Text>
+      /> 
+      {/* Selector de ordenamiento (combo) */}
+      <View style={styles.sortContainerBox}>
+        <Text style={styles.sortLabelBox}>Ordenar por:</Text>
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={sortOrder}
@@ -148,13 +143,26 @@ export default function CoursesList() {
           >
             <Picker.Item label="Nombre (A-Z)" value="name-asc" />
             <Picker.Item label="Nombre (Z-A)" value="name-desc" />
-            <Picker.Item label="ID (A-Z)" value="id-asc" />
-            <Picker.Item label="ID (Z-A)" value="id-desc" />
-            <Picker.Item label="Fecha (asc)" value="fecha-asc" />
-            <Picker.Item label="Fecha (desc)" value="fecha-desc" />
+            <Picker.Item label="Fecha (Asc)" value="fecha-asc" />
+            <Picker.Item label="Fecha (Desc)" value="fecha-desc" />
           </Picker>
         </View>
-      </View>
+      </View>   
+      {/* Selector de filtro (combo) */}
+      <View style={styles.sortContainerBox}>
+        <Text style={styles.sortLabelBox}>Filtrar por:</Text>
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={sortOrder}
+            onValueChange={(value) => setSortOrder(value as any)}
+            mode="dropdown"
+          >
+            <Picker.Item label="Todos" value="todo" />
+            <Picker.Item label="Finalizado" value="fin" />
+            <Picker.Item label="En curso" value="nofin" />
+          </Picker>
+        </View>
+      </View>    
 
       {/* Cabecera de columnas */}
       <View style={styles.headerRow}>
@@ -174,4 +182,3 @@ export default function CoursesList() {
     </View>
   );
 }
-

@@ -10,7 +10,11 @@ import { Button } from '@/components/button/button';
 import { UserLoginData } from '@/types/user';
 import MentoraLogo from '@/public/assets/icons/mentora-logo.svg';
 
-const LoginForm = () => {
+const LoginForm = ({
+  onForgotPassword,
+}: {
+  onForgotPassword: () => void;
+}) => {
   const router = useRouter();
   const [formData, setFormData] = useState<UserLoginData>({
     ci: '',
@@ -161,7 +165,7 @@ const LoginForm = () => {
               className="text-sm text-secondary-color-70 hover:text-primary-color-80 transition-colors"
               onClick={(e) => {
                 e.preventDefault();
-                alert('Funcionalidad de recuperación de contraseña próximamente');
+                onForgotPassword();
               }}
             >
               ¿Olvidaste tu contraseña?

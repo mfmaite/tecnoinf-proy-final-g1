@@ -21,7 +21,7 @@ class AuthController {
 
       return data;
     } catch (error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -45,13 +45,6 @@ class AuthController {
   async getCurrentUser() {
     const session = await getSession();
     return session?.user || null;
-  }
-
-  private handleError(error: unknown): { message: string } {
-    if (error instanceof Error) {
-      return { message: error.message };
-    }
-    return { message: 'Error inesperado' };
   }
 }
 

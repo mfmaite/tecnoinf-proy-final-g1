@@ -25,7 +25,7 @@ export default function CourseView() {
         setCourseData(data.course);
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
         
-      } catch (err) {
+      } catch {
         setError("No se pudieron cargar los datos del curso.");
       } finally {
         setLoading(false);
@@ -60,7 +60,7 @@ export default function CourseView() {
       console.warn("Error descargando archivo, fallback a abrir URL:", err);
       try {
         await Linking.openURL(url);
-      } catch (e) {
+      } catch {
         Alert.alert("No se puede descargar ni abrir el archivo.");
       }
     }
@@ -88,7 +88,7 @@ function renderContentWithLinks(content?: string | null) {
                   } else {
                     Alert.alert("No se puede abrir el enlace.");
                   }
-                } catch (e) {
+                } catch {
                   Alert.alert("Error al abrir el enlace.");
                 }
               }}
@@ -122,6 +122,29 @@ function renderContentWithLinks(content?: string | null) {
       <Text style={styles.title}>Contenidos</Text>
       {contents.map((item) => (
         <View key={item.id} style={styles.contentCard}>
+          <Text style={styles.title}>Foros</Text>
+            {courseData.forums && courseData.forums.length > 0 ? (
+              courseData.forums.map((forum) => (
+                <TouchableOpacity
+                  key={forum.id}
+                  style={styles.contentCard}
+                  onPress={() => router.push(`/courses/${courseData.id}/forums/${forum.id}`)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.subtitle}>
+                    {forum.type === "ANNOUNCEMENTS"
+                      ? "Foro de Anuncios"
+                      : "Foro de Consultas"}
+                  </Text>
+                  <Text style={styles.contentText}>
+                    {forum.posts?.length || 0} posts
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={styles.contentText}>No hay foros disponibles.</Text>
+            )}
+
           <Text style={styles.subtitle}>{item.title || ""}</Text>
           <Text style={styles.contentText}>{item.content || ""}</Text>
           {renderContentWithLinks(item.content)}

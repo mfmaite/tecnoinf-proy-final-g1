@@ -1,8 +1,26 @@
 import { api } from "./api";
+
+export interface ForumPost {
+  id: number;
+  authorCi: string;
+  authorName: string;
+  message: string;
+  createdDate: string;
+}
+
+export interface Forum {
+  id: string;
+  type: string;
+  courseId: string;
+  createdAt: string;
+  posts?: ForumPost[];
+}
+
 export interface CourseData {
   id: string;
   name?: string;
   createdDate?: string | null;
+  forums?: Forum[];
 }
 
 export interface Content {
@@ -79,6 +97,7 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
             id: String(c.id),
             name: c.name,
             createdDate: c.createdDate ?? null,
+            forums: c.forums || [],
           };
           contents = d.contents || [];
         } else {

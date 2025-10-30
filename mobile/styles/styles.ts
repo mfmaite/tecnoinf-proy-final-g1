@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
     width: "90%",
     padding: 10,
     borderRadius: 8,
-    borderColor: "#ccc",
+    borderColor: colors.surfaceDark[30],
     borderWidth: 1,
     marginBottom: 12,
   },
@@ -54,17 +54,21 @@ export const styles = StyleSheet.create({
   sortButtonActive: {
     backgroundColor: colors.primary[60],
   },
-    msgButton: {
+  msgButton: {
     backgroundColor: colors.secondary[60],
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 6,
   },
+  msgButtonText: {
+    color: colors.textNeutral[10],
+    fontWeight: "600",
+  },
   sortButtonText: {
     color: colors.primary[60],
   },
   sortButtonTextActive: {
-    color: "#fff",
+    color: colors.textNeutral[10],
   },
   headerRow: {
     flexDirection: "row",
@@ -83,12 +87,12 @@ export const styles = StyleSheet.create({
     //fontWeight: "700",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.textNeutral[10],
     //width: "80%",
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderColor: "#eee",
+    borderColor: colors.textNeutral[30],
     //flexWrap: "wrap",
   },
   cell: {
@@ -107,7 +111,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.textNeutral[10],
     textAlign: "center",
     fontWeight: "600",
   },
@@ -149,16 +153,16 @@ export const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
-    shadowColor: "#000",
+    shadowColor: colors.surfaceDark[50],
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 3,
     elevation: 2,
   },
-    loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-    contentText: { fontSize: 14, marginBottom: 4 },
-    contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
-    contentDate: { fontSize: 12, color: colors.textNeutral[40] },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  contentText: { fontSize: 14, marginBottom: 4 },
+  contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
+  contentDate: { fontSize: 12, color: colors.textNeutral[40] },
   sortContainerBox: {
     width: "90%",
     marginBottom: 12,
@@ -175,12 +179,49 @@ export const styles = StyleSheet.create({
   pickerWrapper: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: colors.textNeutral[10],
     borderRadius: 6,
     overflow: "hidden",
   },    
   link: {
     color: "#2563EB",
     textDecorationLine: "underline",
+  },
+  itemCard: {
+    backgroundColor: colors.primary[10],
+    padding: 12,
+    marginHorizontal: 12,
+    marginVertical: 6,
+    borderRadius: 8,
+    elevation: 1,
+  },
+    itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  name: {
+    fontWeight: "700",
+  },
+  ci: {
+    color: colors.textNeutral[40],
+  },
+  meta: {
+    color: colors.textNeutral[40],
+    marginTop: 2,
+  },
+  actionsRow: {
+    marginTop: 8,
+    flexDirection: "row",
+  },
+  center: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: colors.textNeutral[40],
+  },
+  errorText: {
+    color: "red",
   },
 });

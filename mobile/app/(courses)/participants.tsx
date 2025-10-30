@@ -93,13 +93,20 @@ export default function ParticipantsList() {
       <Text style={localStyles.meta}>{item.email ?? ""}</Text>
       <Text style={localStyles.meta}>{item.description ?? ""}</Text>
       <View style={localStyles.actionsRow}>
+        <TouchableOpacity
+            style={styles.button}
+            onPress={() => Alert.alert("Ver Perfil", "Funcionalidad no implementada")}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Ver Perfil</Text>
+          </TouchableOpacity>
         {item.role === "PROFESOR" && (
           <TouchableOpacity
-            style={localStyles.msgButton}
+            style={styles.msgButton}
             onPress={() => Alert.alert("Mensajes", "Funcionalidad no implementada")}
             activeOpacity={0.8}
           >
-            <Text style={localStyles.msgButtonText}>Mensajes</Text>
+            <Text style={styles.msgButtonText}>Mensajes</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -183,16 +190,6 @@ const localStyles = StyleSheet.create({
   actionsRow: {
     marginTop: 8,
     flexDirection: "row",
-  },
-  msgButton: {
-    backgroundColor: "#2563EB",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  msgButtonText: {
-    color: "#fff",
-    fontWeight: "600",
   },
   center: {
     padding: 20,

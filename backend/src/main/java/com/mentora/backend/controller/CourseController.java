@@ -10,6 +10,7 @@ import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.responses.BulkCreateCoursesResponse;
 import com.mentora.backend.service.GradeService;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.mentora.backend.responses.GetCourseResponse;
+import com.opencsv.exceptions.CsvException;
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
@@ -38,6 +40,62 @@ public class CourseController {
     public CourseController(CourseService courseService, GradeService gradeService) {
         this.courseService = courseService;
         this.gradeService = gradeService;
+    }
+
+    @Operation(
+            summary = "Crear cursos desde CSV",
+            description = "Crea múltiples cursos a partir de un archivo CSV con formato: ID, Nombre, CIs de profesores (separados por comas). Solo administradores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Cursos creados correctamente")
+    @ApiResponse(responseCode = "207", description = "Algunos cursos no pudieron crearse")
+    @ApiResponse(responseCode = "400", description = "CSV inválido o sin cursos válidos")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<BulkCreateCoursesResponse>> createCoursesFromCsv(
+            @RequestParam("file") MultipartFile file) {
+        try {
+            BulkCreateCoursesResponse data = courseService.createCoursesFromCsv(file != null ? file.getInputStream() : null);
+
+            if (data.getErrors() == null || data.getErrors().isEmpty()) {
+                return ResponseEntity.ok(new DtApiResponse<>(
+                        true,
+                        200,
+                        "Cursos creados correctamente",
+                        data
+                ));
+            }
+
+            if (data.getCreatedCourses() != null && !data.getCreatedCourses().isEmpty()) {
+                return ResponseEntity.status(207).body(new DtApiResponse<>(
+                        false,
+                        207,
+                        "Algunos cursos no pudieron crearse",
+                        data
+                ));
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Ningún curso se creó. Revise los errores",
+                    data
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo CSV",
+                    null
+            ));
+        } catch (CsvException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "CSV inválido",
+                    null
+            ));
+        }
     }
 
     @Operation(summary = "Crear curso",

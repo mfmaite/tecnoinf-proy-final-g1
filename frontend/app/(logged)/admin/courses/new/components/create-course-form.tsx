@@ -28,6 +28,10 @@ const CreateCourseForm = () => {
   const [isLoadingProfessors, setIsLoadingProfessors] = useState(true);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [mode, setMode] = useState<'manual' | 'csv'>('manual');
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [bulkCreatedCount, setBulkCreatedCount] = useState<number | null>(null);
+  const [bulkErrors, setBulkErrors] = useState<string[] | null>(null);
 
   useEffect(() => {
     const loadProfessors = async () => {
@@ -112,6 +116,48 @@ const CreateCourseForm = () => {
     }
   };
 
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setCsvFile(file);
+    if (error) setError('');
+    if (success) setSuccess('');
+    setBulkCreatedCount(null);
+    setBulkErrors(null);
+  };
+
+  const handleCsvSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setBulkCreatedCount(null);
+    setBulkErrors(null);
+
+    if (!csvFile) {
+      setError('Debe seleccionar un archivo CSV');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await courseController.uploadCoursesCsv(csvFile, accessToken!);
+      if (result.success) {
+        setSuccess(result.message);
+      } else {
+        setError(result.message);
+      }
+
+      const createdCount = result.data?.createdCourses?.length ?? 0;
+      const errorsList = result.data?.errors ?? [];
+      setBulkCreatedCount(createdCount);
+      setBulkErrors(errorsList);
+      setCsvFile(null);
+    } catch (err: any) {
+      setError(err.message || 'Error al conectar con el servidor');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       <div className="w-full flex items-center justify-center p-6">
@@ -126,6 +172,40 @@ const CreateCourseForm = () => {
             </p>
           </div>
 
+          <div className="mb-6" role="tablist" aria-label="Modo de creación">
+            <div className="flex border-b border-gray-200">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'manual'}
+                className={`-mb-px px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-color-80 ${
+                  mode === 'manual'
+                    ? 'border-b-2 border-primary-color-80 text-primary-color-80'
+                    : 'border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                }`}
+                onClick={() => { setMode('manual'); setError(''); setSuccess(''); setBulkCreatedCount(null); setBulkErrors(null); }}
+                disabled={isLoading}
+              >
+                Formulario
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'csv'}
+                className={`-mb-px px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-color-80 ${
+                  mode === 'csv'
+                    ? 'border-b-2 border-primary-color-80 text-primary-color-80'
+                    : 'border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                }`}
+                onClick={() => { setMode('csv'); setError(''); setSuccess(''); }}
+                disabled={isLoading}
+              >
+                CSV
+              </button>
+            </div>
+          </div>
+
+          {mode === 'manual' ? (
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-accent-danger-10 border border-accent-danger-40 text-accent-danger-40 px-4 py-3 rounded-lg text-sm">
@@ -227,6 +307,83 @@ const CreateCourseForm = () => {
               </Button>
             </div>
           </form>
+          ) : (
+          <form onSubmit={handleCsvSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-accent-danger-10 border border-accent-danger-40 text-accent-danger-40 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg text-sm">
+                {success}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-small mb-2 font-bold text-text-neutral-50">Archivo CSV</label>
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleCsvFileChange}
+                disabled={isLoading}
+                className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-color-80 file:text-white hover:file:bg-primary-color-90"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Formato: identificador del curso, nombre del curso, CIs de profesores (separados por comas)
+              </p>
+              <a
+                href="/assets/spreadsheets-examples/alta-curso.csv"
+                download
+                className="inline-block mt-3 text-primary-color-80 hover:underline text-sm"
+              >
+                Descargar CSV de ejemplo
+              </a>
+            </div>
+
+            {bulkCreatedCount !== null && (
+              <div className="text-sm text-gray-700">
+                <span className="font-semibold">Cursos creados:</span> {bulkCreatedCount}
+              </div>
+            )}
+            {bulkErrors && bulkErrors.length > 0 && (
+              <div className="text-sm text-accent-danger-50 border border-accent-danger-40 bg-accent-danger-10 rounded-lg p-3">
+                <div className="font-semibold mb-1">Errores:</div>
+                <ul className="list-disc ml-5 space-y-1">
+                  {bulkErrors.map((err, idx) => (
+                    <li key={idx}>{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex gap-4 pt-2">
+              <Button
+                type="button"
+                size="lg"
+                color="secondary"
+                variant="outline"
+                className="flex-1"
+                disabled={isLoading}
+                onClick={() => { setCsvFile(null); setBulkCreatedCount(null); setBulkErrors(null); setError(''); setSuccess(''); }}
+              >
+                Limpiar
+              </Button>
+
+              <Button
+                type="submit"
+                size="lg"
+                color="primary"
+                variant="filled"
+                className="flex-1"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Procesando...' : 'Crear curso(s)'}
+              </Button>
+            </div>
+          </form>
+          )}
         </div>
       </div>
     </div>

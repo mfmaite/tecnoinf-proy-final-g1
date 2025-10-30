@@ -17,7 +17,7 @@ export function Navbar() {
 
   const courseDropdownItems = [
     { href: '/courses', label: 'Listado' },
-    { href: '/courses/new', label: 'Crear', adminOnly: true },
+    { href: '/admin/courses/new', label: 'Crear', adminOnly: true },
   ];
 
   return (

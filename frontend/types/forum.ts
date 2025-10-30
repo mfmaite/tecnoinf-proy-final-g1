@@ -22,3 +22,8 @@ export type ForumPageData = {
   forum: Forum;
   posts: ForumPost[];
 }
+
+export type ForumPostPageData = {
+  forum: Forum;
+  post: ForumPost;
+}

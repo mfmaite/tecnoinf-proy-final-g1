@@ -17,7 +17,7 @@ import { colors } from "../../../styles/colors";
 import { styles as globalStyles } from "../../../styles/styles";
 
 export default function EditProfileScreen() {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState(user?.name || "");
@@ -58,8 +58,6 @@ export default function EditProfileScreen() {
     try {
       setLoading(true);
 
-      let payload: any = { name, email, description };
-
       if (newImage && pictureUrl) {
         // si hay una imagen nueva, usamos FormData
         const formData = new FormData();
@@ -76,8 +74,6 @@ export default function EditProfileScreen() {
           name: filename,
           type,
         } as any);
-
-        payload = formData;
       }
 
       // await updateUser(payload, newImage); // `newImage` indica si es multipart

@@ -44,10 +44,10 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogout}>
           <Text style={styles.buttonText}> Cerrar Sesión </Text>
         </TouchableOpacity>
-      
+
       </View>
     </View>
-    
+
   );
 }
 

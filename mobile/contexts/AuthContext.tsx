@@ -1,8 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
 import { login as loginService } from "../services/auth";
-// import { updateProfile as updateProfileService } from "../services/user";
-import { changePassword } from "../services/userService";
 
 type User = {
   ci: string;
@@ -33,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -73,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Error en logout:", error);
     }
   };
-  
+
   const updateUser = async (updatedData: Partial<User>) => {
     if (!user) return;
     try {

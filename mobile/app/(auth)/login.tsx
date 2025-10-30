@@ -11,7 +11,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../styles/colors";
-import Logo from "../../assets/logo.svg";
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -26,7 +25,7 @@ export default function LoginScreen() {
     try {
       await login(ci, password);
       router.replace("/(main)/home");
-    } catch (e) {
+    } catch {
       setError("Credenciales inválidas");
     }
   };
@@ -72,7 +71,7 @@ export default function LoginScreen() {
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Iniciar sesión</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={() => router.push("/forgot-password")}>
           <Text className="text-blue-500 text-center mt-3">
             ¿Olvidaste tu contraseña?
@@ -106,8 +105,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,

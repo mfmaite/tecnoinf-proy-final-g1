@@ -26,4 +26,14 @@ public class Activity {
   @ManyToOne(optional = false)
   @JoinColumn(name = "userId", referencedColumnName = "ci")
   private User user;
+
+  public Activity() {}
+
+  public Activity(ActivityType type, String description, String link, User user) {
+    this.type = type;
+    this.description = description;
+    this.link = link;
+    this.user = user;
+    this.createdDate = LocalDateTime.now();
+  }
 }

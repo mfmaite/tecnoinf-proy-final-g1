@@ -1,91 +1,108 @@
+// app/(main)/profile/index.tsx
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
+import { styles as globalStyles } from "../../../styles/styles";
+import { colors } from "../../../styles/colors";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/(auth)/login");
+  };
+
+  const goToEditProfile = () => {
+    router.push("/(main)/profile/edit-profile");
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Mi Perfil</Text>
+    <View style={globalStyles.container}>
+      <Text style={globalStyles.title}>Mi Perfil</Text>
 
       {user?.pictureUrl ? (
-        <Image source={{ uri: user.pictureUrl }} style={styles.avatar} />
+        <Image source={{ uri: user.pictureUrl }} style={localStyles.avatar} />
       ) : (
-        <View style={[styles.avatar, styles.avatarPlaceholder]}>
-          <Text style={styles.avatarInitial}>
+        <View style={[localStyles.avatar, localStyles.avatarPlaceholder]}>
+          <Text style={localStyles.avatarInitial}>
             {user?.name?.charAt(0)?.toUpperCase() || "?"}
           </Text>
         </View>
       )}
 
-      <View style={styles.infoBox}>
-        <Text style={styles.label}>Nombre</Text>
-        <Text style={styles.value}>{user?.name || "N/A"}</Text>
+      <View style={localStyles.infoBox}>
+        <Text style={localStyles.label}>Nombre</Text>
+        <Text style={localStyles.value}>{user?.name || "N/A"}</Text>
 
-        <Text style={styles.label}>Email</Text>
-        <Text style={styles.value}>{user?.email || "N/A"}</Text>
+        <Text style={localStyles.label}>Email</Text>
+        <Text style={localStyles.value}>{user?.email || "N/A"}</Text>
 
-        <Text style={styles.label}>Rol</Text>
-        <Text style={styles.value}>{user?.role || "N/A"}</Text>
+        <Text style={localStyles.label}>Rol</Text>
+        <Text style={localStyles.value}>{user?.role || "N/A"}</Text>
 
         {user?.description ? (
           <>
-            <Text style={styles.label}>Descripción</Text>
-            <Text style={styles.value}>{user.description}</Text>
+            <Text style={localStyles.label}>Descripción</Text>
+            <Text style={localStyles.value}>{user.description}</Text>
           </>
         ) : null}
       </View>
 
-      <View style={styles.buttonsContainer}>
-        <Link href="./(main)/profile/edit-profile" asChild>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Editar perfil</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="./(main)/profile/change-password" asChild>
-            <TouchableOpacity>
-                <Text>Cambiar contraseña</Text>
-            </TouchableOpacity>
-        </Link>
+      <TouchableOpacity style={globalStyles.buttonPrimary} onPress={goToEditProfile}>
+        <Text style={globalStyles.buttonText}>Editar perfil</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={logout}
-          style={[styles.button, { backgroundColor: "#dc3545" }]}
-        >
-          <Text style={styles.buttonText}>Cerrar sesión</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[globalStyles.buttonSecondary, { backgroundColor: colors.accent.danger[50] }]}
+        onPress={handleLogout}
+      >
+        <Text style={globalStyles.buttonText}>Cerrar sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", alignItems: "center", padding: 20 },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 25 },
-  avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 20 },
+const localStyles = StyleSheet.create({
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 20,
+    backgroundColor: colors.surfaceLight[30],
+    alignSelf: "center",
+  },
   avatarPlaceholder: {
-    backgroundColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "center"
   },
-  avatarInitial: { fontSize: 40, color: "#fff" },
+  avatarInitial: {
+    fontSize: 40,
+    color: colors.textNeutral[10],
+    fontWeight: "700" as const,
+  },
   infoBox: {
     width: "100%",
-    backgroundColor: "#f9f9f9",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 30,
+    backgroundColor: colors.surfaceLight[10],
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
   },
-  label: { fontWeight: "bold", color: "#333", marginTop: 10 },
-  value: { fontSize: 16, color: "#555" },
-  buttonsContainer: { width: "100%" },
-  button: {
-    backgroundColor: "#007bff",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
+  label: {
+    fontWeight: "600" as const,
+    color: colors.textNeutral[40],
+    marginTop: 8,
   },
-  buttonText: { color: "white", textAlign: "center", fontWeight: "bold" },
+  value: {
+    fontSize: 16,
+    color: colors.textNeutral[50],
+  },
 });

@@ -65,33 +65,35 @@ export default function ResetPasswordScreen() {
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Restablecer contraseña</Text>
+      <View style={globalStyles.cardMain}>
+        <Text style={globalStyles.title}>Restablecer contraseña</Text>
 
-      <TextInput
-        placeholder="Nueva contraseña"
-        secureTextEntry
-        value={newPassword}
-        onChangeText={setNewPassword}
-        style={globalStyles.input}
-      />
+        <TextInput
+          placeholder="Nueva contraseña"
+          secureTextEntry
+          value={newPassword}
+          onChangeText={setNewPassword}
+          style={globalStyles.input}
+        />
 
-      <TextInput
-        placeholder="Confirmar contraseña"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        style={globalStyles.input}
-      />
+        <TextInput
+          placeholder="Confirmar contraseña"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          style={globalStyles.input}
+        />
 
-      <TouchableOpacity
-        style={[globalStyles.buttonPrimary, loading && styles.disabledButton]}
-        onPress={handleResetPassword}
-        disabled={loading}
-      >
-        <Text style={globalStyles.buttonText}>
-          {loading ? "Procesando..." : "Cambiar contraseña"}
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[globalStyles.buttonPrimary, loading && styles.disabledButton]}
+          onPress={handleResetPassword}
+          disabled={loading}
+        >
+          <Text style={globalStyles.buttonText}>
+            {loading ? "Procesando..." : "Cambiar contraseña"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

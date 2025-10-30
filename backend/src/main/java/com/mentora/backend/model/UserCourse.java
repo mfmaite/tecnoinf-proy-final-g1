@@ -19,11 +19,13 @@ public class UserCourse {
     private User user;
 
     @Column(name = "finalGrade")
-    private Double finalGrade;
+    private Integer finalGrade;
 
-    public UserCourse() {}
+    public UserCourse() {
+    }
 
-    public UserCourse(Course course, User user, Double finalGrade) {
+    public UserCourse(Course course, User user, Integer finalGrade) {
+        this();
         this.course = course;
         this.user = user;
         this.finalGrade = finalGrade;
@@ -37,6 +39,7 @@ public class UserCourse {
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
-    public Double getFinalGrade() { return finalGrade; }
-    public void setFinalGrade(Double finalGrade) { this.finalGrade = finalGrade; }
-  }
+    public Integer getFinalGrade() { return finalGrade; }
+    public void setFinalGrade(Integer finalGrade) { this.finalGrade = finalGrade; }
+}
+

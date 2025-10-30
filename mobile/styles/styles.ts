@@ -153,5 +153,28 @@ export const styles = StyleSheet.create({
     contentText: { fontSize: 14, marginBottom: 4 },
     contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
     contentDate: { fontSize: 12, color: colors.textNeutral[40] },
-    
+  sortContainerBox: {
+    width: "90%",
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 8,
+  },
+  sortLabelBox: {
+    marginRight: 8,
+    fontWeight: "600",
+    marginBottom: 6,
+    color: colors.textNeutral[40],
+  },
+  pickerWrapper: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    overflow: "hidden",
+  },    
+  link: {
+    color: "#2563EB",
+    textDecorationLine: "underline",
+  },
 });

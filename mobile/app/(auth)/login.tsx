@@ -26,7 +26,7 @@ export default function LoginScreen() {
     try {
       await login(ci, password);
       router.replace("/(main)/home");
-    } catch (e) {
+    } catch {
       setError("Credenciales inválidas");
     }
   };
@@ -34,7 +34,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
+        {React.createElement(logo, { style: styles.logo })}
         <Text style={styles.title}>Mentora</Text>
 
         <TextInput
@@ -103,8 +103,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     marginBottom: 10,
   },
   title: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   error: {
-    color: colors.accent[50],
+    color: colors.accent.danger[50],
     marginBottom: 8,
     textAlign: "center",
   },

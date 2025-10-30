@@ -2,6 +2,7 @@ package com.mentora.backend.controller;
 
 import com.mentora.backend.requests.ChangePasswordRequest;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
 import com.mentora.backend.requests.ResetPasswordRequest;
@@ -196,6 +197,32 @@ public class UserController {
                     "Error al restablecer la contraseña",
                     null
                 ));
+        }
+    }
+
+    @Operation(summary = "Listar actividades de un usuario",
+            description = "Lista todas las actividades de un usuario",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Actividades obtenidas correctamente")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @GetMapping("/{userId}/activities")
+    public ResponseEntity<DtApiResponse<List<DtActivity>>> getActivitiesForUser(@PathVariable String userId) {
+        try {
+        List<DtActivity> activities = userService.getActivitiesForUser(userId);
+        return ResponseEntity.ok().body(new DtApiResponse<>(
+            true,
+            HttpStatus.OK.value(),
+            "Actividades obtenidas correctamente",
+            activities
+        ));
+
+        } catch (ResponseStatusException e) {
+        return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+            false,
+            e.getStatusCode().value(),
+            e.getReason(),
+            null
+        ));
         }
     }
 }

@@ -36,4 +36,22 @@ public class Activity {
     this.user = user;
     this.createdDate = LocalDateTime.now();
   }
+
+  public Long getId() { return id; }
+  public void setId(Long id) { this.id = id; }
+
+  public ActivityType getType() { return type; }
+  public void setType(ActivityType type) { this.type = type; }
+
+  public String getDescription() { return description; }
+  public void setDescription(String description) { this.description = description; }
+
+  public String getLink() { return link; }
+  public void setLink(String link) { this.link = link; }
+
+  public LocalDateTime getCreatedDate() { return createdDate; }
+  public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+
+  public User getUser() { return user; }
+  public void setUser(User user) { this.user = user; }
 }

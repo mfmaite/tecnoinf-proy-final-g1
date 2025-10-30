@@ -1,11 +1,14 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Role;
+import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.PasswordResetToken;
 import com.mentora.backend.repository.PasswordResetTokenRepository;
 import com.mentora.backend.repository.UserRepository;
+import com.mentora.backend.repository.ActivityRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,12 +25,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final ActivityRepository activityRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, ActivityRepository activityRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.activityRepository = activityRepository;
     }
 
     public User findByCI(String ci) {
@@ -186,5 +191,19 @@ public class UserService {
 
         // Invalidate token after use
         passwordResetTokenRepository.delete(resetToken);
+    }
+
+    public List<DtActivity> getActivitiesForUser(String userId) {
+        return activityRepository.findByUser_Ci(userId).stream().map(this::getDtActivity).toList();
+    }
+
+    private DtActivity getDtActivity(Activity activity) {
+    return new DtActivity(
+        activity.getId(),
+        activity.getType(),
+        activity.getDescription(),
+        activity.getLink(),
+        activity.getCreatedDate()
+    );
     }
 }

@@ -65,7 +65,7 @@ public class ForumService {
         // Crea la actividad de participación en el foro
         Activity activity = new Activity(
             ActivityType.FORUM_PARTICIPATION,
-            "Participación en el foro de " + forum.getType().name() + " del curso " + forum.getCourse().getName(),
+            "Participación en el foro de " + (forum.getType().name() == "ANNOUNCEMENTS" ? "anuncios" : "consultas") + " del curso " + forum.getCourse().getName(),
             "/courses/" + forum.getCourse().getId() + "/forums/" + forum.getId(),
             author
         );

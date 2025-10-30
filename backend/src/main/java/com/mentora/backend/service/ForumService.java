@@ -2,8 +2,11 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.DtPost;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtForum;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.*;
+import com.mentora.backend.responses.GetForumResponse;
+import com.mentora.backend.responses.GetPostResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -56,7 +59,7 @@ public class ForumService {
 
         postRepository.save(post);
 
-        List<DtUser> studentsDto = userCourseService.getUsersFromCourse(forum.getCourse().getId()).stream()
+        List<DtUser> studentsDto = userCourseService.getParticipantsFromCourse(forum.getCourse().getId()).stream()
                 .filter(u -> u.getRole() == Role.ESTUDIANTE)
                 .toList();
 
@@ -79,9 +82,26 @@ public class ForumService {
         return getDtPost(post);
     }
 
-    public List<DtPost> getPostsByForum(Long forumId) {
+    public GetForumResponse getPostsByForum(Long forumId) {
+        Forum forum = forumRepository.findById(forumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Foro no encontrado"));
+
         List<Post> posts = postRepository.findByForum_IdOrderByCreatedDateDesc(forumId);
-        return posts.stream().map(this::getDtPost).toList();
+        return new GetForumResponse(getDtForum(forum), posts.stream().map(this::getDtPost).toList());
+    }
+
+    public GetPostResponse getPost(Long forumId, Long postId) {
+        Forum forum = forumRepository.findById(forumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Foro no encontrado"));
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));
+
+        if (!post.getForum().getId().equals(forum.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El post no pertenece al foro");
+        }
+
+        return new GetPostResponse(getDtForum(forum), getDtPost(post));
     }
 
     private DtPost getDtPost(Post post) {
@@ -89,9 +109,14 @@ public class ForumService {
             post.getId(),
             post.getAuthor().getCi(),
             post.getAuthor().getName(),
+            post.getAuthor().getPictureUrl(),
             post.getMessage(),
             post.getCreatedDate()
         );
         return dto;
+    }
+
+    private DtForum getDtForum(Forum forum) {
+        return new DtForum(forum.getId().toString(), forum.getType().name(), forum.getCourse().getId());
     }
 }

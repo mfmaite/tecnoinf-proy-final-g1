@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link';
 import { useAuth } from '../../hooks/useAuth';
 import UserProfilePicture from '../user-profile-picture/user-profile-picture';
 
@@ -20,11 +21,13 @@ export function UserInfo() {
         <p className="text-xs text-gray-500">{user.ci}</p>
       </div>
 
-      <UserProfilePicture
-        name={user.name}
-        pictureUrl={user.pictureUrl}
-        size="md"
-      />
+      <Link href={'/profile'}>
+        <UserProfilePicture
+          name={user.name}
+          pictureUrl={user.pictureUrl}
+          size="md"
+        />
+      </Link>
     </div>
   )
 }

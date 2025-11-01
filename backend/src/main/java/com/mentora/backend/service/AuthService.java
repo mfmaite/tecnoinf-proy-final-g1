@@ -36,7 +36,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
 
-        DtUser userDto = new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureUrl(), user.getRole());
+        DtUser userDto = new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureFileName(), user.getRole());
         return new LoginResponse(userDto, jwtService.generateToken(user));
     }
 }

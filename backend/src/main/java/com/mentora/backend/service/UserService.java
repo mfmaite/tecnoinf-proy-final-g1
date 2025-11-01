@@ -1,5 +1,6 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.model.User;
@@ -9,8 +10,10 @@ import com.mentora.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.Duration;
 import java.util.*;
@@ -22,12 +25,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final FileStorageService fileStorageService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     public User findByCI(String ci) {
@@ -57,7 +62,7 @@ public class UserService {
                 dto.getEmail(),
                 passwordEncoder.encode(dto.getPassword()),
                 dto.getDescription(),
-                dto.getPictureUrl(),
+                null,
                 dto.getRole()
         );
 
@@ -93,27 +98,47 @@ public class UserService {
         }
 
         String o = (order == null ? "name_asc" : order.toLowerCase());
-        Comparator<User> comparator;
-        switch (o) {
-            case "name_desc":
-                comparator = Comparator.comparing((User u) -> u.getName().toLowerCase()).reversed();
-                break;
-            case "ci_asc":
-                comparator = Comparator.comparing(User::getCi);
-                break;
-            case "ci_desc":
-                comparator = Comparator.comparing(User::getCi).reversed();
-                break;
-            default:
-                comparator = Comparator.comparing((User u) -> u.getName().toLowerCase());
-        }
+        Comparator<User> comparator = switch (o) {
+            case "name_desc" -> Comparator.comparing((User u) -> u.getName().toLowerCase()).reversed();
+            case "ci_asc" -> Comparator.comparing(User::getCi);
+            case "ci_desc" -> Comparator.comparing(User::getCi).reversed();
+            default -> Comparator.comparing((User u) -> u.getName().toLowerCase());
+        };
         users = users.stream().sorted(comparator).collect(Collectors.toList());
 
         return users.stream().map(this::getUserDto).collect(Collectors.toList());
     }
 
+    public DtUser updateUser(String ci, DtUser dto, MultipartFile picture) {
+        User u = userRepository.findByCi(ci)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        if (dto.getName() == null || dto.getName().isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre requerido");
+
+        if (dto.getEmail() == null || !dto.getEmail().contains("@"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email inválido");
+
+        u.setName(dto.getName());
+        u.setEmail(dto.getEmail());
+        u.setDescription(dto.getDescription());
+
+        if (picture != null && !picture.isEmpty()) {
+            try {
+                DtFileResource fr = fileStorageService.store(picture);
+                u.setPictureFileName(fr.getStoragePath());
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error subiendo la imagen");
+            }
+        }
+
+        userRepository.save(u);
+        return getUserDto(u);
+    }
+
+
     public DtUser getUserDto(User u) {
-        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
+        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureFileName(), u.getRole());
     }
 
     public void changePassword(String newPwd, String confirmPwd, String oldPwd, String userCi) {

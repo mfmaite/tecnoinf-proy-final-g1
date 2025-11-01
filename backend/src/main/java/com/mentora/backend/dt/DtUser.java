@@ -21,19 +21,19 @@ public class DtUser {
     private String password;
 
     private String description;
-    private String pictureUrl;
+    private String pictureFileName;
 
     @NotNull(message = "El rol es requerido")
     private Role role;
 
     public DtUser() {}
 
-    public DtUser(String ci, String name, String email, String description, String pictureUrl, Role role) {
+    public DtUser(String ci, String name, String email, String description, String pictureFileName, Role role) {
         this.ci = ci;
         this.name = name;
         this.email = email;
         this.description = description;
-        this.pictureUrl = pictureUrl;
+        this.pictureFileName = pictureFileName;
         this.role = role;
     }
 
@@ -53,8 +53,8 @@ public class DtUser {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getPictureUrl() { return pictureUrl; }
-    public void setPictureUrl(String pictureUrl) { this.pictureUrl = pictureUrl; }
+    public String getPictureFileName() { return pictureFileName; }
+    public void setPictureFileName(String pictureUrl) { this.pictureFileName = pictureFileName; }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }

@@ -22,7 +22,7 @@ public class PostService {
             post.getId(),
             post.getAuthor().getCi(),
             post.getAuthor().getName(),
-            post.getAuthor().getPictureUrl(),
+            post.getAuthor().getPictureFileName(),
             post.getMessage(),
             post.getCreatedDate()
         );

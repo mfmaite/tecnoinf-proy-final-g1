@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -206,9 +208,13 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Actividades obtenidas correctamente")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
     @GetMapping("/{userId}/activities")
-    public ResponseEntity<DtApiResponse<List<DtActivity>>> getActivitiesForUser(@PathVariable String userId) {
+    public ResponseEntity<DtApiResponse<List<DtActivity>>> getActivitiesForUser(
+            @PathVariable String userId,
+            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
         try {
-        List<DtActivity> activities = userService.getActivitiesForUser(userId);
+        List<DtActivity> activities = userService.getActivitiesForUser(userId, startDate, endDate);
         return ResponseEntity.ok().body(new DtApiResponse<>(
             true,
             HttpStatus.OK.value(),

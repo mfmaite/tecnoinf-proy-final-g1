@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -193,8 +196,36 @@ public class UserService {
         passwordResetTokenRepository.delete(resetToken);
     }
 
-    public List<DtActivity> getActivitiesForUser(String userId) {
-        return activityRepository.findByUser_Ci(userId).stream().map(this::getDtActivity).toList();
+    public List<DtActivity> getActivitiesForUser(String userId, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime;
+        LocalDateTime endDateTime;
+
+        LocalDateTime startOfTimes = LocalDateTime.of(1000, 1, 1, 0, 0);
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfMonth = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+        LocalDateTime endOfMonth = LocalDateTime.of(today.withDayOfMonth(today.getMonth().length(today.isLeapYear())), LocalTime.MAX);
+
+
+
+        if (startDate == null && endDate == null) {
+            // Si ambos son null se trae solo lo del mes actual
+            startDateTime = startOfMonth;
+            endDateTime = endOfMonth;
+        } else {
+            startDateTime = (startDate != null)
+                    ? startDate.atStartOfDay()
+                    : startOfTimes;
+
+            endDateTime = (endDate != null)
+                    ? endDate.atTime(LocalTime.MAX)
+                    : endOfMonth;
+        }
+
+        return activityRepository
+                .findByUser_CiAndCreatedDateBetween(userId, startDateTime, endDateTime)
+                .stream()
+                .map(this::getDtActivity)
+                .toList();
     }
 
     private DtActivity getDtActivity(Activity activity) {

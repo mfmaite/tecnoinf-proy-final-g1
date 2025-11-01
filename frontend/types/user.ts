@@ -28,3 +28,9 @@ export interface UserResponse {
   pictureUrl?: string;
   role: 'ADMIN' | 'PROFESOR' | 'ESTUDIANTE';
 }
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}

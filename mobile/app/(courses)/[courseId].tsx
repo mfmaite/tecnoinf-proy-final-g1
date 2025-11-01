@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Alert } from "react-native";
-import { useRouter,useLocalSearchParams } from "expo-router";
+import { View, Text, ScrollView, ActivityIndicator, Linking, Alert, TouchableOpacity } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors } from "../../styles/colors";
 import { getCourseById, CourseData, Content } from "../../services/courses";
 import { styles } from "../../styles/styles";
@@ -18,22 +18,23 @@ export default function CourseView() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (!courseId) return; 
+    if (!courseId) return;
     const fetchCourse = async () => {
       try {
         const data = await getCourseById(String(courseId));
         setCourseData(data.course);
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
-        
+
       } catch (err) {
-        setError("No se pudieron cargar los datos del curso.");
+        setError("No se pudieron cargar los datos del curso: " + err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCourse();
-  }, [courseId]); 
+  }, [courseId]);
+
   useLayoutEffect(() => {
   if (courseData?.name) {
     (navigation as any).setOptions?.({ title: courseData.name });

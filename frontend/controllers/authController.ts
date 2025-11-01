@@ -1,6 +1,6 @@
 import { getSession, signOut } from 'next-auth/react';
 import { API_ENDPOINTS } from '../config/api';
-import { UserLoginData, LoginResponse, ApiError } from '../types/user';
+import { UserLoginData, LoginResponse } from '../types/user';
 
 class AuthController {
   async login(credentials: UserLoginData): Promise<LoginResponse> {
@@ -47,7 +47,7 @@ class AuthController {
     return session?.user || null;
   }
 
-  private handleError(error: unknown): ApiError {
+  private handleError(error: unknown): { message: string } {
     if (error instanceof Error) {
       return { message: error.message };
     }

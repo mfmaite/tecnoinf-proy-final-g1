@@ -58,10 +58,10 @@ export default function CoursesList() {
     const response = await api.get("/courses");
     const data = response.data.data || [];
     setCourses(data);
-    console.log("Respuesta del backend:", response.data);
+    //console.log("Respuesta del backend:", response.data);
     setFilteredCourses(data);
   } catch (err) {
-    console.error("Error al obtener cursos:", err);
+    //console.error("Error al obtener cursos:", err);
     setError("No se pudieron cargar los cursos.");
   } finally {
     setLoading(false);

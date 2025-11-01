@@ -3,14 +3,12 @@ import { colors } from "./colors";
 
 export const styles = StyleSheet.create({
   container: {
-    
     flex: 1,
-    backgroundColor: colors.surfaceLight[20],
+    backgroundColor: colors.primary[10],
+    justifyContent: "center",
     paddingTop: 10,
-    paddingHorizontal: 10, 
-    //alignItems: "center", //rompe todo
+    paddingHorizontal: 20,
   },
-
   title: {
     textAlign: "center",
     fontSize: 24,
@@ -128,6 +126,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 10,
+    marginBottom: 15,
     elevation: 3,
   },
   listContainer: {
@@ -138,10 +137,28 @@ export const styles = StyleSheet.create({
     //paddingVertical: 5,
     //paddingHorizontal: 10,
   },
+  logo: {
+    width: 80,
+    height: 80,
+    alignSelf: "center",
+  },
   error: {
     color: colors.accent.danger[40],
     fontSize: 16,
     textAlign: "center",
+  },
+  cardMain: {
+    backgroundColor: colors.surfaceLight[10],
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    width: "100%",
+    maxWidth: 380,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
   cellId: { flex: 2, textAlign: "center" },
   cellName: { flex: 3, textAlign: "left" },

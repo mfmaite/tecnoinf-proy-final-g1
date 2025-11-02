@@ -23,7 +23,8 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         if (req.nextUrl.pathname.startsWith('/login') ||
-            req.nextUrl.pathname.startsWith('/api/auth')) {
+            req.nextUrl.pathname.startsWith('/api/auth') ||
+            req.nextUrl.pathname.startsWith('/reset-password')) {
           return true
         }
 

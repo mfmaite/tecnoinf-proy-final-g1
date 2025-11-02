@@ -14,8 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.responses.DtApiResponse;
-
-import java.util.List;
+import com.mentora.backend.responses.GetForumResponse;
+import com.mentora.backend.responses.GetPostResponse;
 
 @RestController
 @RequestMapping("/forum")
@@ -72,14 +72,47 @@ public class ForumController {
     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     @PreAuthorize("hasAnyRole('PROFESOR','ESTUDIANTE')")
     @GetMapping("/{forumId}")
-    public ResponseEntity<DtApiResponse<List<DtPost>>> getPostsByForum(@PathVariable Long forumId) {
+    public ResponseEntity<DtApiResponse<GetForumResponse>> getPostsByForum(@PathVariable Long forumId) {
         try {
-            List<DtPost> posts = forumService.getPostsByForum(forumId);
+            GetForumResponse forumResponse = forumService.getPostsByForum(forumId);
+
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,
                 HttpStatus.OK.value(),
                 "Lista de posts obtenida correctamente",
-                posts
+                forumResponse
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Obtener un post de un foro",
+            description = "Devuelve el post y datos del foro.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Post obtenido correctamente")
+    @ApiResponse(responseCode = "404", description = "Foro o post no encontrado")
+    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    @PreAuthorize("hasAnyRole('PROFESOR','ESTUDIANTE')")
+    @GetMapping("/{forumId}/post/{postId}")
+    public ResponseEntity<DtApiResponse<GetPostResponse>> getPost(
+            @PathVariable Long forumId,
+            @PathVariable Long postId
+    ) {
+        try {
+            GetPostResponse postResponse = forumService.getPost(forumId, postId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Post obtenido correctamente",
+                postResponse
             ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(

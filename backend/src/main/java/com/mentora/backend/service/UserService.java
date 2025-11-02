@@ -1,17 +1,23 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Role;
+import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.PasswordResetToken;
 import com.mentora.backend.repository.PasswordResetTokenRepository;
 import com.mentora.backend.repository.UserRepository;
+import com.mentora.backend.repository.ActivityRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,12 +28,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final ActivityRepository activityRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, ActivityRepository activityRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.activityRepository = activityRepository;
     }
 
     public User findByCI(String ci) {
@@ -186,5 +194,47 @@ public class UserService {
 
         // Invalidate token after use
         passwordResetTokenRepository.delete(resetToken);
+    }
+
+    public List<DtActivity> getActivitiesForUser(String userId, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime;
+        LocalDateTime endDateTime;
+
+        LocalDateTime startOfTimes = LocalDateTime.of(1000, 1, 1, 0, 0);
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfMonth = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+        LocalDateTime endOfMonth = LocalDateTime.of(today.withDayOfMonth(today.getMonth().length(today.isLeapYear())), LocalTime.MAX);
+
+
+
+        if (startDate == null && endDate == null) {
+            // Si ambos son null se trae solo lo del mes actual
+            startDateTime = startOfMonth;
+            endDateTime = endOfMonth;
+        } else {
+            startDateTime = (startDate != null)
+                    ? startDate.atStartOfDay()
+                    : startOfTimes;
+
+            endDateTime = (endDate != null)
+                    ? endDate.atTime(LocalTime.MAX)
+                    : endOfMonth;
+        }
+
+        return activityRepository
+                .findByUser_CiAndCreatedDateBetween(userId, startDateTime, endDateTime)
+                .stream()
+                .map(this::getDtActivity)
+                .toList();
+    }
+
+    private DtActivity getDtActivity(Activity activity) {
+    return new DtActivity(
+        activity.getId(),
+        activity.getType(),
+        activity.getDescription(),
+        activity.getLink(),
+        activity.getCreatedDate()
+    );
     }
 }

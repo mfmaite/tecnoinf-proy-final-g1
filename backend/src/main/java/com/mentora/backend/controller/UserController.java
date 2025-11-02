@@ -2,6 +2,7 @@ package com.mentora.backend.controller;
 
 import com.mentora.backend.requests.ChangePasswordRequest;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
 import com.mentora.backend.requests.ResetPasswordRequest;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -196,6 +199,36 @@ public class UserController {
                     "Error al restablecer la contraseña",
                     null
                 ));
+        }
+    }
+
+    @Operation(summary = "Listar actividades de un usuario",
+            description = "Lista todas las actividades de un usuario",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Actividades obtenidas correctamente")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @GetMapping("/{userId}/activities")
+    public ResponseEntity<DtApiResponse<List<DtActivity>>> getActivitiesForUser(
+            @PathVariable String userId,
+            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        try {
+        List<DtActivity> activities = userService.getActivitiesForUser(userId, startDate, endDate);
+        return ResponseEntity.ok().body(new DtApiResponse<>(
+            true,
+            HttpStatus.OK.value(),
+            "Actividades obtenidas correctamente",
+            activities
+        ));
+
+        } catch (ResponseStatusException e) {
+        return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+            false,
+            e.getStatusCode().value(),
+            e.getReason(),
+            null
+        ));
         }
     }
 }

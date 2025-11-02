@@ -68,6 +68,55 @@ class UserController {
     }
   }
 
+  async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<ApiResponse<void>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.RESET_PASSWORD}`, {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword, confirmPassword }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
+    } catch (error) {
+      console.error('Error al restablecer la contraseña:', error);
+      throw error;
+    }
+  }
+
+  async forgotPassword(email: string): Promise<ApiResponse<void>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.PASSWORD_RECOVERY}?email=${email}`, {
+        method: 'GET',
+      });
+
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        data,
+        message,
+      };
+    } catch (error) {
+      console.error('Error al enviar el email de recuperación de contraseña:', error);
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al enviar el email de recuperación de contraseña',
+        data: undefined,
+      };
+    }
+  }
+
   async changePassword(
     payload: ChangePasswordRequest,
     accessToken: string

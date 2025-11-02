@@ -5,9 +5,11 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primary[10],
-    justifyContent: "center",
     paddingTop: 10,
     paddingHorizontal: 20,
+  },
+  scrollContent: {
+    justifyContent: "center",
   },
   title: {
     textAlign: "center",
@@ -98,7 +100,7 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     color: colors.textNeutral[50],
     paddingHorizontal: 5,
-    //flexWrap: "wrap", 
+    //flexWrap: "wrap",
   },
   button: {
     //flex: 1,
@@ -133,7 +135,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     //alignItems: "center",
     textAlign: "center",
-    //paddingBottom: 20, 
+    //paddingBottom: 20,
     //paddingVertical: 5,
     //paddingHorizontal: 10,
   },

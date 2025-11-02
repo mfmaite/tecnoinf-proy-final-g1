@@ -32,6 +32,8 @@ function formatDate(date?: string | null) {
 }
 
 export default function CoursesList() {
+  const router = useRouter();
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);

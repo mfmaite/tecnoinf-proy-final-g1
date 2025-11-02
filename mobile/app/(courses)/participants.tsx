@@ -29,7 +29,6 @@ export default function ParticipantsList() {
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState("");
 
-
   useEffect(() => {
     if (!courseId) return;
     const fetchParticipants = async () => {
@@ -43,16 +42,12 @@ export default function ParticipantsList() {
         const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(
           String(courseId)
         )}/participants`;
-        //console.log("[getParticipants] REQUEST URL:", url);
-
         const res = await fetch(url, {
           method: "GET",
           headers: { Accept: "application/json" },
         });
 
         const text = await res.text();
-        //console.log("[getParticipants] RESPONSE TEXT:", text);
-
         if (!res.ok) {
           throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
         }
@@ -65,7 +60,6 @@ export default function ParticipantsList() {
 
         setParticipants(data as Participant[]);
       } catch (err: any) {
-        //console.error("[getParticipants] error:", err);
         setError(err?.message ?? "Error al obtener participantes");
       } finally {
         setLoading(false);

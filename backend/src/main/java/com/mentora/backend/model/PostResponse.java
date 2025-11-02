@@ -30,7 +30,12 @@ public class PostResponse {
 
     public PostResponse() {}
 
-    public PostResponse(Long id, String message, LocalDateTime createdDate, User author, Post post) {}
+    public PostResponse(String message, User author, Post post) {
+        this.message = message;
+        this.author = author;
+        this.post = post;
+        this.createdDate = LocalDateTime.now();
+    }
 
     public Long getId() {return id;}
     public String getMessage() {return message;}

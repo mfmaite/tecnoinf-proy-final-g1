@@ -42,7 +42,6 @@ export default function ParticipantsList() {
         const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(
           String(courseId)
         )}/participants`;
-        console.log("[getParticipants] REQUEST URL:", url);
 
         const res = await fetch(url, {
           method: "GET",
@@ -50,7 +49,6 @@ export default function ParticipantsList() {
         });
 
         const text = await res.text();
-        console.log("[getParticipants] RESPONSE TEXT:", text);
 
         if (!res.ok) {
           throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);

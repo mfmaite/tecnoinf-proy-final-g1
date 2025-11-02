@@ -61,7 +61,7 @@ export default function CourseView() {
       console.warn("Error descargando archivo, fallback a abrir URL:", err);
       try {
         await Linking.openURL(url);
-      } catch (e) {
+      } catch {
         Alert.alert("No se puede descargar ni abrir el archivo.");
       }
     }
@@ -71,7 +71,7 @@ export default function CourseView() {
     const parts = content.split(/(https?:\/\/[^\s]+)/g);
 
     return (
-      
+
       <Text style={styles.contentText}>
         {parts.map((part, idx) => {
           if (!part) return null;
@@ -90,7 +90,7 @@ export default function CourseView() {
                     } else {
                       Alert.alert("No se puede abrir el enlace.");
                     }
-                  } catch (e) {
+                  } catch {
                     Alert.alert("Error al abrir el enlace.");
                   }
                 }}
@@ -110,7 +110,7 @@ export default function CourseView() {
   if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <TouchableOpacity
         style={styles.buttonPrimary}
         onPress={() =>
@@ -122,9 +122,9 @@ export default function CourseView() {
         activeOpacity={0.8}
       >
         <Text style={styles.buttonText}>Ver Participantes</Text>
-      </TouchableOpacity>      
+      </TouchableOpacity>
       <View style={styles.header}>
-        
+
         <Text style={styles.subtitle}>ID: {courseData.id},
           Creado:{" "}
           {courseData.createdDate
@@ -142,7 +142,7 @@ export default function CourseView() {
           {item.fileName && item.fileUrl && (
             <View>
               <Text style={styles.contentFile}>
-                Archivo: {item.fileName} 
+                Archivo: {item.fileName}
               </Text>
               <TouchableOpacity style={styles.buttonPrimary}
                 onPress={() => handleDownload(item.fileUrl, item.fileName)}

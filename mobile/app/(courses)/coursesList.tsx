@@ -11,7 +11,6 @@ import { colors } from "../../styles/colors";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
 import { Picker } from '@react-native-picker/picker';
-import { push } from "expo-router/build/global-state/routing";
 import { useRouter } from "expo-router";
 
 interface Course {
@@ -20,7 +19,6 @@ interface Course {
   createdDate?: string;
 }
 
-const router = useRouter();
 function formatDate(date?: string | null) {
   if (!date) return "-";
   const d = new Date(date);
@@ -32,6 +30,8 @@ function formatDate(date?: string | null) {
 }
 
 export default function CoursesList() {
+  const router = useRouter();
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,10 +58,8 @@ export default function CoursesList() {
     const response = await api.get("/courses");
     const data = response.data.data || [];
     setCourses(data);
-    //console.log("Respuesta del backend:", response.data);
     setFilteredCourses(data);
-  } catch (err) {
-    //console.error("Error al obtener cursos:", err);
+  } catch {
     setError("No se pudieron cargar los cursos.");
   } finally {
     setLoading(false);
@@ -87,7 +85,7 @@ export default function CoursesList() {
         break;
       case "fecha-desc":
         filtered.sort((a, b) => (b.createdDate || "").localeCompare(a.createdDate || ""));
-        break;       
+        break;
     }
 
     setFilteredCourses(filtered);
@@ -124,14 +122,15 @@ export default function CoursesList() {
 
   return (
     <View style={styles.container}>
-      
+
       {/* Campo de búsqueda */}
       <TextInput
         style={styles.searchInput}
         placeholder="Buscar por nombre o ID..."
         value={search}
         onChangeText={setSearch}
-      /> 
+      />
+
       {/* Selector de ordenamiento (combo) */}
       <View style={styles.sortContainerBox}>
         <Text style={styles.sortLabelBox}>Ordenar por:</Text>
@@ -147,7 +146,7 @@ export default function CoursesList() {
             <Picker.Item label="Fecha (Desc)" value="fecha-desc" />
           </Picker>
         </View>
-      </View>   
+      </View>
       {/* Selector de filtro (combo) */}
       <View style={styles.sortContainerBox}>
         <Text style={styles.sortLabelBox}>Filtrar por:</Text>
@@ -162,7 +161,7 @@ export default function CoursesList() {
             <Picker.Item label="En curso" value="nofin" />
           </Picker>
         </View>
-      </View>    
+      </View>
 
       {/* Cabecera de columnas */}
       <View style={styles.headerRow}>

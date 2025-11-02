@@ -6,17 +6,19 @@ public class DtPost {
     private Long id;
     private String authorCi;
     private String authorName;
+    private String authorPictureUrl;
     private String message;
     private LocalDateTime createdDate;
 
     public DtPost() {}
 
-    public DtPost(Long id, String authorCi, String authorName, String message, LocalDateTime createdDate) {
+    public DtPost(Long id, String authorCi, String authorName, String authorPictureUrl, String message, LocalDateTime createdDate) {
         this.id = id;
         this.authorCi = authorCi;
         this.authorName = authorName;
         this.message = message;
         this.createdDate = createdDate;
+        this.authorPictureUrl = authorPictureUrl;
     }
 
     // Getters y setters
@@ -34,4 +36,7 @@ public class DtPost {
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+
+    public String getAuthorPictureUrl() { return authorPictureUrl; }
+    public void setAuthorPictureUrl(String authorPictureUrl) { this.authorPictureUrl = authorPictureUrl; }
 }

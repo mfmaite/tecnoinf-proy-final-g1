@@ -1,14 +1,17 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtFinalGrade;
+import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.service.CourseService;
-import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.responses.BulkCreateCoursesResponse;
+import com.mentora.backend.service.GradeService;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,14 +29,73 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.mentora.backend.responses.GetCourseResponse;
+import com.opencsv.exceptions.CsvException;
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
 
     private final CourseService courseService;
+    private final GradeService gradeService;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(CourseService courseService, GradeService gradeService) {
         this.courseService = courseService;
+        this.gradeService = gradeService;
+    }
+
+    @Operation(
+            summary = "Crear cursos desde CSV",
+            description = "Crea múltiples cursos a partir de un archivo CSV con formato: ID, Nombre, CIs de profesores (separados por comas). Solo administradores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Cursos creados correctamente")
+    @ApiResponse(responseCode = "207", description = "Algunos cursos no pudieron crearse")
+    @ApiResponse(responseCode = "400", description = "CSV inválido o sin cursos válidos")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<BulkCreateCoursesResponse>> createCoursesFromCsv(
+            @RequestParam("file") MultipartFile file) {
+        try {
+            BulkCreateCoursesResponse data = courseService.createCoursesFromCsv(file != null ? file.getInputStream() : null);
+
+            if (data.getErrors() == null || data.getErrors().isEmpty()) {
+                return ResponseEntity.ok(new DtApiResponse<>(
+                        true,
+                        200,
+                        "Cursos creados correctamente",
+                        data
+                ));
+            }
+
+            if (data.getCreatedCourses() != null && !data.getCreatedCourses().isEmpty()) {
+                return ResponseEntity.status(207).body(new DtApiResponse<>(
+                        false,
+                        207,
+                        "Algunos cursos no pudieron crearse",
+                        data
+                ));
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Ningún curso se creó. Revise los errores",
+                    data
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo CSV",
+                    null
+            ));
+        } catch (CsvException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "CSV inválido",
+                    null
+            ));
+        }
     }
 
     @Operation(summary = "Crear curso",
@@ -253,4 +316,94 @@ public class CourseController {
             ));
         }
     }
+
+    @Operation(
+            summary = "Publicar calificación final individual",
+            description = "Permite a un profesor publicar la calificación final de un estudiante.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/{courseId}/final-grades")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<Void>> publishFinalGrade(
+            @PathVariable String courseId,
+            @RequestBody DtFinalGrade gradeDto) {
+
+        try {
+            gradeService.publishFinalGrade(courseId, gradeDto);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Calificación publicada correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Publicar calificaciones finales masivas desde CSV",
+            description = "Permite a un profesor publicar las calificaciones finales de varios estudiantes mediante un archivo CSV.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/{courseId}/final-grades/csv")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<Void>> publishFinalGradesCsv(
+            @PathVariable String courseId,
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+            gradeService.publishFinalGradesCsv(courseId, file.getInputStream());
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Calificaciones publicadas correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo CSV",
+                    null
+            ));
+        }
+    }
+
+    @Operation(summary = "Listar participantes no matriculados de un curso",
+            description = "Lista todos los participantes no matriculados de un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Participantes no matriculados obtenidos correctamente")
+    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
+    @GetMapping(value = "/{courseId}/non-participants")
+    public ResponseEntity<DtApiResponse<List<DtUser>>> getNonParticipants(@PathVariable String courseId) {
+        try {
+            List<DtUser> nonParticipants = courseService.getNonParticipants(courseId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Participantes no matriculados obtenidos correctamente",
+                nonParticipants
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
 }

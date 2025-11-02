@@ -1,4 +1,5 @@
 import { Course } from "./course";
+import { Forum } from "./forum";
 
 export type SimpleContent = {
   id: number
@@ -12,4 +13,5 @@ export type SimpleContent = {
 export type CourseViewData = {
   course: Course
   contents: SimpleContent[]
+  forums: Forum[]
 }

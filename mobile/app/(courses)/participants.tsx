@@ -7,12 +7,12 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
-  StyleSheet,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
 
+const router = useRouter();
 interface Participant {
   ci: string;
   name: string;
@@ -29,6 +29,7 @@ export default function ParticipantsList() {
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState("");
 
+
   useEffect(() => {
     if (!courseId) return;
     const fetchParticipants = async () => {
@@ -42,7 +43,7 @@ export default function ParticipantsList() {
         const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(
           String(courseId)
         )}/participants`;
-        console.log("[getParticipants] REQUEST URL:", url);
+        //console.log("[getParticipants] REQUEST URL:", url);
 
         const res = await fetch(url, {
           method: "GET",
@@ -50,7 +51,7 @@ export default function ParticipantsList() {
         });
 
         const text = await res.text();
-        console.log("[getParticipants] RESPONSE TEXT:", text);
+        //console.log("[getParticipants] RESPONSE TEXT:", text);
 
         if (!res.ok) {
           throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
@@ -64,7 +65,7 @@ export default function ParticipantsList() {
 
         setParticipants(data as Participant[]);
       } catch (err: any) {
-        console.error("[getParticipants] error:", err);
+        //console.error("[getParticipants] error:", err);
         setError(err?.message ?? "Error al obtener participantes");
       } finally {
         setLoading(false);
@@ -85,17 +86,28 @@ export default function ParticipantsList() {
   }, [participants, search]);
 
   const renderItem = ({ item }: { item: Participant }) => (
-    <View style={localStyles.itemCard}>
-      <View style={localStyles.itemRow}>
-        <Text style={localStyles.name}>{item.name}</Text>
-        <Text style={localStyles.ci}>CI: {item.ci}</Text>
+    <View style={styles.itemCard}>
+      <View style={styles.itemRow}>
+        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.ci}>CI: {item.ci}</Text>
       </View>
-      <Text style={localStyles.meta}>{item.email ?? ""}</Text>
-      <Text style={localStyles.meta}>{item.description ?? ""}</Text>
-      <View style={localStyles.actionsRow}>
+      <Text style={styles.meta}>{item.email ?? ""}</Text>
+      <Text style={styles.meta}>{item.description ?? ""}</Text>
+      <View style={styles.actionsRow}>
         <TouchableOpacity
             style={styles.button}
-            onPress={() => Alert.alert("Ver Perfil", "Funcionalidad no implementada")}
+            onPress={() => router.push(
+            {
+              pathname: "/(courses)/viewProfile",
+              params: {
+                ci: item.ci,
+                name: item.name,
+                email: item.email,
+                description: item.description,
+                pictureUrl: item.pictureUrl,
+                role: item.role,
+              },
+            })}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Ver Perfil</Text>
@@ -118,19 +130,19 @@ export default function ParticipantsList() {
   }
   if (error) {
     return (
-      <View style={localStyles.center}>
-        <Text style={localStyles.errorText}>{error}</Text>
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, localStyles.container]}>
+    <View style={[styles.container, styles.container]}>
       <TextInput
         placeholder="Buscar por nombre o CI"
         value={search}
         onChangeText={setSearch}
-        style={localStyles.searchInput}
+        style={styles.searchInput}
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="while-editing"
@@ -141,64 +153,11 @@ export default function ParticipantsList() {
         keyExtractor={(item) => item.ci}
         renderItem={renderItem}
         ListEmptyComponent={
-          <View style={localStyles.center}>
-            <Text style={localStyles.emptyText}>No se encontraron participantes.</Text>
+          <View style={styles.center}>
+            <Text style={styles.emptyText}>No se encontraron participantes.</Text>
           </View>
         }
       />
     </View>
   );
 }
-
-const localStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 8,
-  },
-  searchInput: {
-    height: 42,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginHorizontal: 12,
-    marginBottom: 8,
-  },
-  itemCard: {
-    backgroundColor: "#fff",
-    padding: 12,
-    marginHorizontal: 12,
-    marginVertical: 6,
-    borderRadius: 8,
-    elevation: 1,
-  },
-  itemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  name: {
-    fontWeight: "700",
-  },
-  ci: {
-    color: "#666",
-  },
-  meta: {
-    color: "#444",
-    marginTop: 2,
-  },
-  actionsRow: {
-    marginTop: 8,
-    flexDirection: "row",
-  },
-  center: {
-    padding: 20,
-    alignItems: "center",
-  },
-  emptyText: {
-    color: "#666",
-  },
-  errorText: {
-    color: "red",
-  },
-});

@@ -27,6 +27,13 @@ export default function ListLayout() {
           headerTitleStyle: styles.title, 
         })}
       />
+      <Stack.Screen
+        name="viewProfile"
+        options={({ route }: any) => ({
+          title: route?.params?.name ?? "Participante",
+          headerTitleStyle: styles.title, 
+        })}
+      />
     </Stack>
   );
 }

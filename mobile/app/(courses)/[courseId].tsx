@@ -110,7 +110,8 @@ export default function CourseView() {
   if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.containerContent}>
+      
       <TouchableOpacity
         style={styles.buttonPrimary}
         onPress={() =>
@@ -137,7 +138,7 @@ export default function CourseView() {
       {contents.map((item) => (
         <View key={item.id} style={styles.contentCard}>
           <Text style={styles.subtitle}>{item.title || ""}</Text>
-          <Text style={styles.contentText}>{item.content || ""}</Text>
+          
           {renderContentWithLinks(item.content)}
           {item.fileName && item.fileUrl && (
             <View>

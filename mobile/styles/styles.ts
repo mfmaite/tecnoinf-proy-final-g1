@@ -241,4 +241,39 @@ export const styles = StyleSheet.create({
   errorText: {
     color: "red",
   },
+  containerContent: {
+    flex: 1,
+    backgroundColor: colors.primary[10],
+    //justifyContent: "center",
+    paddingTop: 10,
+    paddingHorizontal: 20,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: colors.surfaceLight[10],
+    borderRadius: 10,
+    padding: 16,
+    alignItems: "center",
+    shadowColor: colors.secondary[100],
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    marginBottom: 12,
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.secondary[20],
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarInitial: {
+    fontSize: 36,
+    color: colors.accent.info[50],
+    fontWeight: "700",
+  },
+  
 });

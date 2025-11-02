@@ -1,8 +1,11 @@
 package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtPost;
+import com.mentora.backend.dt.DtPostResponse;
 import com.mentora.backend.requests.CreatePostRequest;
+import com.mentora.backend.requests.CreatePostResponseRequest;
 import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.responses.GetSinglePostResponse;
 import com.mentora.backend.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -85,6 +88,66 @@ public class PostController {
                 HttpStatus.OK.value(),
                 "Post eliminado correctamente",
                 null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
+    @Operation(summary = "Crear una respuesta a un post",
+        description = "Permite a estudiantes o profesores responder un post de foro de consultas",
+        security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Respuesta creada correctamente")
+    @ApiResponse(responseCode = "404", description = "Post o usuario no encontrado")
+    @PostMapping("/{postId}/response")
+    public ResponseEntity<DtApiResponse<DtPostResponse>> createResponse(
+        @PathVariable Long postId,
+        @RequestBody CreatePostResponseRequest req,
+        Authentication authentication
+    ) {
+        try {
+            String authorCi = authentication.getName();
+            DtPostResponse created = postService.createResponse(postId, authorCi, req.getMessage());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Respuesta creada correctamente",
+                created
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Obtener un post, el foro al que pertenece y sus respuestas",
+            description = "Devuelve el post, el foro al que pertenece y sus respuestas.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Post obtenido correctamente")
+    @ApiResponse(responseCode = "404", description = "Post no encontrado")
+    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    @PreAuthorize("hasAnyRole('PROFESOR','ESTUDIANTE')")
+    @GetMapping("/{postId}")
+    public ResponseEntity<DtApiResponse<GetSinglePostResponse>> getPost(@PathVariable Long postId) {
+        try {
+            GetSinglePostResponse post = postService.getPost(postId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Post obtenido correctamente",
+                post
             ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(

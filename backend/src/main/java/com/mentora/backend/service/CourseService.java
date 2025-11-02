@@ -53,8 +53,7 @@ public class CourseService {
                 .collect(Collectors.toList());
         }
 
-        return userCourseService.getCoursesForUser(ci).stream()
-            .collect(Collectors.toCollection(ArrayList::new));
+        return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
     @Transactional

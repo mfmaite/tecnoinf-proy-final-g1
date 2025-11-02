@@ -13,8 +13,8 @@ import com.mentora.backend.repository.ActivityRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import com.mentora.backend.requests.UpdateUserRequest;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -118,24 +118,26 @@ public class UserService {
         return users.stream().map(this::getUserDto).collect(Collectors.toList());
     }
 
-    public DtUser updateUser(String ci, DtUser dto, MultipartFile picture) {
-        User u = userRepository.findByCi(ci)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+    public DtUser updateUser(String ci, UpdateUserRequest request) {
+        User u = findByCI(ci);
 
-        if (dto.getName() == null || dto.getName().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre requerido");
+        if (u == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
 
-        if (dto.getEmail() == null || !dto.getEmail().contains("@"))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email inválido");
+        if (request.getName() != null)
+            u.setName(request.getName());
+        if (request.getEmail() != null)
+            u.setEmail(request.getEmail());
+        if (request.getDescription() != null)
+            u.setDescription(request.getDescription());
 
-        u.setName(dto.getName());
-        u.setEmail(dto.getEmail());
-        u.setDescription(dto.getDescription());
-
-        if (picture != null && !picture.isEmpty()) {
+        if (request.getPicture() != null && !request.getPicture().isEmpty()) {
             try {
-                DtFileResource fr = fileStorageService.store(picture);
-                u.setPictureFileName(fr.getStoragePath());
+                DtFileResource fr = fileStorageService.store(request.getPicture());
+                String fileName = fr.getFilename();
+                String fileUrl = fr.getStoragePath();
+                u.setPictureFileName(fileName);
+                u.setPictureUrl(fileUrl);
             } catch (IOException e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error subiendo la imagen");
             }
@@ -254,13 +256,20 @@ public class UserService {
                 .toList();
     }
 
+    public DtUser getUser(String ci) {
+        User u = findByCI(ci);
+        if (u == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+        return getUserDto(u);
+    }
+
     private DtActivity getDtActivity(Activity activity) {
-    return new DtActivity(
-        activity.getId(),
-        activity.getType(),
-        activity.getDescription(),
-        activity.getLink(),
-        activity.getCreatedDate()
-    );
+        return new DtActivity(
+            activity.getId(),
+            activity.getType(),
+            activity.getDescription(),
+            activity.getLink(),
+            activity.getCreatedDate()
+        );
     }
 }

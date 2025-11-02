@@ -10,6 +10,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CourseViewData } from '@/types/content';
+import { AnnouncementForumIcon } from '@/public/assets/icons/announcement-forum-icon';
+import { ConsultForumIcon } from '@/public/assets/icons/consult-forum-icon';
 
 type Params = { params: { courseId: string } }
 
@@ -58,7 +60,9 @@ export default function CourseView({ params }: Params) {
     );
   }
 
-  const { course, contents } = data
+  const { course, contents, forums } = data
+  const announcementsForum = forums?.find(f => f.type === 'ANNOUNCEMENTS');
+  const consultsForum = forums?.find(f => f.type === 'CONSULTS');
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -81,6 +85,28 @@ export default function CourseView({ params }: Params) {
           </Link>
         </div>
 
+      </div>
+
+      <div className="flex items-center gap-6">
+        {announcementsForum && (
+          <Link
+            href={`/courses/${params.courseId}/forums/${announcementsForum.id}`}
+            className="inline-flex items-center gap-2 text-secondary-color-70 hover:text-secondary-color-50"
+          >
+            <AnnouncementForumIcon width={18} height={18} />
+            <span>Foro de Anuncios</span>
+          </Link>
+        )}
+
+        {consultsForum && (
+          <Link
+            href={`/courses/${params.courseId}/forums/${consultsForum.id}`}
+            className="inline-flex items-center gap-2 text-secondary-color-70 hover:text-secondary-color-50"
+          >
+            <ConsultForumIcon width={18} height={18} />
+            <span>Foro de Consultas</span>
+          </Link>
+        )}
       </div>
 
       <div className="space-y-4">

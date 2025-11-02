@@ -39,13 +39,12 @@ export default function ResetPasswordScreen() {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/users/reset-password`, {
+      await axios.post(`${API_URL}/users/reset-password`, {
         token,
         newPassword,
         confirmPassword,
       });
 
-      console.log(" Response:", response.data);
       Alert.alert("Éxito", "Contraseña restablecida correctamente.", [
         {
           text: "Ir al login",
@@ -73,7 +72,7 @@ export default function ResetPasswordScreen() {
           secureTextEntry
           value={newPassword}
           onChangeText={setNewPassword}
-          style={globalStyles.input}
+          style={globalStyles.searchInput}
         />
 
         <TextInput
@@ -81,7 +80,7 @@ export default function ResetPasswordScreen() {
           secureTextEntry
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          style={globalStyles.input}
+          style={globalStyles.searchInput}
         />
 
         <TouchableOpacity

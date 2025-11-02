@@ -23,7 +23,7 @@ public class SimpleContent {
     private String fileUrl;
 
     @Lob
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

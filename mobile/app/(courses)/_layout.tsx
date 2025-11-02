@@ -20,6 +20,13 @@ export default function ListLayout() {
           headerTitleStyle: styles.title, 
         })}
       />
+      <Stack.Screen
+        name="participants"
+        options={({ route }: any) => ({
+          title: route?.params?.courseName ?? "Participantes",
+          headerTitleStyle: styles.title, 
+        })}
+      />
     </Stack>
   );
 }

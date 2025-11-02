@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Text, ScrollView, ActivityIndicator, Linking, Alert, TouchableOpacity } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors } from "../../styles/colors";
 import { getCourseById, CourseData, Content } from "../../services/courses";
 import { styles } from "../../styles/styles";
 import { useNavigation } from "@react-navigation/native";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 
 export default function CourseView() {
-  const { courseId } = useLocalSearchParams<{ courseId?: string }>();
+  const router = useRouter();
+  const { courseId } = useLocalSearchParams<{ courseId?: string }>(); // <-- usar params
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,12 +41,88 @@ export default function CourseView() {
   }
   }, [navigation, courseData?.name]);
 
+  async function handleDownload(url?: string | null, fileName?: string | null) {
+    if (!url) {
+      Alert.alert("Archivo no disponible");
+      return;
+    }
+
+    try {
+      const name = fileName || url.split("/").pop() || `archivo_${Date.now()}`;
+      const localPath = (FileSystem.documentDirectory ?? "") + name;
+      const downloadResult = await FileSystem.downloadAsync(url, localPath);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(downloadResult.uri, { mimeType: undefined });
+      } else {
+        await Linking.openURL(downloadResult.uri);
+      }
+    } catch (err) {
+      console.warn("Error descargando archivo, fallback a abrir URL:", err);
+      try {
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert("No se puede descargar ni abrir el archivo.");
+      }
+    }
+  }
+  function renderContentWithLinks(content?: string | null) {
+  if (!content) return null;
+    const parts = content.split(/(https?:\/\/[^\s]+)/g);
+
+    return (
+
+      <Text style={styles.contentText}>
+        {parts.map((part, idx) => {
+          if (!part) return null;
+          const isUrl = part.startsWith("http://") || part.startsWith("https://");
+          if (isUrl) {
+            return (
+              <Text
+                key={idx}
+                style={styles.link}
+                onPress={async () => {
+                  try {
+                    const url = part;
+                    const supported = await Linking.canOpenURL(url);
+                    if (supported) {
+                      await Linking.openURL(url);
+                    } else {
+                      Alert.alert("No se puede abrir el enlace.");
+                    }
+                  } catch {
+                    Alert.alert("Error al abrir el enlace.");
+                  }
+                }}
+              >
+                {part}
+              </Text>
+            );
+          } else {
+            return <Text key={idx}>{part}</Text>;
+          }
+        })}
+      </Text>
+    );
+  }
   if (loading) return <ActivityIndicator size="large" color={colors.primary[60]} style={styles.loader} />;
   if (error) return <Text style={styles.error}>{error}</Text>;
   if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <TouchableOpacity
+        style={styles.buttonPrimary}
+        onPress={() =>
+          router.push({
+            pathname: "/(courses)/participants",
+            params: { courseId: String(courseId) },
+          })
+        }
+        activeOpacity={0.8}
+      >
+        <Text style={styles.buttonText}>Ver Participantes</Text>
+      </TouchableOpacity>
       <View style={styles.header}>
 
         <Text style={styles.subtitle}>ID: {courseData.id},
@@ -59,10 +138,19 @@ export default function CourseView() {
         <View key={item.id} style={styles.contentCard}>
           <Text style={styles.subtitle}>{item.title || ""}</Text>
           <Text style={styles.contentText}>{item.content || ""}</Text>
+          {renderContentWithLinks(item.content)}
           {item.fileName && item.fileUrl && (
-            <Text style={styles.contentFile}>
-              Archivo: {item.fileName} ({item.fileUrl})
-            </Text>
+            <View>
+              <Text style={styles.contentFile}>
+                Archivo: {item.fileName}
+              </Text>
+              <TouchableOpacity style={styles.buttonPrimary}
+                onPress={() => handleDownload(item.fileUrl, item.fileName)}
+                activeOpacity={0.8}
+              >
+              <Text style={styles.buttonText}>Descargar</Text>
+              </TouchableOpacity>
+            </View>
           )}
           <Text style={styles.contentDate}>
             Creado:{" "}

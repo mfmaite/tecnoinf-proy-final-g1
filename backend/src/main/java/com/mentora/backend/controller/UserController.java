@@ -6,7 +6,7 @@ import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
 import com.mentora.backend.requests.ResetPasswordRequest;
-
+import com.mentora.backend.requests.UpdateUserRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +60,29 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
                             "Error al crear usuario", null));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Editar Perfil de Usuario",
+    description = "Recibe los datos del perfil editado y lo guarda en la base de datos",
+    security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DtApiResponse<DtUser>> updateUser(
+            @ModelAttribute UpdateUserRequest request
+    ) {
+        try {
+            String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
+            DtUser updated = userService.updateUser(userCi, request);
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(true, 200, "Usuario actualizado", updated)
+            );
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
         }
     }
 
@@ -229,6 +253,28 @@ public class UserController {
             e.getReason(),
             null
         ));
+        }
+    }
+
+    @Operation(summary = "Obtener perfil de usuario, o del usuario loggeado",
+               description = "Obtiene el perfil de usuario, o del usuario loggeado si no se proporciona el CI",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Perfil obtenido correctamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    @GetMapping("/profile")
+    public ResponseEntity<DtApiResponse<DtUser>> getProfile(
+            @RequestParam(name = "ci", required = false) String ci
+    ) {
+        try {
+            String userCi = ci != null ? ci : SecurityContextHolder.getContext().getAuthentication().getName();
+            DtUser profile = userService.getUser(userCi);
+            return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(), "Perfil obtenido correctamente", profile));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), "Error al obtener el perfil", null));
         }
     }
 }

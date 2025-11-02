@@ -149,7 +149,7 @@ public class UserService {
 
 
     public DtUser getUserDto(User u) {
-        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureFileName(), u.getRole());
+        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
     }
 
     public void changePassword(String newPwd, String confirmPwd, String oldPwd, String userCi) {

@@ -71,7 +71,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DtApiResponse<DtUser>> updateUser(
-            @RequestBody UpdateUserRequest request
+            @ModelAttribute UpdateUserRequest request
     ) {
         try {
             String userCi = SecurityContextHolder.getContext().getAuthentication().getName();

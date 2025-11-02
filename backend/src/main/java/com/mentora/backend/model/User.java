@@ -21,6 +21,7 @@ public class User {
 
     private String description;
 
+    @Column(name = "pictureUrl", length = 2048)
     private String pictureUrl;
 
     private String pictureFileName;

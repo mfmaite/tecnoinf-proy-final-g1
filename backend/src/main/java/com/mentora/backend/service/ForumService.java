@@ -6,7 +6,6 @@ import com.mentora.backend.dt.DtForum;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.*;
 import com.mentora.backend.responses.GetForumResponse;
-import com.mentora.backend.responses.GetPostResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,6 +21,7 @@ public class ForumService {
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final UserCourseService userCourseService;
+    private final ActivityRepository activityRepository;
 
     public ForumService(
         PostRepository postRepository,
@@ -29,7 +29,8 @@ public class ForumService {
         ForumRepository forumRepository,
         EmailService emailService,
         NotificationService notificationService,
-        UserCourseService userCourseService
+        UserCourseService userCourseService,
+        ActivityRepository activityRepository
     ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
@@ -37,6 +38,7 @@ public class ForumService {
         this.emailService = emailService;
         this.notificationService = notificationService;
         this.userCourseService = userCourseService;
+        this.activityRepository = activityRepository;
     }
 
 
@@ -58,6 +60,15 @@ public class ForumService {
         );
 
         postRepository.save(post);
+
+        // Crea la actividad de participación en el foro
+        Activity activity = new Activity(
+            ActivityType.FORUM_PARTICIPATION,
+            "Participación en el foro de " + (forum.getType().name() == "ANNOUNCEMENTS" ? "anuncios" : "consultas") + " del curso " + forum.getCourse().getName(),
+            "/courses/" + forum.getCourse().getId() + "/forums/" + forum.getId(),
+            author
+        );
+        activityRepository.save(activity);
 
         List<DtUser> studentsDto = userCourseService.getParticipantsFromCourse(forum.getCourse().getId()).stream()
                 .filter(u -> u.getRole() == Role.ESTUDIANTE)
@@ -88,20 +99,6 @@ public class ForumService {
 
         List<Post> posts = postRepository.findByForum_IdOrderByCreatedDateDesc(forumId);
         return new GetForumResponse(getDtForum(forum), posts.stream().map(this::getDtPost).toList());
-    }
-
-    public GetPostResponse getPost(Long forumId, Long postId) {
-        Forum forum = forumRepository.findById(forumId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Foro no encontrado"));
-
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));
-
-        if (!post.getForum().getId().equals(forum.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El post no pertenece al foro");
-        }
-
-        return new GetPostResponse(getDtForum(forum), getDtPost(post));
     }
 
     private DtPost getDtPost(Post post) {

@@ -12,6 +12,8 @@ import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.responses.BulkCreateCoursesResponse;
 import com.mentora.backend.service.GradeService;
+import com.mentora.backend.service.UserCourseService;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.server.ResponseStatusException;
@@ -36,10 +42,14 @@ public class CourseController {
 
     private final CourseService courseService;
     private final GradeService gradeService;
+    private final UserCourseService userCourseService;
 
-    public CourseController(CourseService courseService, GradeService gradeService) {
+    public CourseController(CourseService courseService,
+                            GradeService gradeService,
+                            UserCourseService userCourseService) {
         this.courseService = courseService;
         this.gradeService = gradeService;
+        this.userCourseService = userCourseService;
     }
 
     @Operation(
@@ -260,6 +270,58 @@ public class CourseController {
                 null
             ));
         }
+    }
+
+    @Operation(
+            summary = "Agregar participantes a un curso desde CSV",
+            description = "Recibe un archivo CSV con una columna de CIs. Requiere rol PROFESOR."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Participantes agregados"),
+            @ApiResponse(responseCode = "400", description = "Archivo inválido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos"),
+            @ApiResponse(responseCode = "500", description = "Error interno")
+    })
+    @PostMapping(value = "/{courseId}/participants/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('PROFESOR')")
+    public DtApiResponse<String> addParticipantsCsv(
+            @PathVariable String courseId,
+            @RequestParam("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Archivo CSV vacío");
+        }
+
+        List<String> cis = getStrings(file);
+
+        String result = userCourseService.addUsersToCourseFromCsv(courseId, cis);
+
+        return new DtApiResponse<>(
+                true,
+                200,
+                "Participantes agregados correctamente",
+                result
+        );
+    }
+
+    private static List<String> getStrings(MultipartFile file) {
+        List<String> cis = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                String ci = line.trim();
+                if (!ci.matches("\\d+")) {
+                    throw new IllegalArgumentException("CI inválido: " + ci);
+                }
+                cis.add(ci);
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Error leyendo CSV");
+        }
+        return cis;
     }
 
     @Operation(summary = "Eliminar participantes de un curso",

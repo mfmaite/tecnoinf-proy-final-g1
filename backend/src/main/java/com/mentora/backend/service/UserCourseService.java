@@ -59,6 +59,39 @@ public class UserCourseService {
         return "Usuarios matriculados correctamente";
     }
 
+    public String addUsersToCourseFromCsv(String courseId, List<String> cis) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        List<String> errorUsers = new ArrayList<>();
+
+        for (String ci : cis) {
+            User user = userRepository.findById(ci).orElse(null);
+            if (user == null) {
+                errorUsers.add(ci + " no existe");
+                continue;
+            }
+
+            if (user.getRole() != Role.ESTUDIANTE) {
+                errorUsers.add(ci + " no es estudiante");
+                continue;
+            }
+
+            if (userCourseRepository.existsByCourseAndUser(course, user)) {
+                errorUsers.add(ci + " ya estaba matriculado");
+                continue;
+            }
+
+            UserCourse uc = new UserCourse(course, user, null);
+            userCourseRepository.save(uc);
+        }
+
+        if (!errorUsers.isEmpty()) {
+            return "Algunos usuarios no se pudieron matricular: " + String.join(", ", errorUsers);
+        }
+        return "Usuarios matriculados correctamente";
+    }
+
     public List<DtCourse> getCoursesForUser(String ci) {
         User user = userRepository.findById(ci).orElse(null);
         if (user == null) {

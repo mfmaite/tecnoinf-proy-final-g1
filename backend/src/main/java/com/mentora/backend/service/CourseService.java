@@ -161,7 +161,7 @@ public class CourseService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission has no file");
         }
 
-        return fileStorageService.generateSignedUrl(s.getFileUrl(), 15);
+        return fileStorageService.generateSignedUrl(s.getFileUrl(), 60);
     }
 
     private DtCourse getDtCourse(Course c) {

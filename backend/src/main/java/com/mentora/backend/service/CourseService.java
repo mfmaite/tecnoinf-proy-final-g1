@@ -1,14 +1,18 @@
 package com.mentora.backend.service;
 
+import com.google.cloud.storage.BlobInfo;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtForum;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.CourseRepository;
+import com.mentora.backend.repository.EvaluationSubmissionRepository;
 import com.mentora.backend.repository.ForumRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
 import java.util.*;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,11 @@ import com.opencsv.exceptions.CsvException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import com.google.cloud.storage.Storage.SignUrlOption;
+
+import java.net.URL;
+import java.time.Duration;
+
 
 
 @Service
@@ -37,13 +46,23 @@ public class CourseService {
     private final SimpleContentRepository simpleContentRepository;
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
+    private final EvaluationSubmissionRepository submissionRepo;
+    private final FileStorageService storage;
 
-    public CourseService(CourseRepository courseRepository, UserCourseService userCourseService, SimpleContentRepository simpleContentRepository, FileStorageService fileStorageService, ForumRepository forumRepository) {
+    public CourseService(CourseRepository courseRepository,
+                         UserCourseService userCourseService,
+                         SimpleContentRepository simpleContentRepository,
+                         FileStorageService fileStorageService,
+                         ForumRepository forumRepository,
+                         EvaluationSubmissionRepository submissionRepo,
+                         FileStorageService storage) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
         this.fileStorageService = fileStorageService;
         this.forumRepository = forumRepository;
+        this.submissionRepo = submissionRepo;
+        this.storage = storage;
     }
 
     public List<DtCourse> getCoursesForUser(String ci, Role role) {
@@ -132,6 +151,17 @@ public class CourseService {
         SimpleContent saved = simpleContentRepository.save(newSimpleContent);
 
         return getDtSimpleContent(saved);
+    }
+
+    public String downloadSubmission(Long submissionId) {
+        EvaluationSubmission s = submissionRepo.findById(submissionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+
+        if (s.getFileUrl() == null || s.getFileName() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission has no file");
+        }
+
+        return fileStorageService.generateSignedUrl(s.getFileUrl(), 15);
     }
 
     private DtCourse getDtCourse(Course c) {

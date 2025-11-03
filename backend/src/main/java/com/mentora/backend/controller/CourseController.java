@@ -233,6 +233,41 @@ public class CourseController {
         }
     }
 
+    @Operation(
+            summary = "Descargar entrega de estudiante",
+            description = "Profesor descarga archivo entregado por un estudiante en una evaluación",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "URL generada correctamente")
+    @ApiResponse(responseCode = "403", description = "No autorizado")
+    @ApiResponse(responseCode = "404", description = "Entrega no encontrada")
+    @PreAuthorize("hasRole('PROFESOR')")
+    @GetMapping("/evaluations/submissions/{submissionId}/download")
+    public ResponseEntity<DtApiResponse<String>> downloadSubmission(
+            @PathVariable Long submissionId
+    ) {
+        try {
+            String url = courseService.downloadSubmission(submissionId);
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(
+                            true,
+                            200,
+                            "URL generada",
+                            url
+                    )
+            );
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(
+                            false,
+                            e.getStatusCode().value(),
+                            e.getReason(),
+                            null
+                    ));
+        }
+    }
+
     @Operation(summary = "Agregar participantes a un curso",
             description = "Agrega participantes a un curso. Solo profesores",
             security = @SecurityRequirement(name = "bearerAuth"))

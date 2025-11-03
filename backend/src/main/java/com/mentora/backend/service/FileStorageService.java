@@ -42,18 +42,39 @@ public class FileStorageService {
 
         storage.create(blobInfo, file.getBytes());
 
-        URL signedUrl = storage.signUrl(
-                blobInfo,
-                7,
-                TimeUnit.DAYS,
-                SignUrlOption.withV4Signature()
-        );
-
         DtFileResource fr = new DtFileResource();
         fr.setFilename(originalFilename);
-        fr.setStoragePath(signedUrl.toString());
+        // Guardamos la ruta interna de GCS
+        fr.setStoragePath("gs://" + gcsConfig.getBucketName() + "/" + gcsFileName);
         fr.setSize(file.getSize());
 
         return fr;
     }
+
+    public String generateSignedUrl(String gcsPath, int durationMinutes) {
+        if (gcsPath == null || !gcsPath.startsWith("gs://")) {
+            throw new IllegalArgumentException("GCS path inválido");
+        }
+
+        String noPrefix = gcsPath.replace("gs://", "");
+        int slash = noPrefix.indexOf("/");
+        if (slash <= 0) {
+            throw new IllegalArgumentException("GCS path inválido");
+        }
+
+        String bucket = noPrefix.substring(0, slash);
+        String objectPath = noPrefix.substring(slash + 1);
+
+        BlobInfo blobInfo = BlobInfo.newBuilder(bucket, objectPath).build();
+
+        URL signedUrl = storage.signUrl(
+                blobInfo,
+                durationMinutes,
+                TimeUnit.MINUTES,
+                SignUrlOption.withV4Signature()
+        );
+
+        return signedUrl.toString();
+    }
+
 }

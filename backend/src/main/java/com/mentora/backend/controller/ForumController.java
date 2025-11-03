@@ -14,8 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.responses.DtApiResponse;
-
-import java.util.List;
+import com.mentora.backend.responses.GetForumResponse;
 
 @RestController
 @RequestMapping("/forum")
@@ -72,14 +71,15 @@ public class ForumController {
     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     @PreAuthorize("hasAnyRole('PROFESOR','ESTUDIANTE')")
     @GetMapping("/{forumId}")
-    public ResponseEntity<DtApiResponse<List<DtPost>>> getPostsByForum(@PathVariable Long forumId) {
+    public ResponseEntity<DtApiResponse<GetForumResponse>> getPostsByForum(@PathVariable Long forumId) {
         try {
-            List<DtPost> posts = forumService.getPostsByForum(forumId);
+            GetForumResponse forumResponse = forumService.getPostsByForum(forumId);
+
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,
                 HttpStatus.OK.value(),
                 "Lista de posts obtenida correctamente",
-                posts
+                forumResponse
             ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(

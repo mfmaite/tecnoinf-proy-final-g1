@@ -1,6 +1,6 @@
 import { getSession, signOut } from 'next-auth/react';
 import { API_ENDPOINTS } from '../config/api';
-import { UserLoginData, LoginResponse, ApiError } from '../types/user';
+import { UserLoginData, LoginResponse } from '../types/user';
 
 class AuthController {
   async login(credentials: UserLoginData): Promise<LoginResponse> {
@@ -21,7 +21,7 @@ class AuthController {
 
       return data;
     } catch (error) {
-      throw this.handleError(error);
+      throw error;
     }
   }
 
@@ -45,13 +45,6 @@ class AuthController {
   async getCurrentUser() {
     const session = await getSession();
     return session?.user || null;
-  }
-
-  private handleError(error: unknown): ApiError {
-    if (error instanceof Error) {
-      return { message: error.message };
-    }
-    return { message: 'Error inesperado' };
   }
 }
 

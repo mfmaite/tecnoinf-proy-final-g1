@@ -27,11 +27,4 @@ public class DtCourse {
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
-
-    public List<DtForum> getForums() { return forums; }
-    public void setForums(List<DtForum> forums) { this.forums = forums; }
-
-    public void addForum(DtForum forum) {
-        forums.add(forum);
-    }
 }

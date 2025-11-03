@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
-import { View, Text, ScrollView, ActivityIndicator,TouchableOpacity, Linking, Alert } from "react-native";
-import { useRouter,useLocalSearchParams } from "expo-router";
+import { View, Text, ScrollView, ActivityIndicator, Linking, Alert, TouchableOpacity } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors } from "../../styles/colors";
 import { getCourseById, CourseData, Content } from "../../services/courses";
 import { styles } from "../../styles/styles";
@@ -18,22 +18,23 @@ export default function CourseView() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (!courseId) return; 
+    if (!courseId) return;
     const fetchCourse = async () => {
       try {
         const data = await getCourseById(String(courseId));
         setCourseData(data.course);
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
-        
-      } catch {
-        setError("No se pudieron cargar los datos del curso.");
+
+      } catch (err) {
+        setError("No se pudieron cargar los datos del curso: " + err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCourse();
-  }, [courseId]); 
+  }, [courseId]);
+
   useLayoutEffect(() => {
   if (courseData?.name) {
     (navigation as any).setOptions?.({ title: courseData.name });
@@ -65,55 +66,65 @@ export default function CourseView() {
       }
     }
   }
-function renderContentWithLinks(content?: string | null) {
+  function renderContentWithLinks(content?: string | null) {
   if (!content) return null;
-  // split mantiene los links en los elementos del array
-  const parts = content.split(/(https?:\/\/[^\s]+)/g);
-  return (
-    <Text style={styles.contentText}>
-      {parts.map((part, idx) => {
-        if (!part) return null;
-        const isUrl = part.startsWith("http://") || part.startsWith("https://");
-        if (isUrl) {
-          return (
-            <Text
-              key={idx}
-              style={styles.link}
-              onPress={async () => {
-                try {
-                  const url = part;
-                  const supported = await Linking.canOpenURL(url);
-                  if (supported) {
-                    await Linking.openURL(url);
-                  } else {
-                    Alert.alert("No se puede abrir el enlace.");
+    const parts = content.split(/(https?:\/\/[^\s]+)/g);
+
+    return (
+
+      <Text style={styles.contentText}>
+        {parts.map((part, idx) => {
+          if (!part) return null;
+          const isUrl = part.startsWith("http://") || part.startsWith("https://");
+          if (isUrl) {
+            return (
+              <Text
+                key={idx}
+                style={styles.link}
+                onPress={async () => {
+                  try {
+                    const url = part;
+                    const supported = await Linking.canOpenURL(url);
+                    if (supported) {
+                      await Linking.openURL(url);
+                    } else {
+                      Alert.alert("No se puede abrir el enlace.");
+                    }
+                  } catch {
+                    Alert.alert("Error al abrir el enlace.");
                   }
-                } catch {
-                  Alert.alert("Error al abrir el enlace.");
-                }
-              }}
-            >
-              {part}
-            </Text>
-          );
-        } else {
-          return <Text key={idx}>{part}</Text>;
-        }
-      })}
-    </Text>
-  );
-}
+                }}
+              >
+                {part}
+              </Text>
+            );
+          } else {
+            return <Text key={idx}>{part}</Text>;
+          }
+        })}
+      </Text>
+    );
+  }
   if (loading) return <ActivityIndicator size="large" color={colors.primary[60]} style={styles.loader} />;
   if (error) return <Text style={styles.error}>{error}</Text>;
   if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.surfaceLight[20] }}
-      contentContainerStyle={{ paddingTop: 10, paddingHorizontal: 10 }}
-    >
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <TouchableOpacity
+        style={styles.buttonPrimary}
+        onPress={() =>
+          router.push({
+            pathname: "./(courses)/participants",
+            params: { courseId: String(courseId) },
+          })
+        }
+        activeOpacity={0.8}
+      >
+        <Text style={styles.buttonText}>Ver Participantes</Text>
+      </TouchableOpacity>
       <View style={styles.header}>
-        
+
         <Text style={styles.subtitle}>ID: {courseData.id},
           Creado:{" "}
           {courseData.createdDate
@@ -131,7 +142,7 @@ function renderContentWithLinks(content?: string | null) {
           {item.fileName && item.fileUrl && (
             <View>
               <Text style={styles.contentFile}>
-                Archivo: {item.fileName} 
+                Archivo: {item.fileName}
               </Text>
               <TouchableOpacity style={styles.buttonPrimary}
                 onPress={() => handleDownload(item.fileUrl, item.fileName)}

@@ -38,12 +38,11 @@ public class CSVController {
                 String email = nextLine[2];
                 String password = nextLine[3];
                 String description = nextLine[4];
-                String pictureUrl = nextLine[5];
                 Role role = Role.valueOf(nextLine[6].toUpperCase());
 
                 // Verificar si ya existe por email
                 if (repository.findByEmail(email).isEmpty()) {
-                    User user = new User(ci, nombre, email, password, description, pictureUrl, role);
+                    User user = new User(ci, nombre, email, password, description, null, null, role);
                     repository.save(user);
                     count++;
                 }

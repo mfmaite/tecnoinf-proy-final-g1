@@ -3,6 +3,7 @@ import { API_ENDPOINTS } from '../config/api';
 import { CourseFormData } from '@/app/(logged)/admin/courses/new/components/create-course-form';
 import { CourseViewData } from '@/types/content';
 import { Course } from '@/types/course';
+import { BulkCreateCoursesResponse } from '@/types/bulk-create-courses-response';
 import { UserResponse } from '@/types/user';
 
 class CourseController {
@@ -104,6 +105,38 @@ class CourseController {
     }
   }
 
+  async uploadCoursesCsv(file: File, accessToken: string): Promise<ApiResponse<BulkCreateCoursesResponse>> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/csv`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const { success, code, message, data } = await response.json();
+
+      return {
+        success,
+        code,
+        message,
+        data,
+      };
+    } catch (error) {
+      console.error('Error al crear cursos desde CSV:', error);
+      return {
+        success: false,
+        code: (error as any).code ?? 500,
+        message: 'Error al crear cursos desde CSV',
+        data: undefined,
+      };
+    }
+  }
+
   async getParticipants(courseId: string, accessToken: string): Promise<ApiResponse<UserResponse[]>> {
     try {
       const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants`, {
@@ -118,6 +151,22 @@ class CourseController {
     } catch (error) {
       console.error('Error al obtener participantes:', error);
       return { success: false, code: 500, message: 'Error al obtener participantes', data: undefined };
+    }
+  }
+
+  async getNonParticipants(courseId: string, accessToken: string): Promise<ApiResponse<UserResponse[]>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/non-participants`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const { success, code, message, data } = await response.json();
+      return { success, code, message, data };
+    } catch (error) {
+      console.error('Error al obtener no participantes:', error);
+      return { success: false, code: 500, message: 'Error al obtener no participantes', data: undefined };
     }
   }
 
@@ -136,6 +185,24 @@ class CourseController {
     } catch (error) {
       console.error('Error al agregar participantes:', error);
       return { success: false, code: 500, message: 'Error al agregar participantes', data: undefined };
+    }
+  }
+
+  async deleteParticipants(courseId: string, cis: string[], accessToken: string) {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participantIds: cis }),
+      });
+      const { success, code, message, data } = await response.json();
+      return { success, code, message, data };
+    } catch (error) {
+      console.error('Error al eliminar participantes:', error);
+      return { success: false, code: 500, message: 'Error al eliminar participantes', data: undefined };
     }
   }
 }

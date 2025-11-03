@@ -11,12 +11,11 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../styles/colors";
-import logo from "../../assets/logo.svg";
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const router = useRouter();
-
+  const logo = require("../../assets/images/mentora-logo-small.png");
   const [ci, setCi] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +25,7 @@ export default function LoginScreen() {
     try {
       await login(ci, password);
       router.replace("/(main)/home");
-    } catch (e) {
+    } catch {
       setError("Credenciales inválidas");
     }
   };
@@ -72,8 +71,10 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Iniciar sesión</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
+        <TouchableOpacity onPress={() => router.push("/forgot-password")}>
+          <Text className="text-blue-500 text-center mt-3">
+            ¿Olvidaste tu contraseña?
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -103,8 +104,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     marginBottom: 10,
   },
   title: {
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   error: {
-    color: colors.accent[50],
+    color: colors.accent.danger[50],
     marginBottom: 8,
     textAlign: "center",
   },

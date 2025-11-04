@@ -62,11 +62,6 @@ public class GCSConfig {
         return null;
     }
 
-    @Bean
-    public Storage storage() {
-        return StorageOptions.getDefaultInstance().getService();
-    }
-
     public String getBucketName() {
         return bucketName;
     }

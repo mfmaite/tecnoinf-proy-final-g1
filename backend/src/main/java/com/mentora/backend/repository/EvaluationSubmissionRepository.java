@@ -11,5 +11,5 @@ public interface EvaluationSubmissionRepository extends JpaRepository<Evaluation
 
     List<EvaluationSubmission> findByEvaluationId(Long evaluationId);
 
-    List<EvaluationSubmission> findByEvaluationIdAndAuthorId(Long evaluationId, String authorId);
+    List<EvaluationSubmission> findByEvaluationIdAndAuthorCi(Long evaluationId, String authorCi);
 }

@@ -42,22 +42,27 @@ public class FileStorageService {
 
         storage.create(blobInfo, file.getBytes());
 
-        DtFileResource fr = new DtFileResource();
-        fr.setFilename(originalFilename);
-        // Guardamos la ruta interna de GCS
-        fr.setStoragePath("gs://" + gcsConfig.getBucketName() + "/" + gcsFileName);
-        fr.setSize(file.getSize());
-
-        return fr;
+        return new DtFileResource(
+            originalFilename,
+            "gs://" + gcsConfig.getBucketName() + "/" + gcsFileName,
+            file.getSize()
+        );
     }
 
-    public String generateSignedUrl(String gcsPath, int durationMinutes) {
-        if (gcsPath == null || !gcsPath.startsWith("gs://")) {
-            throw new IllegalArgumentException("GCS path inválido");
+    public String generateSignedUrl(String gcsPath) {
+        int durationMinutes = 60;
+
+        if (gcsPath == null || gcsPath.isBlank()) {
+            return null;
+        }
+        if (!gcsPath.startsWith("gs://")) {
+            // Si no es un path de GCS, devolver tal cual (p.ej. http/https)
+            return gcsPath;
         }
 
         String noPrefix = gcsPath.replace("gs://", "");
         int slash = noPrefix.indexOf("/");
+
         if (slash <= 0) {
             throw new IllegalArgumentException("GCS path inválido");
         }
@@ -76,5 +81,4 @@ public class FileStorageService {
 
         return signedUrl.toString();
     }
-
 }

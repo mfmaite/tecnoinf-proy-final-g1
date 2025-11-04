@@ -38,17 +38,28 @@ function buildUrl(path: string) {
 }
 
 /**
+ * Helper para construir headers con o sin token.
+ */
+function buildHeaders(token?: string | null) {
+  return {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+/**
  * Obtiene un post con sus respuestas.
  */
-export async function getPostById(postId: string): Promise<PostDetailResponse["data"]> {
+export async function getPostById(
+  postId: string,
+  token?: string | null
+): Promise<PostDetailResponse["data"]> {
   const url = buildUrl(`/post/${encodeURIComponent(postId)}`);
 
   const res = await fetch(url, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(token),
   });
 
   const text = await res.text();
@@ -79,15 +90,11 @@ export async function createResponse(
   message: string,
   token?: string | null
 ): Promise<Post> {
-  const url = buildUrl(`/post/${encodeURIComponent(postId)}`);
+  const url = buildUrl(`/post/${encodeURIComponent(postId)}/response`);
 
   const res = await fetch(url, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: buildHeaders(token),
     body: JSON.stringify({ message }),
   });
 
@@ -123,11 +130,7 @@ export async function updatePost(
 
   const res = await fetch(url, {
     method: "PUT",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: buildHeaders(token),
     body: JSON.stringify({ message }),
   });
 
@@ -159,11 +162,7 @@ export async function deletePost(postId: string, token?: string | null): Promise
 
   const res = await fetch(url, {
     method: "DELETE",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: buildHeaders(token),
   });
 
   const text = await res.text();

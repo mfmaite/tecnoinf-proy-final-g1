@@ -22,6 +22,7 @@ export default function CourseView() {
     const fetchCourse = async () => {
       try {
         const data = await getCourseById(String(courseId));
+        console.log("🔍 Curso recibido:", JSON.stringify(data, null, 2));
         setCourseData(data.course);
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
 
@@ -161,29 +162,33 @@ export default function CourseView() {
         </View>
       ))}
 
-      <Text style={styles.title}>Foros</Text>
-          {courseData.forums && courseData.forums.length > 0 ? (
+        <Text style={styles.title}>Foros</Text>
+        {courseData.forums && courseData.forums.length > 0 ? (
             courseData.forums.map((forum) => (
-              <TouchableOpacity
-                key={forum.id}
-                style={styles.contentCard}
-                onPress={() => router.push(`/courses/${courseData.id}/forums/${forum.id}`)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.subtitle}>
-                  {forum.type === "ANNOUNCEMENTS"
-                    ? "Foro de Anuncios"
-                    : "Foro de Consultas"}
-                </Text>
-                <Text style={styles.contentText}>
-                  {forum.posts?.length || 0} posts
-                </Text>
-              </TouchableOpacity>
-            ))
+          <TouchableOpacity
+            key={forum.id}
+            style={[styles.contentCard, { marginBottom: 12 }]}
+            onPress={() => router.push({
+              pathname: "/[courseId]/forums/[forumId]",
+              params: { courseId: String(courseData.id), forumId: String(forum.id) },
+            })}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.subtitle}>
+              {forum.type === "ANNOUNCEMENTS"
+                ? "Foro de Anuncios"
+                : "Foro de Consultas"}
+            </Text>
+            
+          </TouchableOpacity>
+          ))
           ) : (
             <Text style={styles.contentText}>No hay foros disponibles.</Text>
           )}
+
+
     </ScrollView>
+
   );
 }
 

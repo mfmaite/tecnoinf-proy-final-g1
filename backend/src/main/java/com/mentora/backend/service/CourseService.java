@@ -3,10 +3,14 @@ package com.mentora.backend.service;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtForum;
+import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.CourseRepository;
 import com.mentora.backend.repository.ForumRepository;
+import com.mentora.backend.repository.EvaluationRepository;
+import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
+import com.mentora.backend.requests.CreateEvaluationRequest;
 import java.util.*;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +22,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
-import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.responses.GetCourseResponse;
 import com.mentora.backend.responses.BulkCreateCoursesResponse;
@@ -39,19 +42,25 @@ public class CourseService {
     private final SimpleContentRepository simpleContentRepository;
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
+    private final EvaluationRepository evaluationRepository;
+    private final EvaluationService evaluationService;
 
     public CourseService(
         CourseRepository courseRepository,
         UserCourseService userCourseService,
         SimpleContentRepository simpleContentRepository,
         FileStorageService fileStorageService,
-        ForumRepository forumRepository
+        ForumRepository forumRepository,
+        EvaluationRepository evaluationRepository,
+        EvaluationService evaluationService
     ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
         this.fileStorageService = fileStorageService;
         this.forumRepository = forumRepository;
+        this.evaluationRepository = evaluationRepository;
+        this.evaluationService = evaluationService;
     }
 
     public List<DtCourse> getCoursesForUser(String ci, Role role) {
@@ -104,6 +113,21 @@ public class CourseService {
         List<DtSimpleContent> contents = simpleContentRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(this::getDtSimpleContent)
                 .collect(Collectors.toList());
+        List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
+                .map(evaluationService::getDtEvaluation)
+                .collect(Collectors.toList());
+
+        List<Object> allContents = new ArrayList<>();
+        allContents.addAll(contents);
+        allContents.addAll(evaluations);
+        allContents.sort(Comparator.comparing(o -> {
+            if (o instanceof DtSimpleContent) {
+                return ((DtSimpleContent) o).getCreatedDate();
+            } else if (o instanceof DtEvaluation) {
+                return ((DtEvaluation) o).getCreatedDate();
+            }
+            return LocalDateTime.MIN;
+        }));
 
         List<Forum> forums = forumRepository.findByCourse_Id(course.getId());
 
@@ -111,7 +135,7 @@ public class CourseService {
                 .map(forum -> new DtForum(forum.getId().toString(), forum.getType().name(), course.getId()))
                 .collect(Collectors.toList());
 
-        return new GetCourseResponse(getDtCourse(course), contents, dtForums);
+        return new GetCourseResponse(getDtCourse(course), allContents, dtForums);
     }
 
     public DtSimpleContent createSimpleContent(String courseId, CreateSimpleContentRequest req) throws IOException {
@@ -266,5 +290,33 @@ public class CourseService {
         }
 
         return new BulkCreateCoursesResponse(createdCourses, errors);
+    }
+
+    public DtEvaluation createEvaluation(String courseId, CreateEvaluationRequest req) throws IOException {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        if (req.getFile() == null && req.getContent() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Evaluación requiere texto o archivo");
+        }
+
+        String fileName = null;
+        String fileUrl = null;
+        String content = null;
+
+        if (req.getFile() != null) {
+            DtFileResource file = fileStorageService.store(req.getFile());
+            fileName = file.getFilename();
+            fileUrl = file.getStoragePath();
+        }
+
+        if (req.getContent() != null) {
+            content = req.getContent();
+        }
+
+        Evaluation newEvaluation = new Evaluation(req.getTitle(), course, fileName, fileUrl, content);
+        Evaluation saved = evaluationRepository.save(newEvaluation);
+
+        return evaluationService.getDtEvaluation(saved);
     }
 }

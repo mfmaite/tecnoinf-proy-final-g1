@@ -267,4 +267,13 @@ public class CourseService {
 
         return new BulkCreateCoursesResponse(createdCourses, errors);
     }
+
+    @Transactional
+    public void deleteCourse(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        // Hay que poner cascade = REMOVE en las cosas vinculadas el curso en el model de Course para poder eliminarlo facil
+        courseRepository.delete(course);
+    }
 }

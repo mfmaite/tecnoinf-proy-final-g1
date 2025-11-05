@@ -131,6 +131,81 @@ public class PostController {
     }
 
     @Operation(
+            summary = "Editar una respuesta de un post",
+            description = "Permite al autor de una respuesta editarla. Solo el autor puede modificarla.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Respuesta editada correctamente"),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos para editar esta respuesta"),
+            @ApiResponse(responseCode = "404", description = "Respuesta no encontrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/{postId}/response/{responseId}")
+    public ResponseEntity<DtApiResponse<DtPostResponse>> editResponse(
+            @PathVariable Long postId,
+            @PathVariable Long responseId,
+            @RequestBody CreatePostRequest req,
+            Authentication authentication
+    ) {
+        try {
+            String userCi = authentication.getName();
+            DtPostResponse updated = postService.editResponse(responseId, userCi, req.getMessage());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    "Respuesta editada correctamente",
+                    updated
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Eliminar una respuesta de un post",
+            description = "Permite al autor de la respuesta eliminarla. Solo el autor puede eliminarla.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Respuesta eliminada correctamente"),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos para eliminar esta respuesta"),
+            @ApiResponse(responseCode = "404", description = "Respuesta no encontrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{postId}/response/{responseId}")
+    public ResponseEntity<DtApiResponse<Void>> deleteResponse(
+            @PathVariable Long postId,
+            @PathVariable Long responseId,
+            Authentication authentication
+    ) {
+        try {
+            String userCi = authentication.getName();
+            postService.deleteResponse(responseId, userCi);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    "Respuesta eliminada correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
             summary = "Obtener un post, el foro al que pertenece y sus respuestas",
             description = "Devuelve el post, el foro al que pertenece y sus respuestas.",
             security = @SecurityRequirement(name = "bearerAuth"))

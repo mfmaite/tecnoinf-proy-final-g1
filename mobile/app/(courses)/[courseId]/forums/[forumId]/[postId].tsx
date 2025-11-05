@@ -36,13 +36,13 @@ export default function PostDetail() {
 
   const [post, setPost] = useState<Post | null>(null);
   const [responses, setResponses] = useState<Post[]>([]);
-  const [forumType, setForumType] = useState<string>(""); // ✅ nuevo
+  const [forumType, setForumType] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedText, setEditedText] = useState("");
 
-  const userCi = user?.ci ?? null;
+  const userCi = user?.ci ? String(user.ci) : "";
   const isProfessor = user?.role === "PROFESOR" || user?.role === "ADMIN";
 
   /*───────────────────────────────
@@ -55,11 +55,7 @@ export default function PostDetail() {
       const result = await getPostById(postId);
       setPost(result.post);
       setResponses(result.responses || []);
-
-      // ✅ detectar tipo de foro (viene del backend)
-      if (result.forum?.type) {
-        setForumType(result.forum.type);
-      }
+      if (result.forum?.type) setForumType(result.forum.type);
     } catch (err: any) {
       console.error("[loadPost] Error:", err);
       Alert.alert("Error", err.message || "No se pudo cargar el post.");
@@ -119,40 +115,35 @@ export default function PostDetail() {
     🗑️ Eliminar post o respuesta
   ───────────────────────────────*/
   async function handleDelete(id: number) {
-  Alert.alert("Confirmar", "¿Seguro que querés eliminar este mensaje?", [
-    { text: "Cancelar", style: "cancel" },
-    {
-      text: "Eliminar",
-      style: "destructive",
-      onPress: async () => {
-        try {
-          await deletePost(String(id));
+    Alert.alert("Confirmar", "¿Seguro que querés eliminar este mensaje?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePost(String(id));
 
-          // 🟢 Si el post eliminado es el principal, redirigimos al foro
-          if (id === post?.id) {
-            Alert.alert("Eliminado", "El post se eliminó correctamente.", [
-              {
-                text: "OK",
-                onPress: () => router.back(), // vuelve a [forumId].tsx
-              },
-            ]);
-          } else {
-            // 🔁 Si era una respuesta, simplemente recargamos la vista
-            await loadPost();
+            if (id === post?.id) {
+              Alert.alert("Eliminado", "El post se eliminó correctamente.", [
+                { text: "OK", onPress: () => router.back() },
+              ]);
+            } else {
+              await loadPost();
+            }
+          } catch (err: any) {
+            console.error("[handleDelete] Error:", err);
+            const msg =
+              err.message?.includes("foreign key constraint") ||
+              err.message?.includes("Cannot delete or update a parent row")
+                ? "No se puede eliminar este post porque tiene respuestas asociadas."
+                : err.message || "No se pudo eliminar el mensaje.";
+            Alert.alert("Aviso", msg);
           }
-        } catch (err: any) {
-          console.error("[handleDelete] Error:", err);
-          const msg =
-            err.message?.includes("foreign key constraint") ||
-            err.message?.includes("Cannot delete or update a parent row")
-              ? "No se puede eliminar este post porque tiene respuestas asociadas."
-              : err.message || "No se pudo eliminar el mensaje.";
-          Alert.alert("Aviso", msg);
-        }
+        },
       },
-    },
-  ]);
-}
+    ]);
+  }
 
   /*───────────────────────────────
     ⏳ Estado de carga
@@ -177,12 +168,12 @@ export default function PostDetail() {
       {/* 🟢 Post principal */}
       <View style={[globalStyles.contentCard, localStyles.mainPost]}>
         <View style={localStyles.replyHeader}>
-          {post.authorPictureUrl ? (
+          {post.authorPictureUrl && (
             <Image
               source={{ uri: post.authorPictureUrl }}
               style={localStyles.avatarLarge}
             />
-          ) : null}
+          )}
           <Text style={localStyles.replyAuthor}>{post.authorName}</Text>
         </View>
 
@@ -215,7 +206,7 @@ export default function PostDetail() {
             <Text style={localStyles.replyDate}>
               {new Date(post.createdDate).toLocaleString("es-ES")}
             </Text>
-            {(post.authorCi === userCi || isProfessor) && (
+            {(String(post.authorCi) === userCi || isProfessor) && (
               <View style={[globalStyles.actionsRow, { marginTop: 10 }]}>
                 <TouchableOpacity
                   onPress={() => {
@@ -261,19 +252,19 @@ export default function PostDetail() {
       <Text style={[globalStyles.title, { marginTop: 16 }]}>Respuestas</Text>
       {responses.length ? (
         responses.map((r) => {
-          const isAuthor = r.authorCi === userCi;
+          const isAuthor = String(r.authorCi) === userCi;
           return (
             <View
               key={r.id}
               style={[globalStyles.contentCard, localStyles.replyCard]}
             >
               <View style={localStyles.replyHeader}>
-                {r.authorPictureUrl ? (
+                {r.authorPictureUrl && (
                   <Image
                     source={{ uri: r.authorPictureUrl }}
                     style={localStyles.avatarSmall}
                   />
-                ) : null}
+                )}
                 <Text style={localStyles.replyAuthor}>{r.authorName}</Text>
               </View>
 

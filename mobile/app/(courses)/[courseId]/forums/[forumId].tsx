@@ -104,17 +104,23 @@ export default function ForumView() {
   // ────────────────────────────────
   // ✍️ Publicar nuevo post
   // ────────────────────────────────
+  const [isPosting, setIsPosting] = useState(false);
   async function handlePost() {
     if (!message.trim()) return Alert.alert("Escribe un mensaje.");
+    if (isPosting) return;
+
     try {
+      setIsPosting(true);
       const newPost = await createForumPost(forumId!, { message });
       setPosts((prev) => [newPost, ...prev]);
       setMessage("");
     } catch (err: any) {
       Alert.alert("Error", err.message || "No se pudo publicar.");
+    } finally {
+      setIsPosting(false);
     }
   }
-
+  
   // ────────────────────────────────
   // 🧱 Render principal
   // ────────────────────────────────
@@ -159,11 +165,21 @@ export default function ForumView() {
             multiline
           />
           <TouchableOpacity
-            style={globalStyles.buttonPrimary}
+            style={[
+              globalStyles.buttonPrimary,
+              { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+              isPosting && { opacity: 0.7 },
+            ]}
             onPress={handlePost}
+            disabled={isPosting}
             activeOpacity={0.8}
           >
-            <Text style={globalStyles.buttonText}>Publicar</Text>
+            {isPosting && (
+              <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+            )}
+            <Text style={globalStyles.buttonText}>
+              {isPosting ? "Publicando..." : "Publicar"}
+            </Text>
           </TouchableOpacity>
         </View>
       )}

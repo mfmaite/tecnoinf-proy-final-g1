@@ -19,9 +19,14 @@ public class Course {
     @Column(name = "createdDate")
     private LocalDateTime createdDate = LocalDateTime.now();
 
-    // Lista de foros
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Forum> forums = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SimpleContent> simpleContents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Quiz> quizzes = new ArrayList<>();
 
     // Constructores
     public Course() {}
@@ -54,4 +59,25 @@ public class Course {
         forums.remove(forum);
         forum.setCourse(null);
     }
+
+    public List<SimpleContent> getSimpleContents() { return simpleContents; }
+    public void setSimpleContents(List<SimpleContent> simpleContents) { this.simpleContents = simpleContents; }
+
+    public void addSimpleContent(SimpleContent simpleContent) {
+        simpleContents.add(simpleContent);
+    }
+    public void removeSimpleContent(SimpleContent simpleContent) {
+        simpleContents.remove(simpleContent);
+    }
+
+    public List<Quiz> getQuizzes() { return quizzes; }
+    public void setQuizzes(List<Quiz> quizzes) { this.quizzes = quizzes; }
+
+    public void addQuiz(Quiz quiz) {
+        quizzes.add(quiz);
+    }
+    public void removeQuiz(Quiz quiz) {
+        quizzes.remove(quiz);
+    }
+
 }

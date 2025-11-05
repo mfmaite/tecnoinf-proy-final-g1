@@ -1,5 +1,8 @@
 import { api } from "./api";
 
+// ─────────────────────────────────────
+// 🧩 Tipos base
+// ─────────────────────────────────────
 export interface ForumPost {
   id: number;
   authorCi: string;
@@ -37,54 +40,54 @@ export interface CourseResponse {
   contents: Content[];
 }
 
-export async function getCourseById(courseId: string): Promise<CourseResponse> {
-  const base =
-    typeof (api as any).getUri === "function"
-      ? (api as any).getUri()
-      : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
-
-  const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(courseId)}`;
-
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Error al obtener curso (${res.status})`);
-  }
-
-  const text = await res.text();
-  let parsed: any;
-
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error("Respuesta no es JSON válido.");
-  }
-
-  // ✅ el backend devuelve los foros en data.forums, no dentro de course
-  const d = parsed.data;
-  if (!d || !d.course) {
-    throw new Error("Formato inesperado del servidor.");
-  }
-
-  const c = d.course;
-  const course: CourseData = {
-    id: String(c.id),
-    name: c.name,
-    createdDate: c.createdDate ?? null,
-    forums: d.forums || c.forums || [], // ✅ esta línea es clave
-  };
-
-  const contents: Content[] = d.contents || [];
-
-  return { course, contents };
+// 🔹 Estructura genérica de respuesta del backend
+interface ApiResponse<T> {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data: T;
 }
 
+// ─────────────────────────────────────
+// 📘 GET /courses/:courseId
+// ─────────────────────────────────────
+export async function getCourseById(courseId: string): Promise<CourseResponse> {
+  try {
+    const response = await api.get<ApiResponse<any>>(
+      `/courses/${encodeURIComponent(courseId)}`
+    );
+
+    const { success, message, data } = response.data;
+    if (!success) {
+      throw new Error(message || "Error al obtener curso.");
+    }
+
+    if (!data || !data.course) {
+      throw new Error("Formato inesperado del servidor.");
+    }
+
+    const c = data.course;
+    const course: CourseData = {
+      id: String(c.id),
+      name: c.name,
+      createdDate: c.createdDate ?? null,
+      forums: data.forums || c.forums || [],
+    };
+
+    const contents: Content[] = data.contents || [];
+    return { course, contents };
+  } catch (error: any) {
+    console.error("[getCourseById] Error:", error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message ||
+        "No se pudo obtener la información del curso."
+    );
+  }
+}
+
+// ─────────────────────────────────────
+// 🧾 GET /courses
+// ─────────────────────────────────────
 export interface CourseListItem {
   id: string;
   name?: string;
@@ -93,10 +96,19 @@ export interface CourseListItem {
 
 export const getCourses = async (): Promise<CourseListItem[]> => {
   try {
-    const response = await api.get("/courses");
-    return response.data.data || [];
-  } catch (err) {
-    console.error("Error en getCourses:", err);
-    throw err;
+    const response = await api.get<ApiResponse<CourseListItem[]>>("/courses");
+
+    const { success, message, data } = response.data;
+    if (!success) {
+      throw new Error(message || "Error al obtener cursos.");
+    }
+
+    // ✅ Aseguramos siempre un array, aunque venga vacío
+    return Array.isArray(data) ? data : [];
+  } catch (error: any) {
+    console.error("[getCourses] Error:", error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message || "No se pudieron listar los cursos."
+    );
   }
 };

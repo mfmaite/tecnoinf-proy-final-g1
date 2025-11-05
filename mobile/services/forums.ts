@@ -1,5 +1,8 @@
 import { api } from "./api";
 
+// ──────────────────────────────
+// Tipos base
+// ──────────────────────────────
 export interface ForumPost {
   id: number;
   authorCi: string;
@@ -9,183 +12,111 @@ export interface ForumPost {
   createdDate: string;
 }
 
-export interface ForumResponse {
-  success: boolean;
-  status: number;
-  message: string;
-  data: ForumPost[];
-}
-
-export interface PostResponse {
-  success: boolean;
-  status: number;
-  message: string;
-  data: ForumPost;
-}
-
 export interface NewPostPayload {
   message: string;
 }
 
-/**
- * Helper para construir URL base completa.
- */
-function buildUrl(path: string) {
-  const base =
-    typeof (api as any).getUri === "function"
-      ? (api as any).getUri()
-      : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
-  return `${base.replace(/\/+$/, "")}${path}`;
+// Respuesta genérica del backend
+interface ApiResponse<T> {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data: T;
 }
 
-/**
- * Obtiene todos los posts de un foro dado su ID.
- */
-export async function getForumPosts(
-  forumId: string,
-  token?: string | null
-): Promise<ForumPost[]> {
-  const url = buildUrl(`/forum/${encodeURIComponent(forumId)}`);
-
+// ──────────────────────────────
+// GET /forum/:forumId
+// ──────────────────────────────
+export async function getForumPosts(forumId: string): Promise<ForumPost[]> {
   try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    const { data } = await api.get<ApiResponse<any>>(
+      `/forum/${encodeURIComponent(forumId)}`
+    );
 
-    const text = await res.text();
-
-    if (!res.ok) {
-      // 🔍 Log extendido en caso de error
-      console.warn(
-        `[getForumPosts] Request failed (${res.status}) ${res.statusText}`,
-        "\nURL:", url,
-        "\nHeaders:", {
-          Authorization: token ? "Bearer <token oculto>" : "Sin token",
-        },
-        "\nResponse:", text
-      );
-
-      if (res.status === 401)
-        throw new Error("No autorizado. Por favor iniciá sesión nuevamente.");
-      if (res.status === 404) throw new Error("Foro no encontrado.");
-      throw new Error(`Error al obtener posts (${res.status})`);
+    if (!data.success) {
+      throw new Error(data.message || "Error al obtener posts del foro.");
     }
 
-    // Parseo del JSON
-    const parsed = JSON.parse(text);
-    // Algunos endpoints devuelven posts dentro de data.posts, otros en data
-    const posts = parsed.data?.posts || parsed.data || [];
+    // El backend a veces devuelve posts en data.posts o directamente en data
+    const posts: ForumPost[] = data.data?.posts || data.data || [];
     return posts;
-  } catch (err: any) {
-    // Si falla incluso la conexión
-    if (err.message === "Network request failed") {
-      console.error("[getForumPosts] No se pudo conectar al servidor:", url);
-      throw new Error("No se pudo conectar al servidor. Revisá tu conexión o el backend.");
-    }
-
-    console.error("[getForumPosts] Error inesperado:", err);
-    throw new Error(err.message || "Error al obtener los posts del foro.");
+  } catch (error: any) {
+    console.error("[getForumPosts] Error:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        "No se pudieron obtener los posts del foro."
+    );
   }
 }
 
-
-
-/**
- * Crea un nuevo post en un foro (solo si el usuario está autenticado).
- */
+// ──────────────────────────────
+// POST /forum/:forumId
+// ──────────────────────────────
 export async function createForumPost(
   forumId: string,
-  payload: NewPostPayload,
-  token?: string | null
+  payload: NewPostPayload
 ): Promise<ForumPost> {
-  const url = buildUrl(`/forum/${encodeURIComponent(forumId)}`);
+  try {
+    const { data } = await api.post<ApiResponse<ForumPost>>(
+      `/forum/${encodeURIComponent(forumId)}`,
+      payload
+    );
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const text = await res.text();
-
-  if (!res.ok) {
-    try {
-      const parsed = JSON.parse(text);
-      throw new Error(parsed.message || "Error al publicar mensaje.");
-    } catch {
-      throw new Error("Error al publicar mensaje.");
+    if (!data.success) {
+      throw new Error(data.message || "Error al publicar mensaje.");
     }
-  }
 
-  const json: PostResponse = JSON.parse(text);
-  return json.data;
+    return data.data;
+  } catch (error: any) {
+    console.error("[createForumPost] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "No se pudo publicar el mensaje."
+    );
+  }
 }
 
-/**
- * Edita un post existente (solo el autor o un profesor puede hacerlo).
- */
+// ──────────────────────────────
+// PUT /post/:postId
+// ──────────────────────────────
 export async function updateForumPost(
   postId: number,
-  payload: NewPostPayload,
-  token?: string | null
+  payload: NewPostPayload
 ): Promise<ForumPost> {
-  const url = buildUrl(`/post/${encodeURIComponent(postId)}`);
+  try {
+    const { data } = await api.put<ApiResponse<ForumPost>>(
+      `/post/${encodeURIComponent(postId)}`,
+      payload
+    );
 
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const text = await res.text();
-
-  if (!res.ok) {
-    try {
-      const parsed = JSON.parse(text);
-      throw new Error(parsed.message || "Error al editar post.");
-    } catch {
-      throw new Error(`Error al editar post (${res.status})`);
+    if (!data.success) {
+      throw new Error(data.message || "Error al editar post.");
     }
-  }
 
-  const json: PostResponse = JSON.parse(text);
-  return json.data;
+    return data.data;
+  } catch (error: any) {
+    console.error("[updateForumPost] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "No se pudo editar el post."
+    );
+  }
 }
 
-/**
- * Elimina un post existente (solo autor o profesor).
- */
-export async function deleteForumPost(postId: number, token?: string | null): Promise<void> {
-  const url = buildUrl(`/post/${encodeURIComponent(postId)}`);
+// ──────────────────────────────
+// DELETE /post/:postId
+// ──────────────────────────────
+export async function deleteForumPost(postId: number): Promise<void> {
+  try {
+    const { data } = await api.delete<ApiResponse<unknown>>(
+      `/post/${encodeURIComponent(postId)}`
+    );
 
-  const res = await fetch(url, {
-    method: "DELETE",
-    headers: {
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    try {
-      const parsed = JSON.parse(text);
-      throw new Error(parsed.message || `Error al eliminar post (${res.status})`);
-    } catch {
-      throw new Error(`Error al eliminar post (${res.status})`);
+    if (!data.success) {
+      throw new Error(data.message || "Error al eliminar post.");
     }
+  } catch (error: any) {
+    console.error("[deleteForumPost] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "No se pudo eliminar el post."
+    );
   }
 }

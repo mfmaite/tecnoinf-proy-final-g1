@@ -6,8 +6,11 @@ import com.mentora.backend.dt.DtForum;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.CourseRepository;
 import com.mentora.backend.repository.ForumRepository;
+import com.mentora.backend.repository.QuizRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
 import java.util.*;
+
+import com.mentora.backend.requests.CreateQuizRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
@@ -39,19 +42,22 @@ public class CourseService {
     private final SimpleContentRepository simpleContentRepository;
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
+    private final QuizRepository quizRepository;
 
     public CourseService(
-        CourseRepository courseRepository,
-        UserCourseService userCourseService,
-        SimpleContentRepository simpleContentRepository,
-        FileStorageService fileStorageService,
-        ForumRepository forumRepository
+            CourseRepository courseRepository,
+            UserCourseService userCourseService,
+            SimpleContentRepository simpleContentRepository,
+            FileStorageService fileStorageService,
+            ForumRepository forumRepository,
+            QuizRepository quizRepository
     ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
         this.fileStorageService = fileStorageService;
         this.forumRepository = forumRepository;
+        this.quizRepository = quizRepository;
     }
 
     public List<DtCourse> getCoursesForUser(String ci, Role role) {
@@ -142,6 +148,118 @@ public class CourseService {
         return getDtSimpleContent(saved);
     }
 
+    public Quiz createQuiz(String courseId, CreateQuizRequest req, String userCi) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        boolean isProfessor = userCourseService
+                .getParticipantsFromCourse(course.getId()).stream()
+                .anyMatch(u -> u.getCi().equals(userCi) && u.getRole() == Role.PROFESOR);
+
+        if (!isProfessor)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos");
+
+        if (req.getQuestions() == null || req.getQuestions().isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe haber al menos una pregunta");
+
+        for (CreateQuizRequest.QuestionDTO q : req.getQuestions()) {
+            if (q.getAnswers() == null || q.getAnswers().size() < 2)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada pregunta debe tener al menos dos respuestas");
+
+            boolean hasCorrect = q.getAnswers()
+                    .stream()
+                    .anyMatch(CreateQuizRequest.AnswerDTO::isCorrect);
+
+            if (!hasCorrect)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada pregunta debe tener una respuesta correcta");
+        }
+
+        Quiz quiz = new Quiz();
+        quiz.setTitle(req.getTitle());
+        quiz.setCourse(course);
+        quiz.setExpirationDate(req.getDueDate());
+
+        return getQuiz(req, quiz);
+    }
+
+    public Quiz editQuiz(String courseId, Long quizId, CreateQuizRequest req, String userCi) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+
+        if (!quiz.getCourse().getId().equals(courseId))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz no encontrado en ese curso");
+
+        boolean isProfessor = userCourseService
+                .getParticipantsFromCourse(quiz.getCourse().getId()).stream()
+                .anyMatch(u -> u.getCi().equals(userCi) && u.getRole() == Role.PROFESOR);
+
+        if (!isProfessor)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos");
+
+        if (req.getQuestions() == null || req.getQuestions().isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe haber al menos una pregunta");
+
+        for (CreateQuizRequest.QuestionDTO q : req.getQuestions()) {
+            if (q.getAnswers() == null || q.getAnswers().size() < 2)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada pregunta debe tener al menos dos respuestas");
+
+            boolean hasCorrect = q.getAnswers()
+                    .stream()
+                    .anyMatch(CreateQuizRequest.AnswerDTO::isCorrect);
+
+            if (!hasCorrect)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada pregunta debe tener una respuesta correcta");
+        }
+
+        quiz.setTitle(req.getTitle());
+        quiz.setExpirationDate(req.getDueDate());
+
+        // remove existing questions/answers (orphanRemoval + cascade se encargan)
+        quiz.getQuestions().clear();
+
+        return getQuiz(req, quiz);
+    }
+
+    private Quiz getQuiz(CreateQuizRequest req, Quiz quiz) {
+        List<QuizQuestion> questions = req.getQuestions().stream().map(q -> {
+            QuizQuestion qq = new QuizQuestion();
+            qq.setQuestionText(q.getQuestion());
+            qq.setQuiz(quiz);
+
+            List<QuizAnswer> answers = q.getAnswers().stream().map(a -> {
+                QuizAnswer qa = new QuizAnswer();
+                qa.setAnswerText(a.getText());
+                qa.setCorrect(a.isCorrect());
+                qa.setQuestion(qq);
+                return qa;
+            }).toList();
+
+            qq.setAnswers(answers);
+            return qq;
+        }).toList();
+
+        quiz.setQuestions(questions);
+
+        return quizRepository.save(quiz);
+    }
+
+    public void deleteQuiz(String courseId, Long quizId, String userCi) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+
+        if (!quiz.getCourse().getId().equals(courseId))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz no encontrado en ese curso");
+
+        boolean isProfessor = userCourseService
+                .getParticipantsFromCourse(quiz.getCourse().getId()).stream()
+                .anyMatch(u -> u.getCi().equals(userCi) && u.getRole() == Role.PROFESOR);
+
+        if (!isProfessor)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos");
+
+        quizRepository.delete(quiz);
+    }
+
     private DtCourse getDtCourse(Course c) {
         return new DtCourse(c.getId(), c.getName(), c.getCreatedDate());
     }
@@ -224,11 +342,11 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + ": ID inválido (máximo 10 caracteres, solo mayúsculas y números)");
                     continue;
                 }
-                if (name == null || name.isEmpty()) {
+                if (name.isEmpty()) {
                     errors.add("Fila " + lineNumber + " (" + id + "): Nombre obligatorio");
                     continue;
                 }
-                if (professorsCell == null || professorsCell.isEmpty()) {
+                if (professorsCell.isEmpty()) {
                     errors.add("Fila " + lineNumber + " (" + id + "): Profesores asignados obligatorios");
                     continue;
                 }

@@ -9,6 +9,7 @@ import com.mentora.backend.repository.ForumRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
 import java.util.*;
 import org.springframework.stereotype.Service;
+
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 
+
 @Service
 public class CourseService {
 
@@ -38,7 +40,13 @@ public class CourseService {
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
 
-    public CourseService(CourseRepository courseRepository, UserCourseService userCourseService, SimpleContentRepository simpleContentRepository, FileStorageService fileStorageService, ForumRepository forumRepository) {
+    public CourseService(
+        CourseRepository courseRepository,
+        UserCourseService userCourseService,
+        SimpleContentRepository simpleContentRepository,
+        FileStorageService fileStorageService,
+        ForumRepository forumRepository
+    ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
@@ -139,7 +147,24 @@ public class CourseService {
     }
 
     private DtSimpleContent getDtSimpleContent(SimpleContent sc) {
-        return new DtSimpleContent(sc.getId(), sc.getTitle(), sc.getContent(), sc.getFileName(), sc.getFileUrl(), sc.getCreatedDate());
+        String signedUrl = null;
+        String fileUrl = sc.getFileUrl();
+        if (fileUrl != null) {
+            if (fileUrl.startsWith("gs://")) {
+                signedUrl = fileStorageService.generateSignedUrl(fileUrl);
+            } else {
+                signedUrl = fileUrl;
+            }
+        }
+
+        return new DtSimpleContent(
+            sc.getId(),
+            sc.getTitle(),
+            sc.getContent(),
+            sc.getFileName(),
+            signedUrl,
+            sc.getCreatedDate()
+        );
     }
 
     public String addParticipants(String courseId, String[] participantIds) {

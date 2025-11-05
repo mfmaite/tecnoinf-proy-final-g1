@@ -149,7 +149,20 @@ public class UserService {
 
 
     public DtUser getUserDto(User u) {
-        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
+        String signedPictureUrl = null;
+
+        if (u.getPictureUrl() != null && u.getPictureUrl().startsWith("gs://")) {
+            signedPictureUrl = fileStorageService.generateSignedUrl(u.getPictureUrl());
+        }
+
+        return new DtUser(
+            u.getCi(),
+            u.getName(),
+            u.getEmail(),
+            u.getDescription(),
+            signedPictureUrl,
+            u.getRole()
+        );
     }
 
     public void changePassword(String newPwd, String confirmPwd, String oldPwd, String userCi) {

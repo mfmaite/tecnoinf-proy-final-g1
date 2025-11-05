@@ -14,4 +14,9 @@ public class DtFileResource {
     public Long getSize() { return size; }
     public void setSize(Long size) { this.size = size; }
 
+    public DtFileResource(String filename, String storagePath, Long size) {
+        this.filename = filename;
+        this.storagePath = storagePath;
+        this.size = size;
+    }
 }

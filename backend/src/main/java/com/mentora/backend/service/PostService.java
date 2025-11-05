@@ -54,6 +54,11 @@ public class PostService {
         return getDtPost(updated);
     }
 
+    public void deleteAllResponsePosts(Post post) {
+        List<PostResponse> responses = postResponseRepository.findAllByPost(post);
+        postResponseRepository.deleteAll(responses);
+    }
+
     public void deletePost(Long postId, String userCi) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));
@@ -61,6 +66,7 @@ public class PostService {
         if (!post.getAuthor().getCi().equals(userCi))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos para eliminar este post");
 
+        deleteAllResponsePosts(post);
         postRepository.delete(post);
     }
 

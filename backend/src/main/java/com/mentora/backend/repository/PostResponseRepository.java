@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface PostResponseRepository extends JpaRepository<PostResponse, String> {
+public interface PostResponseRepository extends JpaRepository<PostResponse, Long> {
     List<PostResponse> findAllByPost(Post post);
 }

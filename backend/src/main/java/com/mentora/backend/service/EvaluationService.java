@@ -7,6 +7,7 @@ import com.mentora.backend.dt.DtEvaluationSubmission;
 import com.mentora.backend.model.Evaluation;
 import com.mentora.backend.model.EvaluationSubmission;
 import com.mentora.backend.model.User;
+import com.mentora.backend.model.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
@@ -14,7 +15,10 @@ import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.repository.EvaluationSubmissionRepository;
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
 
 @Service
 public class EvaluationService {
@@ -38,11 +42,29 @@ public class EvaluationService {
     this.evaluationSubmissionRepository = evaluationSubmissionRepository;
   }
 
-  public DtEvaluation getEvaluation(Long evaluationId) {
+  public GetEvaluationWithSubmissionResponse getEvaluation(Long evaluationId, String userCi) {
+    User user = userRepository.findById(userCi)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
     Evaluation evaluation = evaluationRepository.findById(evaluationId)
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
 
-    return getDtEvaluation(evaluation);
+    List<EvaluationSubmission> submissions = new ArrayList<>();
+
+    if (user.getRole().equals(Role.PROFESOR)) {
+      submissions = evaluationSubmissionRepository.findByEvaluationId(evaluationId);
+    } else {
+      submissions = evaluationSubmissionRepository.findByEvaluationIdAndAuthorCi(evaluationId, userCi);
+    }
+
+    List<DtEvaluationSubmission> dtSubmissions = submissions.stream()
+      .map(this::getDtEvaluationSubmission)
+      .collect(Collectors.toList());
+
+    return new GetEvaluationWithSubmissionResponse(
+      getDtEvaluation(evaluation),
+      dtSubmissions
+    );
   }
 
   public DtEvaluation getDtEvaluation(Evaluation e) {

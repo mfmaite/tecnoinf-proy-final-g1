@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.mentora.backend.responses.DtApiResponse;
-import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.service.EvaluationService;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.Authentication;
@@ -16,6 +15,7 @@ import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.mentora.backend.dt.DtEvaluationSubmission;
+import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
 
 @RestController
 @RequestMapping("/evaluations")
@@ -26,16 +26,21 @@ public class EvaluationController {
     this.evaluationService = evaluationService;
   }
 
-  @Operation(summary = "Obtener evaluación",
-    description = "Obtiene una evaluación por su ID",
+  @Operation(summary = "Obtener evaluación con respuesta",
+    description = "Obtiene una evaluación por su ID y su respuesta",
     security = @SecurityRequirement(name = "bearerAuth"))
   @ApiResponse(responseCode = "200", description = "Evaluación obtenida correctamente")
   @ApiResponse(responseCode = "404", description = "Evaluación no encontrada")
   @ApiResponse(responseCode = "500", description = "Error interno del servidor")
   @GetMapping("/{evaluationId}")
-  public ResponseEntity<DtApiResponse<DtEvaluation>> getEvaluation(@PathVariable Long evaluationId) {
+  public ResponseEntity<DtApiResponse<GetEvaluationWithSubmissionResponse>> getEvaluation(
+    @PathVariable Long evaluationId,
+    Authentication authentication
+  ) {
     try {
-      DtEvaluation evaluation = evaluationService.getEvaluation(evaluationId);
+      String userCi = authentication.getName();
+
+      GetEvaluationWithSubmissionResponse evaluation = evaluationService.getEvaluation(evaluationId, userCi);
 
       return ResponseEntity.ok(new DtApiResponse<>(
         true,

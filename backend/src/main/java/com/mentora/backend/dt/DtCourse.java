@@ -1,14 +1,11 @@
 package com.mentora.backend.dt;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DtCourse {
     private String id;
     private String name;
     private LocalDateTime createdDate;
-    private List<DtForum> forums = new ArrayList<>();
 
     public DtCourse() {}
 

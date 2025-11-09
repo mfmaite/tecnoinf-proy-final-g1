@@ -22,7 +22,6 @@ export default function CourseView() {
     const fetchCourse = async () => {
       try {
         const data = await getCourseById(String(courseId));
-        console.log("🔍 Curso recibido:", JSON.stringify(data, null, 2));
         setCourseData(data.course);
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
 
@@ -179,7 +178,7 @@ export default function CourseView() {
                 ? "Foro de Anuncios"
                 : "Foro de Consultas"}
             </Text>
-            
+
           </TouchableOpacity>
           ))
           ) : (

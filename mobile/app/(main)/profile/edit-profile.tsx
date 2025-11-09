@@ -1,4 +1,3 @@
-// app/(main)/profile/edit-profile.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -15,9 +14,10 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
 import { styles as globalStyles } from "../../../styles/styles";
+import { updateUserProfile } from "../../../services/userService";
 
 export default function EditProfileScreen() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser } = useAuth(); // ✅ ahora también traemos updateUser
   const router = useRouter();
 
   const [name, setName] = useState(user?.name || "");
@@ -58,33 +58,34 @@ export default function EditProfileScreen() {
     try {
       setLoading(true);
 
-      let payload: any = { name, email, description };
-
+      let picture: any = undefined;
       if (newImage && pictureUrl) {
-        // si hay una imagen nueva, usamos FormData
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("email", email);
-        formData.append("description", description);
-
         const filename = pictureUrl.split("/").pop() || "avatar.jpg";
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : "image/jpeg";
 
-        formData.append("picture", {
+        picture = {
           uri: pictureUrl,
           name: filename,
           type,
-        } as any);
-
-        payload = formData;
+        };
       }
 
-      // await updateUser(payload, newImage); // `newImage` indica si es multipart
+      // 🔹 Llamar al endpoint para actualizar en el backend
+      const updatedUser = await updateUserProfile({
+        name,
+        email,
+        description,
+        picture,
+      });
+
+      // 🔹 Actualizar también en el contexto global (y en SecureStore)
+      await updateUser(updatedUser);
+
       Alert.alert("Éxito", "Tu perfil ha sido actualizado.");
       router.back();
     } catch (error) {
-      console.error(error);
+      console.error("[EditProfile] Error actualizando perfil:", error);
       Alert.alert("Error", "No se pudo actualizar el perfil.");
     } finally {
       setLoading(false);
@@ -92,7 +93,7 @@ export default function EditProfileScreen() {
   };
 
   const goToChangePassword = () => {
-    router.push("/(main)/profile/change-password")
+    router.push("/(main)/profile/change-password");
   };
 
   return (

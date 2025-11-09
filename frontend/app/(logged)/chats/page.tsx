@@ -5,10 +5,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { chatController } from '@/controllers/chatController';
 import { Chat } from '@/types/chat';
 import Link from 'next/link';
+import { UserResponse } from '@/types/user';
 
 const ChatsPage = () => {
   const { accessToken, user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
+  const [counterpart, setCounterpart] = useState<UserResponse>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
@@ -30,9 +32,9 @@ const ChatsPage = () => {
     }
   }, [accessToken]);
 
-  const getCounterpartCi = (chat: Chat) => {
-    if (!user?.ci) return chat.participant1Ci || chat.participant2Ci || '';
-    return chat.participant1Ci === user.ci ? (chat.participant2Ci || '') : (chat.participant1Ci || '');
+  const getCounterpart = (chat: Chat) => {
+    if (!user?.ci) return chat.participant1 || chat.participant2 || null;
+    return chat.participant1?.ci === user.ci ? (chat.participant2 || null) : (chat.participant1 || null);
   };
 
   if (isLoading) {
@@ -52,7 +54,7 @@ const ChatsPage = () => {
               Tus chats
             </h1>
             <p className="text-gray-600">
-              Lista de conversaciones 1:1
+              Lista de conversaciones
             </p>
           </div>
 
@@ -71,17 +73,18 @@ const ChatsPage = () => {
               </div>
             ) : (
               chats.map((chat) => {
-                const counterpart = getCounterpartCi(chat);
+                const counterpart = getCounterpart(chat);
                 return (
                   <div key={chat.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
-                        {counterpart ? counterpart.slice(-2) : '??'}
+                        {counterpart?.name ? counterpart.name.slice(0, 2).toUpperCase() : '??'}
                       </div>
+
                       <div>
-                        <div className="text-sm font-medium text-gray-900">Chat #{chat.id}</div>
-                        <div className="text-sm text-gray-600">Con: {counterpart || 'Desconocido'}</div>
+                        <div className="text-sm font-medium text-gray-900">{counterpart?.name}</div>
                       </div>
+
                     </div>
                     <div>
                       <Link href={`/chats/${chat.id}`} className="text-primary-color-80 hover:text-primary-color-90 font-medium">

@@ -1,7 +1,9 @@
+import type { UserResponse } from '@/types/user';
+
 export interface Chat {
   id: number;
-  participant1Ci: string | null;
-  participant2Ci: string | null;
+  participant1: UserResponse | null;
+  participant2: UserResponse | null;
 }
 
 

@@ -24,18 +24,21 @@ public class ChatService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final UserService userService;
 
     public ChatService(ChatRepository chatRepository,
         MessageRepository messageRepository,
         UserRepository userRepository,
         NotificationService notificationService,
-        EmailService emailService
+        EmailService emailService,
+        UserService userService
     ) {
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.userService = userService;
     }
 
     public DtMessage sendMessage(String senderCi, String recipientCi, String messageText) {
@@ -114,8 +117,8 @@ public class ChatService {
     private DtChat getDtChat(Chat chat) {
         return new DtChat(
                 chat.getId(),
-                chat.getParticipant1Id(),
-                chat.getParticipant2Id()
+                userService.getUserDto(chat.getParticipant1Id()),
+                userService.getUserDto(chat.getParticipant2Id())
         );
     }
 }

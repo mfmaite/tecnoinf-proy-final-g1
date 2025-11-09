@@ -70,7 +70,7 @@ public class ChatController {
     @ApiResponse(responseCode = "403", description = "No tienes permisos para obtener chats")
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
-    @GetMapping("")
+    @GetMapping
     @PreAuthorize("hasRole('PROFESOR') or hasRole('ESTUDIANTE')")
     public ResponseEntity<DtApiResponse<List<DtChat>>> getChats(
             Authentication authentication

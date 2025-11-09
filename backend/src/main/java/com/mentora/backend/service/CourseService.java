@@ -300,6 +300,10 @@ public class CourseService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Evaluación requiere texto o archivo");
         }
 
+        if (req.getDueDate() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha límite de entrega de la evaluación es obligatoria");
+        }
+
         String fileName = null;
         String fileUrl = null;
         String content = null;
@@ -314,7 +318,7 @@ public class CourseService {
             content = req.getContent();
         }
 
-        Evaluation newEvaluation = new Evaluation(req.getTitle(), course, fileName, fileUrl, content);
+        Evaluation newEvaluation = new Evaluation(req.getTitle(), course, fileName, fileUrl, content, req.getDueDate());
         Evaluation saved = evaluationRepository.save(newEvaluation);
 
         return evaluationService.getDtEvaluation(saved);

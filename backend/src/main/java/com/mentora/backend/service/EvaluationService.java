@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
+import java.time.LocalDateTime;
 
 @Service
 public class EvaluationService {
@@ -84,7 +85,8 @@ public class EvaluationService {
         e.getContent(),
         e.getFileName(),
         signedUrl,
-        e.getCreatedDate()
+        e.getCreatedDate(),
+        e.getDueDate()
     );
   }
 
@@ -119,6 +121,17 @@ public class EvaluationService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe una respuesta para esta evaluación, intenta editarla");
     }
 
+    Evaluation evaluation = evaluationRepository.findById(evaluationId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
+
+    User user = userRepository.findById(userCi)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+    LocalDateTime dueDate = evaluation.getDueDate();
+    if (dueDate != null && dueDate.isBefore(LocalDateTime.now())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha límite de entrega de la evaluación ha expirado, no es posible enviar una respuesta");
+    }
+
     String fileName = null;
     String fileUrl = null;
 
@@ -127,12 +140,6 @@ public class EvaluationService {
       fileName = file.getFilename();
       fileUrl = file.getStoragePath();
     }
-
-    Evaluation evaluation = evaluationRepository.findById(evaluationId)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
-
-    User user = userRepository.findById(userCi)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
     EvaluationSubmission submission = new EvaluationSubmission(
       req.getSolution(),

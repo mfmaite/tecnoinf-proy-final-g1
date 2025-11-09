@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Linking, Alert, TouchableOpacity } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { colors } from "../../styles/colors";
-import { getCourseById, CourseData, Content } from "../../services/courses";
-import { styles } from "../../styles/styles";
+import { colors } from "../../../styles/colors";
+import { getCourseById, CourseData, Content } from "../../../services/courses";
+import { styles } from "../../../styles/styles";
 import { useNavigation } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -36,9 +36,8 @@ export default function CourseView() {
   }, [courseId]);
 
   useLayoutEffect(() => {
-  if (courseData?.name) {
-    (navigation as any).setOptions?.({ title: courseData.name });
-  }
+    const title = courseData?.name ?? "Detalle del curso";
+    (navigation as any).setOptions?.({ title, headerTitle: title });
   }, [navigation, courseData?.name]);
 
   async function handleDownload(url?: string | null, fileName?: string | null) {

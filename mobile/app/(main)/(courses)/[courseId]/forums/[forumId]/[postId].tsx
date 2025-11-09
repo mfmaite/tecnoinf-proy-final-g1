@@ -9,10 +9,10 @@ import {
   TextInput,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useAuth } from "../../../../../contexts/AuthContext";
-import { colors } from "../../../../../styles/colors";
-import { styles as globalStyles } from "../../../../../styles/styles";
-import { getPostById, deletePost, createResponse } from "../../../../../services/posts";
+import { useAuth } from "../../../../../../contexts/AuthContext";
+import { colors } from "../../../../../../styles/colors";
+import { styles as globalStyles } from "../../../../../../styles/styles";
+import { getPostById, deletePost, createResponse } from "../../../../../../services/posts";
 
 export default function PostDetail() {
   const { courseId, postId } = useLocalSearchParams<{ courseId?: string; postId?: string }>();

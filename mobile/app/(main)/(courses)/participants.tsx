@@ -10,8 +10,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { styles } from "../../styles/styles";
-import { api } from "../../services/api";
+import { styles } from "../../../styles/styles";
+import { api } from "../../../services/api";
 
 interface Participant {
   ci: string;

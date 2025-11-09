@@ -83,6 +83,7 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
         "No se pudo obtener la información del curso."
     );
   }
+
 }
 
 // ─────────────────────────────────────

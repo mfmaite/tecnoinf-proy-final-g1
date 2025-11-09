@@ -16,6 +16,9 @@ type User = {
   role: "ADMIN" | "PROFESOR" | "ESTUDIANTE" | string;
 };
 
+/**
+ * Tipado del contexto de autenticación.
+ */
 type AuthContextType = {
   token: string | null;
   user: User | null;
@@ -33,20 +36,21 @@ type AuthContextType = {
   isStudent: boolean;
 };
 
-// ─────────────────────────────────────────────
-// 🌐 Contexto
-// ─────────────────────────────────────────────
+/**
+ * Creación del contexto
+ */
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+/**
+ * Provider global de autenticación
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
-  // ─────────────────────────────────────────────
-  // 🔹 Restaurar sesión guardada (token + usuario)
-  // ─────────────────────────────────────────────
+  // 🔹 Cargar sesión almacenada al iniciar la app
   useEffect(() => {
     (async () => {
       try {
@@ -100,9 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ─────────────────────────────────────────────
   // 🔹 Logout
-  // ─────────────────────────────────────────────
   const logout = async () => {
     try {
       setToken(null);
@@ -115,9 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ─────────────────────────────────────────────
   // 🔹 Actualizar datos del usuario localmente
-  // ─────────────────────────────────────────────
   const updateUser = async (updatedData: Partial<User>) => {
     if (!user) return;
     try {
@@ -146,9 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ─────────────────────────────────────────────
-  // 🔹 Helpers derivados
-  // ─────────────────────────────────────────────
+  // 🔹 Helpers derivados del estado actual
   const isAuthenticated = !!token;
   const isProfessor =
     user?.role === "PROFESOR" || user?.role === "ADMIN" || false;
@@ -176,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// ─────────────────────────────────────────────
-// 🔹 Hook de acceso rápido
-// ─────────────────────────────────────────────
+/**
+ * Hook de acceso rápido al contexto
+ */
 export const useAuth = () => useContext(AuthContext);

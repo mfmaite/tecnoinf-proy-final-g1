@@ -8,9 +8,9 @@ import {
   TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { colors } from "../../styles/colors";
-import { styles } from "../../styles/styles";
-import { api } from "../../services/api";
+import { colors } from "../../../styles/colors";
+import { styles } from "../../../styles/styles";
+import { api } from "../../../services/api";
 import { Picker } from '@react-native-picker/picker';
 
 interface Course {

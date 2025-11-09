@@ -19,11 +19,11 @@ import {
   getForumPosts,
   createForumPost,
   ForumPost,
-} from "../../../../services/forums";
-import { colors } from "../../../../styles/colors";
-import { styles as globalStyles } from "../../../../styles/styles";
-import { useAuth } from "../../../../contexts/AuthContext";
-import { getCourseById } from "../../../../services/courses";
+} from "../../../../../services/forums";
+import { colors } from "../../../../../styles/colors";
+import { styles as globalStyles } from "../../../../../styles/styles";
+import { useAuth } from "../../../../../contexts/AuthContext";
+import { getCourseById } from "../../../../../services/courses";
 
 export default function ForumView() {
   const { courseId, forumId } = useLocalSearchParams<{

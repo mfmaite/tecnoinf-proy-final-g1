@@ -48,8 +48,8 @@ public class ChatService {
         User recipient = userRepository.findByCi(recipientCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario destinatario no encontrado"));
 
-        Chat chat = chatRepository.findByParticipants(sender, recipient)
-                .orElseGet(() -> chatRepository.save(new Chat(sender, recipient)));
+        List<Chat> existing = chatRepository.findByParticipants(sender, recipient);
+        Chat chat = existing.isEmpty() ? chatRepository.save(new Chat(sender, recipient)) : existing.get(0);
 
         Message message = new Message(chat, sender, messageText, LocalDateTime.now());
         messageRepository.save(message);
@@ -85,8 +85,8 @@ public class ChatService {
         User partner = userRepository.findByCi(partnerCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario destino no encontrado"));
 
-        Chat chat = chatRepository.findByParticipants(requester, partner)
-                .orElseGet(() -> chatRepository.save(new Chat(requester, partner)));
+        List<Chat> existing = chatRepository.findByParticipants(requester, partner);
+        Chat chat = existing.isEmpty() ? chatRepository.save(new Chat(requester, partner)) : existing.get(0);
 
         return messageRepository.findAllByChatOrderByDateSentAsc(chat).stream()
                 .map(this::getDtMessage)

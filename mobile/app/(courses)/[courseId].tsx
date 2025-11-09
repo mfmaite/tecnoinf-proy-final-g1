@@ -115,7 +115,7 @@ export default function CourseView() {
         style={styles.buttonPrimary}
         onPress={() =>
           router.push({
-            pathname: "/(courses)/participants",
+            pathname: "./(courses)/participants",
             params: { courseId: String(courseId) },
           })
         }
@@ -160,7 +160,34 @@ export default function CourseView() {
           </Text>
         </View>
       ))}
+
+        <Text style={styles.title}>Foros</Text>
+        {courseData.forums && courseData.forums.length > 0 ? (
+            courseData.forums.map((forum) => (
+          <TouchableOpacity
+            key={forum.id}
+            style={[styles.contentCard, { marginBottom: 12 }]}
+            onPress={() => router.push({
+              pathname: "/[courseId]/forums/[forumId]",
+              params: { courseId: String(courseData.id), forumId: String(forum.id) },
+            })}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.subtitle}>
+              {forum.type === "ANNOUNCEMENTS"
+                ? "Foro de Anuncios"
+                : "Foro de Consultas"}
+            </Text>
+
+          </TouchableOpacity>
+          ))
+          ) : (
+            <Text style={styles.contentText}>No hay foros disponibles.</Text>
+          )}
+
+
     </ScrollView>
+
   );
 }
 

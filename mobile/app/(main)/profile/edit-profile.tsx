@@ -15,6 +15,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
 import { styles as globalStyles } from "../../../styles/styles";
 import { updateUserProfile } from "../../../services/userService";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function EditProfileScreen() {
   const { user, updateUser } = useAuth();
@@ -25,8 +26,12 @@ export default function EditProfileScreen() {
   const [description, setDescription] = useState(user?.description || "");
   const [pictureUrl, setPictureUrl] = useState(user?.pictureUrl || "");
   const [newImage, setNewImage] = useState(false);
+  const [removeImage, setRemoveImage] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // ────────────────────────────────
+  // 📷 Seleccionar nueva foto
+  // ────────────────────────────────
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -46,9 +51,35 @@ export default function EditProfileScreen() {
     if (!result.canceled && result.assets?.[0]?.uri) {
       setPictureUrl(result.assets[0].uri);
       setNewImage(true);
+      setRemoveImage(false);
     }
   };
 
+  // ────────────────────────────────
+  // 🗑️ Quitar foto actual
+  // ────────────────────────────────
+  const removeProfilePicture = () => {
+    Alert.alert(
+      "Quitar foto",
+      "¿Querés eliminar tu foto de perfil?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sí, eliminar",
+          style: "destructive",
+          onPress: () => {
+            setPictureUrl("");
+            setNewImage(false);
+            setRemoveImage(true);
+          },
+        },
+      ]
+    );
+  };
+
+  // ────────────────────────────────
+  // 💾 Guardar cambios
+  // ────────────────────────────────
   const handleSave = async () => {
     if (!name || !email) {
       Alert.alert("Error", "Por favor completá todos los campos obligatorios.");
@@ -59,6 +90,8 @@ export default function EditProfileScreen() {
       setLoading(true);
 
       let picture: any = undefined;
+
+      // Si hay nueva imagen
       if (newImage && pictureUrl) {
         const filename = pictureUrl.split("/").pop() || "avatar.jpg";
         const match = /\.(\w+)$/.exec(filename);
@@ -71,7 +104,11 @@ export default function EditProfileScreen() {
         };
       }
 
-      // 🔹 Llamar al endpoint para actualizar en el backend
+      // Si quitó la imagen
+      if (removeImage) {
+        picture = null;
+      }
+
       const updatedUser = await updateUserProfile({
         name,
         email,
@@ -79,7 +116,6 @@ export default function EditProfileScreen() {
         picture,
       });
 
-      // 🔹 Actualizar también en el contexto global (y en SecureStore)
       await updateUser(updatedUser);
 
       Alert.alert("Éxito", "Tu perfil ha sido actualizado.");
@@ -96,23 +132,37 @@ export default function EditProfileScreen() {
     router.push("/(main)/profile/change-password");
   };
 
+  // ────────────────────────────────
+  // 🧱 Render principal
+  // ────────────────────────────────
   return (
     <View style={globalStyles.container}>
       <Text style={globalStyles.title}>Editar Perfil</Text>
 
+      {/* 🖼️ Avatar */}
       <TouchableOpacity onPress={pickImage}>
         {pictureUrl ? (
           <Image source={{ uri: pictureUrl }} style={localStyles.avatar} />
         ) : (
           <View style={[localStyles.avatar, localStyles.avatarPlaceholder]}>
-            <Text style={localStyles.avatarInitial}>
-              {name?.charAt(0)?.toUpperCase() || "?"}
-            </Text>
+            <Ionicons
+              name="person-circle-outline"
+              size={80}
+              color={colors.textNeutral[20]}
+            />
           </View>
         )}
         <Text style={localStyles.changePhotoText}>Cambiar foto</Text>
       </TouchableOpacity>
 
+      {/* 🗑️ Quitar foto */}
+      {pictureUrl ? (
+        <TouchableOpacity onPress={removeProfilePicture}>
+          <Text style={localStyles.removePhotoText}>Quitar foto</Text>
+        </TouchableOpacity>
+      ) : null}
+
+      {/* 🧾 Formulario */}
       <View style={localStyles.form}>
         <Text style={localStyles.label}>Nombre</Text>
         <TextInput
@@ -177,13 +227,14 @@ const localStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarInitial: {
-    fontSize: 40,
-    color: colors.textNeutral[10],
-    fontWeight: "700",
-  },
   changePhotoText: {
     color: colors.primary[60],
+    textAlign: "center",
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  removePhotoText: {
+    color: colors.accent.danger[50],
     textAlign: "center",
     marginBottom: 16,
     fontWeight: "600",

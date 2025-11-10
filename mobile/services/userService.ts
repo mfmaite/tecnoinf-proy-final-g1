@@ -8,7 +8,7 @@ interface ApiResponse<T> {
 }
 
 /**
- * Cambia la contraseña del usuario autenticado.
+ * 🔐 Cambia la contraseña del usuario autenticado.
  * El token JWT se agrega automáticamente por el interceptor.
  */
 export const changePassword = async (
@@ -33,24 +33,57 @@ export const changePassword = async (
   }
 };
 
+/**
+ * 🧩 Actualiza el perfil del usuario autenticado.
+ * Maneja tanto actualizaciones con imagen nueva como eliminación de imagen.
+ */
 export async function updateUserProfile(data: {
   name: string;
   email: string;
   description: string;
-  picture?: any;
+  picture?: any | null;
 }) {
-  const formData = new FormData();
-  formData.append("name", data.name);
-  formData.append("email", data.email);
-  formData.append("description", data.description || "");
+  let response;
 
-  if (data.picture) {
-    formData.append("picture", data.picture);
+  // 🗑️ Si el usuario quitó la imagen
+  if (data.picture === null) {
+    // Enviamos form-data sin campo "picture" para que el backend la remueva
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("description", data.description || "");
+    formData.append("picture", ""); // campo vacío en vez de null
+
+    response = await api.put<ApiResponse<any>>("/users", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   }
 
-  const response = await api.put("/users", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  // 🖼️ Si hay una nueva imagen
+  else if (data.picture) {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("description", data.description || "");
+    formData.append("picture", data.picture);
 
-  return response.data.data; // el backend devuelve el user actualizado en `data`
+    response = await api.put<ApiResponse<any>>("/users", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  // 🧾 Solo texto (sin cambios de imagen)
+  else {
+    response = await api.put<ApiResponse<any>>("/users", {
+      name: data.name,
+      email: data.email,
+      description: data.description || "",
+    });
+  }
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || "Error al actualizar usuario.");
+  }
+
+  return response.data.data;
 }

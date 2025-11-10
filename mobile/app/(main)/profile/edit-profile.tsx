@@ -30,7 +30,7 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(false);
 
   // ────────────────────────────────
-  // 📷 Seleccionar nueva foto
+  // 📷 Seleccionar nueva foto (con validación)
   // ────────────────────────────────
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -46,13 +46,26 @@ export default function EditProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
     });
 
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      setPictureUrl(result.assets[0].uri);
-      setNewImage(true);
-      setRemoveImage(false);
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+
+    const uri = result.assets[0].uri;
+    const filename = uri.split("/").pop() || "";
+    const extension = filename.split(".").pop()?.toLowerCase();
+
+    if (!["jpg", "jpeg", "png"].includes(extension || "")) {
+      Alert.alert(
+        "Formato no válido",
+        "Solo se permiten imágenes en formato JPG o PNG."
+      );
+      return;
     }
+
+    setPictureUrl(uri);
+    setNewImage(true);
+    setRemoveImage(false);
   };
 
   // ────────────────────────────────
@@ -192,6 +205,7 @@ export default function EditProfileScreen() {
         />
       </View>
 
+      {/* 🔘 Guardar cambios */}
       <TouchableOpacity
         style={[globalStyles.buttonPrimary, loading && { opacity: 0.6 }]}
         onPress={handleSave}
@@ -204,6 +218,7 @@ export default function EditProfileScreen() {
         )}
       </TouchableOpacity>
 
+      {/* 🔐 Cambiar contraseña */}
       <TouchableOpacity
         style={globalStyles.buttonSecondary}
         onPress={goToChangePassword}

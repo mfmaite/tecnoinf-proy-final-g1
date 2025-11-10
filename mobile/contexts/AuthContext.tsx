@@ -1,20 +1,19 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
-import {
-  login as loginService,
-  changePassword as changePasswordService,
-} from "../services/auth";
+import { login as loginService } from "../services/auth";
+import { changePassword as changePasswordService } from "../services/userService";
+import { api } from "../services/api"; // ✅ Import necesario para setear headers globales
 
-/**
- * Tipado del usuario logueado.
- */
+// ─────────────────────────────────────────────
+// 🧩 Tipos
+// ─────────────────────────────────────────────
 type User = {
   ci: string;
   name: string;
   email: string;
   description?: string;
   pictureUrl?: string;
-  role: "ADMIN" | "PROFESOR" | "ESTUDIANTE" | string; // por si el backend usa otro texto
+  role: "ADMIN" | "PROFESOR" | "ESTUDIANTE" | string;
 };
 
 /**
@@ -32,7 +31,6 @@ type AuthContextType = {
     confirmPassword: string
   ) => Promise<void>;
 
-  // Helpers adicionales (azúcar sintáctico)
   isAuthenticated: boolean;
   isProfessor: boolean;
   isStudent: boolean;
@@ -54,33 +52,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // 🔹 Cargar sesión almacenada al iniciar la app
   useEffect(() => {
-    const loadData = async () => {
+    (async () => {
       try {
         const storedToken = await SecureStore.getItemAsync("token");
         const storedUser = await SecureStore.getItemAsync("user");
-        if (storedToken) setToken(storedToken);
+
+        if (storedToken) {
+          setToken(storedToken);
+          api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`; // ✅ Header global
+        }
+
         if (storedUser) setUser(JSON.parse(storedUser));
-      } catch {
+      } catch (err) {
+        console.warn("[AuthContext] Error restaurando sesión:", err);
         await SecureStore.deleteItemAsync("token");
         await SecureStore.deleteItemAsync("user");
       }
-    };
-    loadData();
+    })();
   }, []);
 
+  // ─────────────────────────────────────────────
+  // 🔹 Sincronizar el header global de Axios cuando cambia el token
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common["Authorization"];
+    }
+  }, [token]);
+
+  // ─────────────────────────────────────────────
   // 🔹 Login
+  // ─────────────────────────────────────────────
   const login = async (ci: string, password: string) => {
     try {
       const { token, user } = await loginService(ci, password);
-      if (!token) throw new Error("No se recibió token del servidor");
+      if (!token) throw new Error("No se recibió token del servidor.");
 
       setToken(token);
       setUser(user);
 
+      // ✅ Setear header global inmediato
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
       await SecureStore.setItemAsync("token", token);
       await SecureStore.setItemAsync("user", JSON.stringify(user));
     } catch (error) {
-      console.error("Error en login:", error);
+      console.error("[AuthContext] Error en login:", error);
       throw error;
     }
   };
@@ -90,10 +109,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setToken(null);
       setUser(null);
+      delete api.defaults.headers.common["Authorization"];
       await SecureStore.deleteItemAsync("token");
       await SecureStore.deleteItemAsync("user");
     } catch (error) {
-      console.error("Error en logout:", error);
+      console.error("[AuthContext] Error en logout:", error);
     }
   };
 
@@ -105,27 +125,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(newUser);
       await SecureStore.setItemAsync("user", JSON.stringify(newUser));
     } catch (error) {
-      console.error("Error al actualizar usuario:", error);
+      console.error("[AuthContext] Error al actualizar usuario:", error);
       throw error;
     }
   };
 
-  // 🔹 Cambiar contraseña (usa servicio con token)
+  // ─────────────────────────────────────────────
+  // 🔹 Cambiar contraseña
+  // ─────────────────────────────────────────────
   const changePassword = async (
     oldPassword: string,
     newPassword: string,
     confirmPassword: string
   ) => {
-    if (!token) throw new Error("No autenticado");
     try {
-      await changePasswordService(
-        oldPassword,
-        newPassword,
-        confirmPassword,
-        token
-      );
+      await changePasswordService(oldPassword, newPassword, confirmPassword);
     } catch (error) {
-      console.error("Error al cambiar contraseña:", error);
+      console.error("[AuthContext] Error al cambiar contraseña:", error);
       throw error;
     }
   };
@@ -136,6 +152,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     user?.role === "PROFESOR" || user?.role === "ADMIN" || false;
   const isStudent = user?.role === "ESTUDIANTE" || false;
 
+  // ─────────────────────────────────────────────
+  // 🔹 Provider
+  // ─────────────────────────────────────────────
   return (
     <AuthContext.Provider
       value={{

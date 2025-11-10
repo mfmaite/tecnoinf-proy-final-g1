@@ -17,7 +17,7 @@ import { styles as globalStyles } from "../../../styles/styles";
 import { updateUserProfile } from "../../../services/userService";
 
 export default function EditProfileScreen() {
-  const { user, updateUser } = useAuth(); // ✅ ahora también traemos updateUser
+  const { user, updateUser } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState(user?.name || "");

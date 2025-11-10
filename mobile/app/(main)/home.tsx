@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
@@ -44,10 +44,10 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogout}>
           <Text style={styles.buttonText}> Cerrar Sesión </Text>
         </TouchableOpacity>
-      
+
       </View>
     </View>
-    
+
   );
 }
 

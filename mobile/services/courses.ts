@@ -1,8 +1,26 @@
 import { api } from "./api";
+
+export interface ForumPost {
+  id: number;
+  authorCi: string;
+  authorName: string;
+  message: string;
+  createdDate: string;
+}
+
+export interface Forum {
+  id: string;
+  type: string;
+  courseId: string;
+  createdAt: string;
+  posts?: ForumPost[];
+}
+
 export interface CourseData {
   id: string;
   name?: string;
   createdDate?: string | null;
+  forums?: Forum[];
 }
 
 export interface Content {
@@ -25,81 +43,46 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
       ? (api as any).getUri()
       : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
 
-  const url = `${base.replace(/\/+$/,"")}/courses/${encodeURIComponent(courseId)}`;
+  const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(courseId)}`;
 
   const res = await fetch(url, {
     method: "GET",
     headers: {
-      Accept: "application/json, application/xml, text/*",
+      Accept: "application/json",
       "Content-Type": "application/json",
     },
   });
 
-  const text = await res.text();
-
   if (!res.ok) {
-    throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+    throw new Error(`Error al obtener curso (${res.status})`);
   }
+
+  const text = await res.text();
+  let parsed: any;
 
   try {
-    const parsed = JSON.parse(text);
-
-    let course: CourseData | null = null;
-    let contents: Content[] = [];
-
-  if (parsed.course) {
-      course = parsed.course;
-      contents = parsed.contents || [];
-    } else if (parsed.data) {
-      if (Array.isArray(parsed.data)) {
-        const found = parsed.data.find((c: any) => String(c.id) === String(courseId));
-        if (found) {
-          course = {
-            id: String(found.id),
-            name: found.name,
-            createdDate: found.createdDate ?? null,
-          };
-        }
-      } else if (typeof parsed.data === "object" && parsed.data !== null) {
-        const d = parsed.data;
-        if (d.course) {
-          const c = d.course;
-          course = {
-            id: String(c.id),
-            name: c.name,
-            createdDate: c.createdDate ?? null,
-          };
-          contents = d.contents || [];
-        } else {
-          course = {
-            id: String(d.id),
-            name: d.name,
-            createdDate: d.createdDate ?? null,
-          };
-          contents = d.contents || [];
-        }
-      }
-    } else {
-      if (parsed.id) {
-        course = {
-          id: String(parsed.id),
-          name: parsed.name,
-          createdDate: parsed.createdDate ?? null,
-        };
-        contents = parsed.contents || [];
-      }
-    }
-
-    if (!course) {
-      console.warn("[getCourseById] No se pudo extraer el curso del JSON parseado:", parsed);
-      throw new Error("Respuesta válida pero no contiene datos del curso. Revisa los logs.");
-    }
-
-    return { course, contents };
-  } catch (err) {
-    console.error("[getCourseById] Error al parsear respuesta:", err);
-    throw new Error("Respuesta no es JSON válido o formato inesperado. Revisa RESPONSE TEXT en la consola.");
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("Respuesta no es JSON válido.");
   }
+
+  // ✅ el backend devuelve los foros en data.forums, no dentro de course
+  const d = parsed.data;
+  if (!d || !d.course) {
+    throw new Error("Formato inesperado del servidor.");
+  }
+
+  const c = d.course;
+  const course: CourseData = {
+    id: String(c.id),
+    name: c.name,
+    createdDate: c.createdDate ?? null,
+    forums: d.forums || c.forums || [], // ✅ esta línea es clave
+  };
+
+  const contents: Content[] = d.contents || [];
+
+  return { course, contents };
 }
 
 export interface CourseListItem {

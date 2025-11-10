@@ -26,7 +26,7 @@ export default function LoginScreen() {
     try {
       await login(ci, password);
       router.replace("/(main)/home");
-    } catch (e) {
+    } catch {
       setError("Credenciales inválidas");
     }
   };
@@ -106,8 +106,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,

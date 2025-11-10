@@ -21,7 +21,10 @@ public class User {
 
     private String description;
 
+    @Column(name = "pictureUrl", length = 2048)
     private String pictureUrl;
+
+    private String pictureFileName;
 
     @Enumerated(EnumType.STRING)
     private Role role; // ADMIN, PROFESOR, ESTUDIANTE
@@ -29,13 +32,14 @@ public class User {
     // === Constructores ===
     public User() {}
 
-    public User(String ci, String name, String email, String password, String description, String pictureUrl, Role role) {
+    public User(String ci, String name, String email, String password, String description, String pictureUrl, String pictureFileName, Role role) {
         this.ci = ci;
         this.name = name;
         this.email = email;
         this.password = password;
         this.description = description;
         this.pictureUrl = pictureUrl;
+        this.pictureFileName = pictureFileName;
         this.role = role; // ADMIN, PROFESOR, ESTUDIANTE
     }
 
@@ -86,6 +90,14 @@ public class User {
 
     public void setPictureUrl(String pictureUrl) {
         this.pictureUrl = pictureUrl;
+    }
+
+    public String getPictureFileName() {
+        return pictureFileName;
+    }
+
+    public void setPictureFileName(String pictureFileName) {
+        this.pictureFileName = pictureFileName;
     }
 
     public Role getRole() {

@@ -37,7 +37,7 @@ export default function ForgotPasswordScreen() {
       );
 
       router.push("/(auth)/login");
-    } catch (err) {
+    } catch {
       setError("No se pudo enviar el correo. Intentá nuevamente más tarde.");
     } finally {
       setLoading(false);

@@ -2,12 +2,14 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtForum;
 import com.mentora.backend.model.*;
 import com.mentora.backend.repository.CourseRepository;
 import com.mentora.backend.repository.ForumRepository;
 import com.mentora.backend.requests.CreateCourseRequest;
 import java.util.*;
 import org.springframework.stereotype.Service;
+
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,14 @@ import com.mentora.backend.requests.CreateSimpleContentRequest;
 import com.mentora.backend.repository.SimpleContentRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.responses.GetCourseResponse;
+import com.mentora.backend.responses.BulkCreateCoursesResponse;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
 
 
 @Service
@@ -30,7 +40,13 @@ public class CourseService {
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
 
-    public CourseService(CourseRepository courseRepository, UserCourseService userCourseService, SimpleContentRepository simpleContentRepository, FileStorageService fileStorageService, ForumRepository forumRepository) {
+    public CourseService(
+        CourseRepository courseRepository,
+        UserCourseService userCourseService,
+        SimpleContentRepository simpleContentRepository,
+        FileStorageService fileStorageService,
+        ForumRepository forumRepository
+    ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
@@ -45,8 +61,7 @@ public class CourseService {
                 .collect(Collectors.toList());
         }
 
-        return userCourseService.getCoursesForUser(ci).stream()
-            .collect(Collectors.toCollection(ArrayList::new));
+        return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
     @Transactional
@@ -90,7 +105,13 @@ public class CourseService {
                 .map(this::getDtSimpleContent)
                 .collect(Collectors.toList());
 
-        return new GetCourseResponse(getDtCourse(course), contents);
+        List<Forum> forums = forumRepository.findByCourse_Id(course.getId());
+
+        List<DtForum> dtForums = forums.stream()
+                .map(forum -> new DtForum(forum.getId().toString(), forum.getType().name(), course.getId()))
+                .collect(Collectors.toList());
+
+        return new GetCourseResponse(getDtCourse(course), contents, dtForums);
     }
 
     public DtSimpleContent createSimpleContent(String courseId, CreateSimpleContentRequest req) throws IOException {
@@ -126,7 +147,24 @@ public class CourseService {
     }
 
     private DtSimpleContent getDtSimpleContent(SimpleContent sc) {
-        return new DtSimpleContent(sc.getId(), sc.getTitle(), sc.getContent(), sc.getFileName(), sc.getFileUrl(), sc.getCreatedDate());
+        String signedUrl = null;
+        String fileUrl = sc.getFileUrl();
+        if (fileUrl != null) {
+            if (fileUrl.startsWith("gs://")) {
+                signedUrl = fileStorageService.generateSignedUrl(fileUrl);
+            } else {
+                signedUrl = fileUrl;
+            }
+        }
+
+        return new DtSimpleContent(
+            sc.getId(),
+            sc.getTitle(),
+            sc.getContent(),
+            sc.getFileName(),
+            signedUrl,
+            sc.getCreatedDate()
+        );
     }
 
     public String addParticipants(String courseId, String[] participantIds) {
@@ -143,5 +181,90 @@ public class CourseService {
 
     public List<DtUser> getNonParticipants(String courseId) {
         return userCourseService.getNonParticipantsFromCourse(courseId);
+    }
+
+    public BulkCreateCoursesResponse createCoursesFromCsv(InputStream csvInputStream) throws IOException, CsvException {
+        if (csvInputStream == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV requerido");
+        }
+
+        List<DtCourse> createdCourses = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvInputStream, StandardCharsets.UTF_8)).build()) {
+            List<String[]> rows = reader.readAll();
+            if (rows == null || rows.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+            }
+
+            int lineNumber = 0;
+            for (String[] row : rows) {
+                lineNumber++;
+
+                if (row == null) { continue; }
+                if (lineNumber == 1 && row.length > 0 && row[0] != null && row[0].trim().equalsIgnoreCase("identificador del curso")) {
+                    continue;
+                }
+
+                String id = row.length > 0 && row[0] != null ? row[0].trim() : "";
+                String name = row.length > 1 && row[1] != null ? row[1].trim() : "";
+                String professorsCell = row.length > 2 && row[2] != null ? row[2].trim() : "";
+
+                if (id.isEmpty() && name.isEmpty() && professorsCell.isEmpty()) {
+                    continue;
+                }
+
+                id = id.toUpperCase();
+
+                if (id.isEmpty()) {
+                    errors.add("Fila " + lineNumber + ": ID del curso obligatorio");
+                    continue;
+                }
+                if (!id.matches("^[A-Z0-9]{1,10}$")) {
+                    errors.add("Fila " + lineNumber + ": ID inválido (máximo 10 caracteres, solo mayúsculas y números)");
+                    continue;
+                }
+                if (name == null || name.isEmpty()) {
+                    errors.add("Fila " + lineNumber + " (" + id + "): Nombre obligatorio");
+                    continue;
+                }
+                if (professorsCell == null || professorsCell.isEmpty()) {
+                    errors.add("Fila " + lineNumber + " (" + id + "): Profesores asignados obligatorios");
+                    continue;
+                }
+
+                String[] cis = java.util.Arrays.stream(professorsCell.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .distinct()
+                        .toArray(String[]::new);
+
+                if (cis.length == 0) {
+                    errors.add("Fila " + lineNumber + " (" + id + "): Se requiere al menos un CI de profesor");
+                    continue;
+                }
+                boolean cisValid = java.util.Arrays.stream(cis).allMatch(ci -> ci.matches("^\\d+$"));
+                if (!cisValid) {
+                    errors.add("Fila " + lineNumber + " (" + id + "): CIs de profesores inválidos (solo dígitos)");
+                    continue;
+                }
+
+                CreateCourseRequest req = new CreateCourseRequest();
+                req.setId(id);
+                req.setName(name);
+                req.setProfessorsCis(cis);
+
+                try {
+                    DtCourse created = createCourse(req);
+                    createdCourses.add(created);
+                } catch (ResponseStatusException e) {
+                    errors.add("Fila " + lineNumber + " (" + id + "): " + e.getReason());
+                } catch (Exception e) {
+                    errors.add("Fila " + lineNumber + " (" + id + "): Error inesperado al crear el curso");
+                }
+            }
+        }
+
+        return new BulkCreateCoursesResponse(createdCourses, errors);
     }
 }

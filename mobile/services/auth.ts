@@ -1,50 +1,54 @@
 import { api } from "./api";
 
 /**
- * Inicia sesión de un usuario y devuelve el token y los datos del usuario.
+ * Tipo base de respuesta del backend
  */
-export async function login(ci: string, password: string) {
-  const response = await api.post("/auth/login", { ci, password });
-  const { success, message, data } = response.data;
-  if (!success) {
-    throw new Error(message || "Error de autenticación");
-  }
-  const { token, user } = data;
-  return { token, user };
+interface ApiResponse<T> {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data: T;
 }
 
 /**
- * Cambia la contraseña del usuario autenticado.
- * Requiere token JWT en el header Authorization.
+ * Datos devueltos por /auth/login
  */
-export async function changePassword(
-  oldPassword: string,
-  newPassword: string,
-  confirmPassword: string,
-  token: string
-): Promise<void> {
-  try {
-    const response = await api.post(
-      "/users/change-password",
-      {
-        oldPassword,
-        newPassword,
-        confirmPassword,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+interface LoginResponse {
+  token: string;
+  user: {
+    ci: string;
+    name: string;
+    email: string;
+    description?: string;
+    pictureUrl?: string;
+    role: "ADMIN" | "PROFESOR" | "ESTUDIANTE" | string;
+  };
+}
 
-    if (!response.data.success) {
-      throw new Error(response.data.message || "Error al cambiar contraseña");
+/**
+ * 🔹 Inicia sesión y devuelve token + usuario
+ */
+export async function login(ci: string, password: string) {
+  try {
+    const { data } = await api.post<ApiResponse<LoginResponse>>("/auth/login", {
+      ci,
+      password,
+    });
+
+    if (!data.success) {
+      throw new Error(data.message || "Error de autenticación");
     }
+
+    return {
+      token: data.data.token,
+      user: data.data.user,
+    };
   } catch (error: any) {
-    console.error("[changePassword] Error:", error);
+    console.error("[login] Error:", error);
     throw new Error(
-      error.response?.data?.message || "Error al cambiar la contraseña"
+      error.response?.data?.message ||
+        "No se pudo iniciar sesión. Verificá tus credenciales."
     );
   }
 }
+

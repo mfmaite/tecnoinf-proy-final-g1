@@ -130,7 +130,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // 🔹 Cambiar contraseña (usa servicio con token)
+  // ─────────────────────────────────────────────
+  // 🔹 Cambiar contraseña
+  // ─────────────────────────────────────────────
   const changePassword = async (
     oldPassword: string,
     newPassword: string,

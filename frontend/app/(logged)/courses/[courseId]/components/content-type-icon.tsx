@@ -1,5 +1,8 @@
 import React from 'react';
 import type { ContentType } from '@/types/content';
+import { SimpleContentIcon } from '@/public/assets/icons/simple-content';
+import { EvaluationIcon } from '@/public/assets/icons/evaluation';
+import { QuizIcon } from '@/public/assets/icons/quiz';
 
 type ContentTypeIconProps = {
   type: ContentType;
@@ -8,22 +11,11 @@ type ContentTypeIconProps = {
 };
 
 export function ContentTypeIcon({ type, size = 18, className }: ContentTypeIconProps) {
-  const commonProps = {
-    width: size,
-    height: size,
-    className,
-  };
-
-  switch (type) {
-    case 'simpleContent':
-      return <img src="/assets/icons/simple-content.svg" alt="Contenido simple" {...commonProps} />;
-    case 'evaluation':
-      return <img src="/assets/icons/evaluation.svg" alt="Evaluación" {...commonProps} />;
-    case 'quiz':
-      return <img src="/assets/icons/quiz.svg" alt="Quiz" {...commonProps} />;
-    default:
-      return null;
-  }
+  const commonProps = { width: size, height: size, className };
+  if (type === 'simpleContent') return <SimpleContentIcon {...commonProps} />;
+  if (type === 'evaluation') return <EvaluationIcon {...commonProps} />;
+  if (type === 'quiz') return <QuizIcon {...commonProps} />;
+  return null;
 }
 
 

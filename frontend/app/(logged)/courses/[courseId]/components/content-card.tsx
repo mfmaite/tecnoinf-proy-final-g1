@@ -1,67 +1,30 @@
 "use client";
-import React, { useState } from 'react'
-import { formatDate, isImage, isVideo } from '@/helpers/utils';
-import { SimpleContent } from '@/types/content';
-import dynamic from 'next/dynamic';
-import { Modal } from '@/components/modal/modal';
-
-const MarkdownPreview = dynamic<any>(() => import('@uiw/react-markdown-preview').then(m => m.default), { ssr: false });
+import React from 'react';
+import Link from 'next/link';
+import { formatDate } from '@/helpers/utils';
+import type { CourseContent } from '@/types/content';
+import { ContentTypeIcon } from './content-type-icon';
 
 interface ContentCardProps {
-  content: SimpleContent
+  courseId: string;
+  content: CourseContent;
 }
 
-const ContentCard = ({ content }: ContentCardProps) => {
-  const [isImageOpen, setIsImageOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+const ContentCard = ({ courseId, content }: ContentCardProps) => {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 text-text-neutral-50">
+    <Link
+      href={`/courses/${courseId}/contents/${content.id}`}
+      className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-secondary-color-60 hover:shadow-sm transition-colors"
+    >
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">{content.title}</h2>
-        <span className="text-xs text-text-neutral-50">{formatDate(content.createdDate)}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <ContentTypeIcon type={content.type} size={50} />
+          <h2 className="text-base font-semibold text-secondary-color-70 truncate">{content.title}</h2>
+        </div>
+        <span className="ml-4 shrink-0 text-xs text-text-neutral-50">{formatDate(content.createdDate)}</span>
       </div>
-
-      {content.content ? (
-        <div className="prose max-w-none" data-color-mode="light">
-          <MarkdownPreview source={content.content} />
-        </div>
-      ) : null}
-
-      {content.fileUrl ? (
-        <div className="space-y-2">
-          {isVideo(content.fileUrl) ? (
-            <video controls className="w-full max-h-[480px] rounded-md" src={content.fileUrl} />
-          ) : isImage(content.fileUrl) ? (
-            <div className="w-full h-48 rounded-md bg-gray-50 flex items-center justify-center">
-              <img
-                className="max-h-full object-contain cursor-default hover:cursor-[zoom-in]"
-                src={content.fileUrl}
-                alt={content.fileName ?? 'Archivo'}
-                onClick={() => { setPreviewUrl(content.fileUrl as string); setIsImageOpen(true); }}
-              />
-            </div>
-          ) : (
-            <a className="text-blue-600 underline" href={content.fileUrl} target="_blank" rel="noreferrer">
-              Ver archivo
-            </a>
-          )}
-        </div>
-      ) : null}
-
-      <Modal
-        isOpen={isImageOpen}
-        onClose={() => { setIsImageOpen(false); setPreviewUrl(null); }}
-        title={content.title}
-        size="xl"
-      >
-        {previewUrl ? (
-          <div className="w-full flex items-center justify-center">
-            <img src={previewUrl} alt={content.fileName ?? 'Imagen'} className="max-w-full max-h-[80vh] rounded-md" />
-          </div>
-        ) : null}
-      </Modal>
-    </div>
-  )
-}
+    </Link>
+  );
+};
 
 export { ContentCard };

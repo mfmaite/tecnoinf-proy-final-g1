@@ -112,10 +112,10 @@ public class CourseService {
 
         List<DtSimpleContent> contents = simpleContentRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(this::getDtSimpleContent)
-                .collect(Collectors.toList());
+                .toList();
         List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(evaluationService::getDtEvaluation)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Object> allContents = new ArrayList<>();
         allContents.addAll(contents);
@@ -248,11 +248,11 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + ": ID inválido (máximo 10 caracteres, solo mayúsculas y números)");
                     continue;
                 }
-                if (name == null || name.isEmpty()) {
+                if (name.isEmpty()) {
                     errors.add("Fila " + lineNumber + " (" + id + "): Nombre obligatorio");
                     continue;
                 }
-                if (professorsCell == null || professorsCell.isEmpty()) {
+                if (professorsCell.isEmpty()) {
                     errors.add("Fila " + lineNumber + " (" + id + "): Profesores asignados obligatorios");
                     continue;
                 }
@@ -323,4 +323,23 @@ public class CourseService {
 
         return evaluationService.getDtEvaluation(saved);
     }
+
+    @Transactional
+    public DtSimpleContent updateSimpleContent(String courseId, DtSimpleContent dto) {
+        SimpleContent sc = simpleContentRepository.findById(dto.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado"));
+
+        if (!sc.getCourse().getId().equals(courseId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El contenido no pertenece a este curso");
+        }
+
+        if (dto.getTitle() != null) sc.setTitle(dto.getTitle());
+        if (dto.getContent() != null) sc.setContent(dto.getContent());
+        if (dto.getFileName() != null) sc.setFileName(dto.getFileName());
+        if (dto.getFileUrl() != null) sc.setFileUrl(dto.getFileUrl());
+
+        SimpleContent saved = simpleContentRepository.save(sc);
+        return getDtSimpleContent(saved);
+    }
+
 }

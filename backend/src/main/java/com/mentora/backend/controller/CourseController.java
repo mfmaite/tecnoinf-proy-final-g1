@@ -451,4 +451,33 @@ public class CourseController {
         }
     }
 
+    @Operation(
+            summary = "Editar contenido simple",
+            description = "Actualiza un contenido simple existente. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Contenido simple actualizado")
+    @ApiResponse(responseCode = "404", description = "Contenido no encontrado")
+    @PutMapping("/{courseId}/contents/simple/{contentId}")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<DtSimpleContent>> updateSimpleContent(
+            @PathVariable String courseId,
+            @PathVariable Long contentId,
+            @RequestBody DtSimpleContent dto) {
+
+        try {
+            dto.setId(contentId);
+
+            DtSimpleContent updated = courseService.updateSimpleContent(courseId, dto);
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(true, 200, "Contenido simple actualizado", updated)
+            );
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(
+                    new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null)
+            );
+        }
+    }
 }

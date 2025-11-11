@@ -33,7 +33,6 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        {/* <Logo style={styles.logo} /> */}
         <Image source={logo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Mentora</Text>
 

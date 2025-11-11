@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtEvaluation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -99,4 +100,34 @@ public class EvaluationController {
     }
 
   }
+
+    @PutMapping("/{courseId}/{evaluationId}")
+    @Operation(
+            summary = "Editar evaluación",
+            description = "Actualiza una evaluación existente. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Evaluación actualizada")
+    @ApiResponse(responseCode = "404", description = "Evaluación no encontrada")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<DtEvaluation>> updateEvaluation(
+            @PathVariable String courseId,
+            @PathVariable Long evaluationId,
+            @RequestBody DtEvaluation dto) {
+
+        try {
+            dto.setId(evaluationId);
+
+            DtEvaluation updated = evaluationService.updateEvaluation(courseId, dto);
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(true, 200, "Evaluación actualizada", updated)
+            );
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(
+                    new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null)
+            );
+        }
+    }
 }

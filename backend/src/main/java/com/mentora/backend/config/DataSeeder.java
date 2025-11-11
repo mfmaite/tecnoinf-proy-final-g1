@@ -45,6 +45,7 @@ public class DataSeeder implements CommandLineRunner {
                 passwordEncoder.encode("Admin123"),
                 "Usuario administrador del sistema",
                 null,
+                null,
                 Role.ADMIN
             );
             userRepository.save(admin);
@@ -60,6 +61,7 @@ public class DataSeeder implements CommandLineRunner {
                 passwordEncoder.encode("Profesor123"),
                 "Profesor de matemáticas con 10 años de experiencia",
                 null,
+                null,
                 Role.PROFESOR
             );
             userRepository.save(profesor);
@@ -74,6 +76,7 @@ public class DataSeeder implements CommandLineRunner {
                 "estudiante@mentora.com",
                 passwordEncoder.encode("Estudiante123"),
                 "Estudiante de segundo año",
+                null,
                 null,
                 Role.ESTUDIANTE
             );
@@ -91,6 +94,7 @@ public class DataSeeder implements CommandLineRunner {
                 "estudiante@mentora.com",
                 passwordEncoder.encode("estudiante123"),
                 "Estudiante de segundo año",
+                null,
                 null,
                 Role.ESTUDIANTE
         );

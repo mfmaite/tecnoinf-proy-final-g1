@@ -1,5 +1,6 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Role;
@@ -13,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.mentora.backend.requests.UpdateUserRequest;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,13 +32,15 @@ public class UserService {
     private final EmailService emailService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final ActivityRepository activityRepository;
+    private final FileStorageService fileStorageService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, ActivityRepository activityRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, ActivityRepository activityRepository, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.activityRepository = activityRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     public User findByCI(String ci) {
@@ -65,7 +70,8 @@ public class UserService {
                 dto.getEmail(),
                 passwordEncoder.encode(dto.getPassword()),
                 dto.getDescription(),
-                dto.getPictureUrl(),
+                null,
+                null,
                 dto.getRole()
         );
 
@@ -101,27 +107,62 @@ public class UserService {
         }
 
         String o = (order == null ? "name_asc" : order.toLowerCase());
-        Comparator<User> comparator;
-        switch (o) {
-            case "name_desc":
-                comparator = Comparator.comparing((User u) -> u.getName().toLowerCase()).reversed();
-                break;
-            case "ci_asc":
-                comparator = Comparator.comparing(User::getCi);
-                break;
-            case "ci_desc":
-                comparator = Comparator.comparing(User::getCi).reversed();
-                break;
-            default:
-                comparator = Comparator.comparing((User u) -> u.getName().toLowerCase());
-        }
+        Comparator<User> comparator = switch (o) {
+            case "name_desc" -> Comparator.comparing((User u) -> u.getName().toLowerCase()).reversed();
+            case "ci_asc" -> Comparator.comparing(User::getCi);
+            case "ci_desc" -> Comparator.comparing(User::getCi).reversed();
+            default -> Comparator.comparing((User u) -> u.getName().toLowerCase());
+        };
         users = users.stream().sorted(comparator).collect(Collectors.toList());
 
         return users.stream().map(this::getUserDto).collect(Collectors.toList());
     }
 
+    public DtUser updateUser(String ci, UpdateUserRequest request) {
+        User u = findByCI(ci);
+
+        if (u == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+
+        if (request.getName() != null)
+            u.setName(request.getName());
+        if (request.getEmail() != null)
+            u.setEmail(request.getEmail());
+        if (request.getDescription() != null)
+            u.setDescription(request.getDescription());
+
+        if (request.getPicture() != null && !request.getPicture().isEmpty()) {
+            try {
+                DtFileResource fr = fileStorageService.store(request.getPicture());
+                String fileName = fr.getFilename();
+                String fileUrl = fr.getStoragePath();
+                u.setPictureFileName(fileName);
+                u.setPictureUrl(fileUrl);
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error subiendo la imagen");
+            }
+        }
+
+        userRepository.save(u);
+        return getUserDto(u);
+    }
+
+
     public DtUser getUserDto(User u) {
-        return new DtUser(u.getCi(), u.getName(), u.getEmail(), u.getDescription(), u.getPictureUrl(), u.getRole());
+        String signedPictureUrl = null;
+
+        if (u.getPictureUrl() != null && u.getPictureUrl().startsWith("gs://")) {
+            signedPictureUrl = fileStorageService.generateSignedUrl(u.getPictureUrl());
+        }
+
+        return new DtUser(
+            u.getCi(),
+            u.getName(),
+            u.getEmail(),
+            u.getDescription(),
+            signedPictureUrl,
+            u.getRole()
+        );
     }
 
     public void changePassword(String newPwd, String confirmPwd, String oldPwd, String userCi) {
@@ -228,13 +269,20 @@ public class UserService {
                 .toList();
     }
 
+    public DtUser getUser(String ci) {
+        User u = findByCI(ci);
+        if (u == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+        return getUserDto(u);
+    }
+
     private DtActivity getDtActivity(Activity activity) {
-    return new DtActivity(
-        activity.getId(),
-        activity.getType(),
-        activity.getDescription(),
-        activity.getLink(),
-        activity.getCreatedDate()
-    );
+        return new DtActivity(
+            activity.getId(),
+            activity.getType(),
+            activity.getDescription(),
+            activity.getLink(),
+            activity.getCreatedDate()
+        );
     }
 }

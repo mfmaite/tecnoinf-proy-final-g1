@@ -7,12 +7,11 @@ import {
   ActivityIndicator,
   TextInput,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { colors } from "../../styles/colors";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
 import { Picker } from '@react-native-picker/picker';
-import { push } from "expo-router/build/global-state/routing";
-import { useRouter } from "expo-router";
 
 interface Course {
   id?: string;
@@ -126,7 +125,6 @@ export default function CoursesList() {
 
   return (
     <View style={styles.container}>
-      
       {/* Campo de búsqueda */}
       <TextInput
         style={styles.searchInput}

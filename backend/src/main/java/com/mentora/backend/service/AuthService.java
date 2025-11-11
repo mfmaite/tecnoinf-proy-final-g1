@@ -16,11 +16,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
-    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, UserService userService) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
     public LoginResponse login(DtLogin dtLogin) {
@@ -36,7 +38,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
 
-        DtUser userDto = new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureUrl(), user.getRole());
+        DtUser userDto = userService.getUserDto(user);
         return new LoginResponse(userDto, jwtService.generateToken(user));
     }
 }

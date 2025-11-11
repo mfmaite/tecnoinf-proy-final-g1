@@ -24,7 +24,7 @@ export default function RootLayout() {
 
   function openRoute(path: string) {
     setMenuVisible(false);
-    router.push(path);
+    router.push(path as any);
   }
 
   function getTitleFromSegments(segs: string[]) {
@@ -128,6 +128,13 @@ export default function RootLayout() {
                 onPress={() => openRoute("/(main)/profile")}
               >
                 <Text style={localStyles.menuButtonText}>Perfil</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={localStyles.menuButton}
+                onPress={() => openRoute("/(main)/chats")}
+              >
+                <Text style={localStyles.menuButtonText}>Mensajes</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

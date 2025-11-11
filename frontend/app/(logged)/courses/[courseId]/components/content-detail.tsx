@@ -21,11 +21,6 @@ export function ContentDetail({ content }: ContentDetailProps) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-4 text-text-neutral-50">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-secondary-color-70">{content.title}</h2>
-        <span className="text-xs text-text-neutral-50">{formatDate(content.createdDate)}</span>
-      </div>
-
       {markdown ? (
         <div className="prose max-w-none" data-color-mode="light">
           <MarkdownPreview source={markdown} />

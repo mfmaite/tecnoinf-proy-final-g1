@@ -138,6 +138,34 @@ public class CourseService {
         return new GetCourseResponse(getDtCourse(course), allContents, dtForums);
     }
 
+    public Object getContentByTypeAndId(String courseId, String type, Long contentId) {
+        if (type == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido obligatorio");
+        }
+        switch (type) {
+            case "simpleContent": {
+                SimpleContent sc = simpleContentRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (sc == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                return getDtSimpleContent(sc);
+            }
+            case "evaluation": {
+                Evaluation e = evaluationRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (e == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                return evaluationService.getDtEvaluation(e);
+            }
+            case "quiz": {
+                // No implementado aún
+                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Quiz no implementado");
+            }
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido inválido");
+        }
+    }
+
     public DtSimpleContent createSimpleContent(String courseId, CreateSimpleContentRequest req) throws IOException {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));

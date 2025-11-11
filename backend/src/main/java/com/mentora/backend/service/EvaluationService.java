@@ -9,6 +9,7 @@ import com.mentora.backend.model.EvaluationSubmission;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.Role;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
 import com.mentora.backend.repository.UserRepository;
@@ -153,4 +154,25 @@ public class EvaluationService {
     EvaluationSubmission saved = evaluationSubmissionRepository.save(submission);
     return getDtEvaluationSubmission(saved);
   }
+
+    @Transactional
+    public DtEvaluation updateEvaluation(String courseId, DtEvaluation dto) {
+        Evaluation ev = evaluationRepository.findById(dto.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
+
+        if (!ev.getCourse().getId().equals(courseId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La evaluación no pertenece a este curso");
+        }
+
+        if (dto.getTitle() != null) ev.setTitle(dto.getTitle());
+        if (dto.getContent() != null) ev.setContent(dto.getContent());
+        if (dto.getFileName() != null) ev.setFileName(dto.getFileName());
+        if (dto.getFileUrl() != null) ev.setFileUrl(dto.getFileUrl());
+        if (dto.getDueDate() != null) ev.setDueDate(dto.getDueDate());
+
+        Evaluation saved = evaluationRepository.save(ev);
+
+        return getDtEvaluation(saved);
+    }
+
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,42 +14,64 @@ import { getChatMessages, sendMessage } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 
 export default function ChatScreen() {
-  const { partnerCi, chatId } = useLocalSearchParams<{ partnerCi: string; chatId: string }>();
+  const { partnerCi, chatId } =
+    useLocalSearchParams<{ partnerCi: string; chatId: string }>();
   const { user } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  const loadMessages = async () => {
+  // 🔹 Carga inicial y actualización periódica
+  const loadMessages = useCallback(async () => {
     try {
       const data = await getChatMessages(Number(chatId));
-      setMessages(data);
+      setMessages((prev) => {
+        const combined = [...prev, ...data];
+        const unique = Array.from(
+          new Map(combined.map((msg) => [msg.id, msg])).values()
+        );
+        return unique.sort(
+          (a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime()
+        );
+      });
     } catch (err) {
       console.error("Error cargando mensajes", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [chatId]);
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 5000); // refresh cada 5s
+    const interval = setInterval(loadMessages, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadMessages]);
 
+  // 🔹 Enviar mensaje con protección contra doble envío
   const handleSend = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() || isSending) return;
+
     try {
+      setIsSending(true);
       const newMsg = await sendMessage(partnerCi, text.trim());
-      setMessages((prev) => [...prev, newMsg]);
+
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === newMsg.id);
+        return exists ? prev : [...prev, newMsg];
+      });
+
       setText("");
       flatListRef.current?.scrollToEnd({ animated: true });
     } catch (err) {
       console.error("Error enviando mensaje", err);
+    } finally {
+      setIsSending(false);
     }
   };
 
+  // 🔹 Loading general
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -58,6 +80,7 @@ export default function ChatScreen() {
     );
   }
 
+  // 🔹 Render principal
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -66,16 +89,19 @@ export default function ChatScreen() {
       <FlatList
         ref={flatListRef}
         data={messages}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.id}-${item.dateSent}-${index}`}
         renderItem={({ item }) => {
           const isMine = item.sendByUserCi === user?.ci;
           if (!user) {
             return (
-              <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+              <View
+                style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+              >
                 <Text>No se encontró el usuario autenticado.</Text>
               </View>
             );
-          } else
+          }
+
           return (
             <View
               style={{
@@ -105,6 +131,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ padding: 16 }}
       />
 
+      {/* 🔹 Caja de texto + botón de envío */}
       <View
         style={{
           flexDirection: "row",
@@ -112,6 +139,7 @@ export default function ChatScreen() {
           padding: 10,
           borderTopWidth: 1,
           borderColor: "#ddd",
+          backgroundColor: "#fff",
         }}
       >
         <TextInput
@@ -126,9 +154,24 @@ export default function ChatScreen() {
           value={text}
           onChangeText={setText}
           placeholder="Escribe un mensaje..."
+          editable={!isSending}
         />
-        <TouchableOpacity onPress={handleSend}>
-          <Text style={{ color: "#4f46e5", fontWeight: "bold" }}>Enviar</Text>
+
+        <TouchableOpacity
+          onPress={handleSend}
+          disabled={isSending}
+          style={{ opacity: isSending ? 0.6 : 1 }}
+        >
+          {isSending ? (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <ActivityIndicator size="small" color="#4f46e5" />
+              <Text style={{ color: "#4f46e5", fontWeight: "bold", marginLeft: 6 }}>
+                Enviando...
+              </Text>
+            </View>
+          ) : (
+            <Text style={{ color: "#4f46e5", fontWeight: "bold" }}>Enviar</Text>
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

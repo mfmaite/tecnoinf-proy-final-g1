@@ -29,6 +29,9 @@ public class QuizQuestion {
         this.questionText = questionText;
         this.quiz = quiz;
         this.answers = answers;
+        for (QuizAnswer a : answers) {
+            a.setQuestion(this);
+        }
     }
 
     public Long getId() {
@@ -54,5 +57,18 @@ public class QuizQuestion {
     }
     public void setAnswers(List<QuizAnswer> answers) {
         this.answers = answers;
+        for (QuizAnswer a : answers) {
+            a.setQuestion(this);
+        }
+    }
+
+    public void addAnswer(QuizAnswer answer) {
+        answers.add(answer);
+        answer.setQuestion(this);
+    }
+
+    public void removeAnswer(QuizAnswer answer) {
+        answers.remove(answer);
+        answer.setQuestion(null);
     }
 }

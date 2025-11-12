@@ -36,6 +36,9 @@ public class Quiz {
         this.expirationDate = expirationDate;
         this.course = course;
         this.questions = questions;
+        for (QuizQuestion q : questions) {
+            q.setQuiz(this);
+        }
     }
 
     public Long getId() { return id; }
@@ -45,10 +48,40 @@ public class Quiz {
     public Course getCourse() { return course; }
     public List<QuizQuestion> getQuestions() { return questions; }
 
-    public void setId(Long id) { this.id = id; }
-    public void setTitle(String title) { this.title = title; }
-    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
-    public void setExpirationDate(LocalDateTime expirationDate) { this.expirationDate = expirationDate; }
-    public void setCourse(Course course) { this.course = course; }
-    public void setQuestions(List<QuizQuestion> questions) { this.questions = questions; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public void setExpirationDate(LocalDateTime expirationDate) {
+        this.expirationDate = expirationDate;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
+    public void setQuestions(List<QuizQuestion> questions) {
+        this.questions = questions;
+        for (QuizQuestion q : questions) {
+            q.setQuiz(this);
+        }
+    }
+
+    public void addQuestion(QuizQuestion question) {
+        questions.add(question);
+        question.setQuiz(this);
+    }
+
+    public void removeQuestion(QuizQuestion question) {
+        questions.remove(question);
+        question.setQuiz(null);
+    }
 }

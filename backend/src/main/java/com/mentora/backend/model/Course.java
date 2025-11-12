@@ -63,11 +63,14 @@ public class Course {
     public List<SimpleContent> getSimpleContents() { return simpleContents; }
     public void setSimpleContents(List<SimpleContent> simpleContents) { this.simpleContents = simpleContents; }
 
-    public void addSimpleContent(SimpleContent simpleContent) {
-        simpleContents.add(simpleContent);
+    public void addSimpleContent(SimpleContent sc) {
+        simpleContents.add(sc);
+        sc.setCourse(this);
     }
-    public void removeSimpleContent(SimpleContent simpleContent) {
-        simpleContents.remove(simpleContent);
+
+    public void removeSimpleContent(SimpleContent sc) {
+        simpleContents.remove(sc);
+        sc.setCourse(null);
     }
 
     public List<Quiz> getQuizzes() { return quizzes; }
@@ -75,9 +78,12 @@ public class Course {
 
     public void addQuiz(Quiz quiz) {
         quizzes.add(quiz);
+        quiz.setCourse(this);
     }
+
     public void removeQuiz(Quiz quiz) {
         quizzes.remove(quiz);
+        quiz.setCourse(null);
     }
 
 }

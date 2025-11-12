@@ -8,40 +8,64 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { getChatMessages, sendMessage } from "../../../services/chat";
+import {
+  getChatMessages,
+  getOrCreateChatWith,
+  sendMessage,
+} from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 
 export default function ChatScreen() {
   const { partnerCi, chatId } =
-    useLocalSearchParams<{ partnerCi: string; chatId: string }>();
+    useLocalSearchParams<{ partnerCi?: string; chatId?: string }>();
   const { user } = useAuth();
+
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  // 🔹 Carga inicial y actualización periódica
+  // 🔹 Cargar mensajes: usa chatId si existe, sino busca o crea chat con partnerCi
   const loadMessages = useCallback(async () => {
+    if (!partnerCi) {
+      console.warn("❌ No se recibió partnerCi, no se puede cargar el chat");
+      return;
+    }
+
     try {
-      const data = await getChatMessages(Number(chatId));
-      setMessages((prev) => {
-        const combined = [...prev, ...data];
-        const unique = Array.from(
-          new Map(combined.map((msg) => [msg.id, msg])).values()
-        );
-        return unique.sort(
-          (a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime()
-        );
-      });
-    } catch (err) {
-      console.error("Error cargando mensajes", err);
+      let data: any[] = [];
+
+      if (chatId && !isNaN(Number(chatId))) {
+        // Si tenemos chatId, traemos los mensajes del chat
+
+        data = await getChatMessages(Number(chatId));
+      } else {
+        // Si no tenemos chatId, buscamos o creamos el chat con el otro usuario
+        const chat = await getOrCreateChatWith(partnerCi);
+        data = chat.messages ?? [];
+
+        // Si el chat recién se creó y está vacío, mandamos el primer mensaje "inicio"
+        if (data.length === 0) {
+          await sendMessage(partnerCi, "Hola! :D");
+        }
+      }
+
+      // Ordenar y setear los mensajes
+      const sorted = [...data].sort(
+        (a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime()
+      );
+      setMessages(sorted);
+    } catch (err: any) {
+      console.error("🚨 Error cargando mensajes:", err);
+      Alert.alert("Error", "No se pudieron cargar los mensajes.");
     } finally {
       setLoading(false);
     }
-  }, [chatId]);
+  }, [chatId, partnerCi]);
 
   useEffect(() => {
     loadMessages();
@@ -49,9 +73,10 @@ export default function ChatScreen() {
     return () => clearInterval(interval);
   }, [loadMessages]);
 
-  // 🔹 Enviar mensaje con protección contra doble envío
+  // 🔹 Enviar mensaje
   const handleSend = async () => {
     if (!text.trim() || isSending) return;
+    if (!partnerCi) return;
 
     try {
       setIsSending(true);
@@ -65,13 +90,14 @@ export default function ChatScreen() {
       setText("");
       flatListRef.current?.scrollToEnd({ animated: true });
     } catch (err) {
-      console.error("Error enviando mensaje", err);
+      console.error("🚨 Error enviando mensaje:", err);
+      Alert.alert("Error", "No se pudo enviar el mensaje.");
     } finally {
       setIsSending(false);
     }
   };
 
-  // 🔹 Loading general
+  // 🔹 Loading
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -92,16 +118,6 @@ export default function ChatScreen() {
         keyExtractor={(item, index) => `${item.id}-${item.dateSent}-${index}`}
         renderItem={({ item }) => {
           const isMine = item.sendByUserCi === user?.ci;
-          if (!user) {
-            return (
-              <View
-                style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-              >
-                <Text>No se encontró el usuario autenticado.</Text>
-              </View>
-            );
-          }
-
           return (
             <View
               style={{
@@ -131,7 +147,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ padding: 16 }}
       />
 
-      {/* 🔹 Caja de texto + botón de envío */}
+      {/* Caja de texto + botón de envío */}
       <View
         style={{
           flexDirection: "row",
@@ -165,7 +181,13 @@ export default function ChatScreen() {
           {isSending ? (
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <ActivityIndicator size="small" color="#4f46e5" />
-              <Text style={{ color: "#4f46e5", fontWeight: "bold", marginLeft: 6 }}>
+              <Text
+                style={{
+                  color: "#4f46e5",
+                  fontWeight: "bold",
+                  marginLeft: 6,
+                }}
+              >
                 Enviando...
               </Text>
             </View>

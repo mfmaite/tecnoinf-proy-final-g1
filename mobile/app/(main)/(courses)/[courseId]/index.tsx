@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
-import { Directory, File, Paths } from "expo-file-system";
+import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 
-import { colors } from "../../../styles/colors";
-import { styles } from "../../../styles/styles";
-import { getCourseById, CourseData, Content } from "../../../services/courses";
+import { colors } from "../../../../styles/colors";
+import { styles } from "../../../../styles/styles";
+import { getCourseById, CourseData, Content } from "../../../../services/courses";
 
 export default function CourseView() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function CourseView() {
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null); // 🔹 ID de contenido en descarga
 
   // ─────────────────────────────────────────────
   // 📚 Cargar curso
@@ -40,7 +41,7 @@ export default function CourseView() {
         setContents((data.contents || []).sort((a, b) => a.id - b.id));
       } catch (err: any) {
         console.error("[CourseView] Error al cargar curso:", err.response?.data || err);
-         setError(err.message || "No se pudieron cargar los datos del curso.");
+        setError(err.message || "No se pudieron cargar los datos del curso.");
       } finally {
         setLoading(false);
       }
@@ -53,43 +54,61 @@ export default function CourseView() {
   // 🧭 Actualizar título dinámico
   // ─────────────────────────────────────────────
   useLayoutEffect(() => {
-    if (!courseData) return; // ✅ si no hay datos, salimos temprano
+    if (!courseData) return;
     (navigation as any).setOptions?.({ title: courseData.name ?? "Curso" });
   }, [courseData, navigation]);
 
   // ─────────────────────────────────────────────
   // 📎 Descarga y apertura de archivos
   // ─────────────────────────────────────────────
-  async function handleDownload(url?: string | null, fileName?: string | null) {
+  async function handleDownload(
+    url?: string | null,
+    fileName?: string | null,
+    contentId?: number
+  ) {
     if (!url) {
       Alert.alert("Archivo no disponible");
       return;
     }
 
     try {
+      setDownloadingId(contentId ?? null);
+
       const name = fileName || url.split("/").pop() || `archivo_${Date.now()}`;
-      const destination = new Directory(Paths.document, name); // carpeta principal + nombre
-      await destination.create(); // asegúrate que exista
 
-      const file = await File.downloadFileAsync(url, destination);
-      // file es instancia de File, tiene .uri entre otras props
+      // ✅ Nuevo sistema de paths (Expo SDK 54)
+      const baseDir =
+        FileSystem.Paths?.document?.uri ??
+        FileSystem.Paths?.cache?.uri ??
+        "";
 
-      const uri = file.uri;
+      if (!baseDir) {
+        Alert.alert("No se pudo determinar la carpeta de descarga.");
+        return;
+      }
+
+      const localPath = baseDir + name;
+      console.log("📂 Descargando archivo en:", localPath);
+
+      const downloadResult = await FileSystem.downloadAsync(url, localPath);
 
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
+        await Sharing.shareAsync(downloadResult.uri);
       } else {
-        await Linking.openURL(uri);
+        await Linking.openURL(downloadResult.uri);
       }
     } catch (err) {
       console.warn("[handleDownload] Error al descargar:", err);
       try {
-        if (url) await Linking.openURL(url);
+        await Linking.openURL(url);
       } catch {
         Alert.alert("No se puede abrir el archivo.");
       }
+    } finally {
+      setDownloadingId(null);
     }
   }
+
   // ─────────────────────────────────────────────
   // 🔗 Render de texto con enlaces clicables
   // ─────────────────────────────────────────────
@@ -142,9 +161,7 @@ export default function CourseView() {
     );
 
   if (error) return <Text style={styles.error}>{error}</Text>;
-
-  if (!courseData)
-    return <Text style={styles.error}>Curso no encontrado.</Text>;
+  if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
   // ─────────────────────────────────────────────
   // 🎨 Render UI
@@ -159,7 +176,7 @@ export default function CourseView() {
         style={styles.buttonPrimary}
         onPress={() =>
           router.push({
-            pathname: "/(courses)/participants",
+            pathname: "/(main)/(courses)/participants",
             params: { courseId: String(courseId) },
           })
         }
@@ -192,11 +209,34 @@ export default function CourseView() {
               <View>
                 <Text style={styles.contentFile}>Archivo: {item.fileName}</Text>
                 <TouchableOpacity
-                  style={styles.buttonPrimary}
-                  onPress={() => handleDownload(item.fileUrl, item.fileName)}
+                  style={[
+                    styles.buttonPrimary,
+                    downloadingId === item.id && { opacity: 0.7 },
+                  ]}
+                  onPress={() =>
+                    handleDownload(item.fileUrl, item.fileName, item.id)
+                  }
                   activeOpacity={0.8}
+                  disabled={downloadingId === item.id}
                 >
-                  <Text style={styles.buttonText}>Descargar</Text>
+                  {downloadingId === item.id ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ActivityIndicator
+                        size="small"
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={styles.buttonText}>Descargando...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.buttonText}>Descargar</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             )}

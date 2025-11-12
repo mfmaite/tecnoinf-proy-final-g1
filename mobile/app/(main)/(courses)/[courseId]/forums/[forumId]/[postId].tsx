@@ -16,10 +16,10 @@ import {
   createResponse,
   deletePost,
   updatePost,
-} from "../../../../../services/posts";
-import { useAuth } from "../../../../../contexts/AuthContext";
-import { colors } from "../../../../../styles/colors";
-import { styles as globalStyles } from "../../../../../styles/styles";
+} from "../../../../../../services/posts";
+import { useAuth } from "../../../../../../contexts/AuthContext";
+import { colors } from "../../../../../../styles/colors";
+import { styles as globalStyles } from "../../../../../../styles/styles";
 
 interface Post {
   id: number;

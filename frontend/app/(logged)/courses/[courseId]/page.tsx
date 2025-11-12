@@ -126,7 +126,7 @@ export default function CourseView({ params }: Params) {
       <div className="space-y-4">
         {contents?.length ? (
           contents.map((c) => (
-            <ContentCard key={c.id} content={c} />
+            <ContentCard key={c.id} courseId={params.courseId} content={c} />
           ))
         ) : (
           <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 text-gray-500">

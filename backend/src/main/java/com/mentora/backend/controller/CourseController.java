@@ -235,6 +235,35 @@ public class CourseController {
         }
     }
 
+    @Operation(summary = "Obtener un contenido",
+            description = "Obtiene un contenido único por tipo e ID dentro de un curso",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Contenido obtenido correctamente")
+    @ApiResponse(responseCode = "404", description = "Contenido no encontrado")
+    @GetMapping(value = "/{courseId}/contents/{type}/{contentId}")
+    public ResponseEntity<DtApiResponse<Object>> getContentByTypeAndId(
+            @PathVariable String courseId,
+            @PathVariable String type,
+            @PathVariable Long contentId
+    ) {
+        try {
+            Object content = courseService.getContentByTypeAndId(courseId, type, contentId);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Contenido obtenido correctamente",
+                content
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
     @Operation(summary = "Agregar participantes a un curso",
             description = "Agrega participantes a un curso. Solo profesores",
             security = @SecurityRequirement(name = "bearerAuth"))

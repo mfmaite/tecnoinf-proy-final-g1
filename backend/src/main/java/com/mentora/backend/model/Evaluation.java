@@ -19,6 +19,9 @@ public class Evaluation {
   @Column(name = "fileName")
   private String fileName;
 
+  @Column(name = "fileUrl", length = 2048)
+  private String fileUrl;
+
   @Lob
   @Column(name = "content", columnDefinition = "LONGTEXT")
   private String content;
@@ -27,13 +30,18 @@ public class Evaluation {
   @JoinColumn(name = "courseId", referencedColumnName = "id")
   private Course course;
 
+  @Column(name = "dueDate")
+  private LocalDateTime dueDate;
+
   public Evaluation() {}
 
-  public Evaluation(String title, Course course, String fileName, String content) {
+  public Evaluation(String title, Course course, String fileName, String fileUrl, String content, LocalDateTime dueDate) {
     this.title = title;
     this.course = course;
     this.fileName = fileName;
+    this.fileUrl = fileUrl;
     this.content = content;
+    this.dueDate = dueDate;
   }
 
   // ====== Getters y Setters ======
@@ -54,4 +62,10 @@ public class Evaluation {
 
   public String getFileName() { return fileName; }
   public void setFileName(String fileName) { this.fileName = fileName; }
+
+  public String getFileUrl() { return fileUrl; }
+  public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+
+  public LocalDateTime getDueDate() { return dueDate; }
+  public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
 }

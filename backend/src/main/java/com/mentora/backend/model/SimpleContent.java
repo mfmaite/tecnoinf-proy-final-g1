@@ -26,7 +26,7 @@ public class SimpleContent {
     @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "course_id", referencedColumnName = "id")
     private Course course;
 

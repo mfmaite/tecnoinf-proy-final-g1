@@ -2,11 +2,13 @@ package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.model.Quiz;
 import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
+import com.mentora.backend.requests.CreateQuizRequest;
 import com.mentora.backend.service.CourseService;
 import com.mentora.backend.dt.DtSimpleContent;
 import com.mentora.backend.requests.CreateSimpleContentRequest;
@@ -408,47 +410,108 @@ public class CourseController {
         }
     }
 
-    @Operation(summary = "Crear evaluación",
-        description = "Crea una evaluación para un curso. Solo profesores",
-        security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Evaluación creada correctamente")
-    @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
-    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
-    @PostMapping(value = "/{courseId}/contents/evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Crear quiz",
+            description = "Crea un quiz para un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Quiz creado")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos")
+    @ApiResponse(responseCode = "404", description = "Curso no encontrado")
+    @PostMapping("/{courseId}/quizzes")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<DtApiResponse<DtEvaluation>> createEvaluation(
-        @PathVariable String courseId,
-        @ModelAttribute CreateEvaluationRequest req,
-        Authentication authentication
+    public ResponseEntity<DtApiResponse<Quiz>> createQuiz(
+            @PathVariable String courseId,
+            @RequestBody @Valid CreateQuizRequest req,
+            Authentication auth
     ) {
+        String userCi = auth.getName();
         try {
-            DtEvaluation created = courseService.createEvaluation(courseId, req);
-
-            DtApiResponse<DtEvaluation> response = new DtApiResponse<>(
-                true,
-                200,
-                "Evaluación creada correctamente",
-                created
-            );
-
-            return ResponseEntity.ok(response);
-
+            Quiz quiz = courseService.createQuiz(courseId, req, userCi);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Quiz creado",
+                    quiz
+            ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
-                false,
-                e.getStatusCode().value(),
-                e.getReason(),
-                null
-            ));
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DtApiResponse<>(
-                false,
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                e.getMessage(),
-                null
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
             ));
         }
     }
 
+    @Operation(
+            summary = "Editar quiz",
+            description = "Edita un quiz existente. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Quiz editado")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos")
+    @ApiResponse(responseCode = "404", description = "Quiz no encontrado")
+    @PutMapping("/{courseId}/quizzes/{quizId}")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<Quiz>> editQuiz(
+            @PathVariable String courseId,
+            @PathVariable Long quizId,
+            @RequestBody @Valid CreateQuizRequest req,
+            Authentication auth
+    ) {
+        String userCi = auth.getName();
+        try {
+            Quiz quiz = courseService.editQuiz(courseId, quizId, req, userCi);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Quiz editado",
+                    quiz
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Eliminar quiz",
+            description = "Elimina un quiz existente. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Quiz eliminado")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos")
+    @ApiResponse(responseCode = "404", description = "Quiz no encontrado")
+    @DeleteMapping("/{courseId}/quizzes/{quizId}")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<Void>> deleteQuiz(
+            @PathVariable String courseId,
+            @PathVariable Long quizId,
+            Authentication auth
+    ) {
+        String userCi = auth.getName();
+        try {
+            courseService.deleteQuiz(courseId, quizId, userCi);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Quiz eliminado",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
 }

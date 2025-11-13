@@ -32,10 +32,9 @@ public class NotificationService {
     }
 
     public void markAsRead(String notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(n -> {
-            n.setRead(Boolean.TRUE);
-            notificationRepository.save(n);
-        });
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificación no encontrada"));
+        notification.setRead(Boolean.TRUE);
+        notificationRepository.save(notification);
     }
 
     public List<Notification> getUserNotifications(User user) {

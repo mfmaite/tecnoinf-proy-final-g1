@@ -40,6 +40,12 @@ export function Navbar() {
                 items={courseDropdownItems}
                 userRole={user?.role}
               />
+              <Link
+                href="/chats"
+                className="text-gray-600 hover:text-primary-color-80 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+              >
+                  Mensajes
+              </Link>
             </div>
           </div>
 

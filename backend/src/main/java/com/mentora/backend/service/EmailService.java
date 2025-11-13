@@ -50,4 +50,14 @@ public class EmailService {
         me.printStackTrace();
     }
   }
+
+    public void sendWelcomeEmail(String recipient, String plainPassword) {
+        String subject = "Bienvenido a Mentora";
+        String body = "Su cuenta ha sido creada.\n" +
+                "Usuario: " + recipient + "\n" +
+                "Contraseña: " + plainPassword + "\n" +
+                "Se recomienda cambiarla al ingresar.";
+
+        sendEmail(recipient, subject, body);
+    }
 }

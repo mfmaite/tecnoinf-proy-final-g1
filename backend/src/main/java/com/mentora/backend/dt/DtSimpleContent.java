@@ -9,6 +9,7 @@ public class DtSimpleContent {
   private String fileName;
   private String fileUrl;
   private LocalDateTime createdDate;
+  private String type;
 
   public DtSimpleContent() {}
 
@@ -19,6 +20,7 @@ public class DtSimpleContent {
     this.fileName = fileName;
     this.fileUrl = fileUrl;
     this.createdDate = createdDate;
+    this.type = "simpleContent";
   }
 
   public Long getId() { return id; }
@@ -38,4 +40,7 @@ public class DtSimpleContent {
 
   public LocalDateTime getCreatedDate() { return createdDate; }
   public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+
+  public String getType() { return type; }
+  public void setType(String type) { this.type = type; }
 }

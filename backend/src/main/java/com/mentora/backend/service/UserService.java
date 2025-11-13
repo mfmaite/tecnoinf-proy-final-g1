@@ -10,11 +10,19 @@ import com.mentora.backend.model.PasswordResetToken;
 import com.mentora.backend.repository.PasswordResetTokenRepository;
 import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.repository.ActivityRepository;
+import com.mentora.backend.responses.BulkCreateUsersResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.UpdateUserRequest;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -86,6 +94,87 @@ public class UserService {
         } catch (Exception ignored) {}
 
         return getUserDto(user);
+    }
+
+    public BulkCreateUsersResponse createUsersFromCsv(InputStream csvInputStream) throws IOException, CsvException {
+        if (csvInputStream == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV requerido");
+        }
+
+        List<DtUser> created = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvInputStream, StandardCharsets.UTF_8)).build()) {
+            List<String[]> rows = reader.readAll();
+
+            if (rows == null || rows.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+            }
+
+            int line = 0;
+            for (String[] row : rows) {
+                line++;
+
+                if (row == null) { continue; }
+                if (line == 1 && row.length > 0 && row[0] != null && row[0].trim().equalsIgnoreCase("ci")) {
+                    continue;
+                }
+
+                String ci       = row[0] != null ? row[0].trim() : "";
+                String nombre   = row[1] != null ? row[1].trim() : "";
+                String apellido = row[2] != null ? row[2].trim() : "";
+                String email    = row[3] != null ? row[3].trim() : "";
+                String pass     = row[4] != null ? row[4].trim() : "";
+                String rol      = row[5] != null ? row[5].trim() : "";
+
+                if (!ci.matches("^\\d+$")) {
+                    errors.add("Fila " + line + ": CI inválido");
+                    continue;
+                }
+                if (nombre.isEmpty() || apellido.isEmpty()) {
+                    errors.add("Fila " + line + ": Nombre y apellido obligatorios");
+                    continue;
+                }
+                if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                    errors.add("Fila " + line + ": Email inválido");
+                    continue;
+                }
+                if (!pass.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")) {
+                    errors.add("Fila " + line + ": Contraseña inválida");
+                    continue;
+                }
+                if (!rol.equals("Estudiante") && !rol.equals("Profesor") && !rol.equals("Administrador")) {
+                    errors.add("Fila " + line + ": Rol inválido");
+                    continue;
+                }
+
+                if (userRepository.existsByCi(ci)) {
+                    errors.add("Fila " + line + ": CI duplicado");
+                    continue;
+                }
+                if (userRepository.existsByEmail(email)) {
+                    errors.add("Fila " + line + ": Email duplicado");
+                    continue;
+                }
+
+                User user = new User(ci, nombre + " " + apellido, email, pass, null, null, null, mapRole(rol));
+                userRepository.save(user);
+                created.add(getUserDto(user));
+            }
+        } catch (CsvException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV inválido");
+        }
+
+        return new BulkCreateUsersResponse(created, errors);
+    }
+
+    private Role mapRole(String rol) {
+        return switch (rol.toLowerCase()) {
+            case "estudiante" -> Role.ESTUDIANTE;
+            case "profesor" -> Role.PROFESOR;
+            case "administrador" -> Role.ADMIN;
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol inválido");
+        };
     }
 
     public List<DtUser> getUsers(String order, String filter) {

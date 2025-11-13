@@ -24,18 +24,21 @@ public class ChatService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final UserService userService;
 
     public ChatService(ChatRepository chatRepository,
         MessageRepository messageRepository,
         UserRepository userRepository,
         NotificationService notificationService,
-        EmailService emailService
+        EmailService emailService,
+        UserService userService
     ) {
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.userService = userService;
     }
 
     public DtMessage sendMessage(String senderCi, String recipientCi, String messageText) {
@@ -45,8 +48,8 @@ public class ChatService {
         User recipient = userRepository.findByCi(recipientCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario destinatario no encontrado"));
 
-        Chat chat = chatRepository.findByParticipants(sender, recipient)
-                .orElseGet(() -> chatRepository.save(new Chat(sender, recipient)));
+        List<Chat> existing = chatRepository.findByParticipants(sender, recipient);
+        Chat chat = existing.isEmpty() ? chatRepository.save(new Chat(sender, recipient)) : existing.get(0);
 
         Message message = new Message(chat, sender, messageText, LocalDateTime.now());
         messageRepository.save(message);
@@ -82,8 +85,8 @@ public class ChatService {
         User partner = userRepository.findByCi(partnerCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario destino no encontrado"));
 
-        Chat chat = chatRepository.findByParticipants(requester, partner)
-                .orElseGet(() -> chatRepository.save(new Chat(requester, partner)));
+        List<Chat> existing = chatRepository.findByParticipants(requester, partner);
+        Chat chat = existing.isEmpty() ? chatRepository.save(new Chat(requester, partner)) : existing.get(0);
 
         return messageRepository.findAllByChatOrderByDateSentAsc(chat).stream()
                 .map(this::getDtMessage)
@@ -114,8 +117,8 @@ public class ChatService {
     private DtChat getDtChat(Chat chat) {
         return new DtChat(
                 chat.getId(),
-                chat.getParticipant1Id(),
-                chat.getParticipant2Id()
+                userService.getUserDto(chat.getParticipant1Id()),
+                userService.getUserDto(chat.getParticipant2Id())
         );
     }
 }

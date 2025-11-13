@@ -11,6 +11,7 @@ import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { ContentTypeFlag } from '../../../components/content-type-flag';
 import { formatDate } from '@/helpers/utils';
 import { evaluationController } from '@/controllers/evaluationController';
+import { EvaluationSubmission } from '@/types/evaluation-submission';
 
 type Params = { params: { courseId: string; type: 'simpleContent' | 'evaluation' | 'quiz'; contentId: string } };
 
@@ -22,6 +23,7 @@ export default function ContentDetailPage({ params }: Params) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showSubmission, setShowSubmission] = useState<boolean>(false);
+  const [submissions, setSubmissions] = useState<EvaluationSubmission[]>([]);
   const [solution, setSolution] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -47,7 +49,8 @@ export default function ContentDetailPage({ params }: Params) {
         );
         if (!active) return;
         if (resp.success && resp.data) {
-          setContent(resp.data as CourseContent);
+          setContent(resp.data.evaluation as CourseContent);
+          setSubmissions(resp.data.submissions as EvaluationSubmission[]);
         } else {
           setError(resp.message ?? 'No se pudo cargar el contenido');
         }

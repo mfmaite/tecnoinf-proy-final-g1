@@ -138,7 +138,7 @@ public class CourseService {
         return new GetCourseResponse(getDtCourse(course), allContents, dtForums);
     }
 
-    public Object getContentByTypeAndId(String courseId, String type, Long contentId) {
+    public Object getContentByTypeAndId(String courseId, String type, Long contentId, String userCi) {
         if (type == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido obligatorio");
         }
@@ -155,7 +155,8 @@ public class CourseService {
                 if (e == null) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
                 }
-                return evaluationService.getDtEvaluation(e);
+                // Retornar evaluación con submissions según el rol del usuario (profesor: todas; estudiante: solo la suya)
+                return evaluationService.getEvaluation(e.getId(), userCi);
             }
             case "quiz": {
                 // No implementado aún

@@ -112,10 +112,10 @@ public class CourseService {
 
         List<DtSimpleContent> contents = simpleContentRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(this::getDtSimpleContent)
-                .collect(Collectors.toList());
+                .toList();
         List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(evaluationService::getDtEvaluation)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Object> allContents = new ArrayList<>();
         allContents.addAll(contents);
@@ -276,11 +276,11 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + ": ID inválido (máximo 10 caracteres, solo mayúsculas y números)");
                     continue;
                 }
-                if (name == null || name.isEmpty()) {
+                if (name.isEmpty()) {
                     errors.add("Fila " + lineNumber + " (" + id + "): Nombre obligatorio");
                     continue;
                 }
-                if (professorsCell == null || professorsCell.isEmpty()) {
+                if (professorsCell.isEmpty()) {
                     errors.add("Fila " + lineNumber + " (" + id + "): Profesores asignados obligatorios");
                     continue;
                 }
@@ -351,4 +351,21 @@ public class CourseService {
 
         return evaluationService.getDtEvaluation(saved);
     }
+
+    public DtSimpleContent updateSimpleContent(Long contentId, CreateSimpleContentRequest req) throws IOException {
+        SimpleContent sc = simpleContentRepository.findById(contentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado"));
+
+        if (req.getTitle() != null) sc.setTitle(req.getTitle());
+        if (req.getContent() != null) sc.setContent(req.getContent());
+        if (req.getFile() != null) {
+            DtFileResource file = fileStorageService.store(req.getFile());
+            sc.setFileName(file.getFilename());
+            sc.setFileUrl(file.getStoragePath());
+        }
+
+        SimpleContent saved = simpleContentRepository.save(sc);
+        return getDtSimpleContent(saved);
+    }
+
 }

@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/button/button';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { courseController } from '@/controllers/courseController';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { UserResponse } from '@/types/user';
+import { SendIcon } from '@/public/assets/icons/send-icon';
+import { chatController } from '@/controllers/chatController';
 
 type Props = { courseId: string }
 
@@ -14,6 +16,7 @@ function ParticipantsTable({ courseId }: Props) {
   const { accessToken, user } = useAuth();
   const [data, setData] = useState<UserResponse[]>([]);
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
 
   useEffect(() => {
     const getParticipants = async () => {
@@ -28,6 +31,25 @@ function ParticipantsTable({ courseId }: Props) {
 
     getParticipants();
   }, [accessToken, courseId])
+
+  const onOpenChat = async (participantCi: string) => {
+    if (!accessToken) return;
+    try {
+      const res = await chatController.getChats(accessToken);
+      const chats = res.data ?? [];
+      const matches = chats.filter(c => c.participant1?.ci === participantCi || c.participant2?.ci === participantCi);
+      if (matches.length > 0) {
+        // si hay varios, tomar el más reciente por id
+        const targetId = matches.reduce((acc, c) => (c.id > acc ? c.id : acc), matches[0].id);
+        router.push(`/chats/${targetId}`);
+      } else {
+        router.push(`/chats/new?recipientCi=${participantCi}`);
+      }
+    } catch {
+      // en caso de error, redirigir a nuevo chat igualmente
+      router.push(`/chats/new?recipientCi=${participantCi}`);
+    }
+  }
 
   if (error) {
     return (
@@ -85,6 +107,7 @@ function ParticipantsTable({ courseId }: Props) {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+              <th />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -94,6 +117,16 @@ function ParticipantsTable({ courseId }: Props) {
                 <td className="px-4 py-3 text-sm text-gray-700">{u.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.role}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => onOpenChat(u.ci)}
+                    className="text-primary-color-80 hover:text-primary-color-90 font-medium"
+                    title="Enviar mensaje"
+                  >
+                    <SendIcon className="w-6 h-6" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -174,7 +174,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-/**
- * Hook de acceso rápido al contexto
- */
 export const useAuth = () => useContext(AuthContext);

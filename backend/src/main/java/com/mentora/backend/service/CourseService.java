@@ -352,19 +352,17 @@ public class CourseService {
         return evaluationService.getDtEvaluation(saved);
     }
 
-    @Transactional
-    public DtSimpleContent updateSimpleContent(String courseId, DtSimpleContent dto) {
-        SimpleContent sc = simpleContentRepository.findById(dto.getId())
+    public DtSimpleContent updateSimpleContent(Long contentId, CreateSimpleContentRequest req) throws IOException {
+        SimpleContent sc = simpleContentRepository.findById(contentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado"));
 
-        if (!sc.getCourse().getId().equals(courseId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El contenido no pertenece a este curso");
+        if (req.getTitle() != null) sc.setTitle(req.getTitle());
+        if (req.getContent() != null) sc.setContent(req.getContent());
+        if (req.getFile() != null) {
+            DtFileResource file = fileStorageService.store(req.getFile());
+            sc.setFileName(file.getFilename());
+            sc.setFileUrl(file.getStoragePath());
         }
-
-        if (dto.getTitle() != null) sc.setTitle(dto.getTitle());
-        if (dto.getContent() != null) sc.setContent(dto.getContent());
-        if (dto.getFileName() != null) sc.setFileName(dto.getFileName());
-        if (dto.getFileUrl() != null) sc.setFileUrl(dto.getFileUrl());
 
         SimpleContent saved = simpleContentRepository.save(sc);
         return getDtSimpleContent(saved);

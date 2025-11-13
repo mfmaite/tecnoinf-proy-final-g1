@@ -12,7 +12,6 @@ import {
 import { useRouter } from "expo-router";
 import { api } from "../../services/api";
 import { colors } from "../../styles/colors";
-import Logo from "../../assets/logo.svg";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -47,7 +46,6 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        {/* <Logo style={styles.logo} /> */}
         <Image source={logo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Mentora</Text>
 

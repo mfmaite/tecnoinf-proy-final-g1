@@ -11,7 +11,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../styles/colors";
-import Logo from "../../assets/logo.svg";
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -34,7 +33,6 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        {/* <Logo style={styles.logo} /> */}
         <Image source={logo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Mentora</Text>
 
@@ -72,7 +70,7 @@ export default function LoginScreen() {
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Iniciar sesión</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={() => router.push("/forgot-password")}>
           <Text className="text-blue-500 text-center mt-3">
             ¿Olvidaste tu contraseña?

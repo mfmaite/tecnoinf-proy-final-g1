@@ -29,9 +29,6 @@ export default function EditProfileScreen() {
   const [removeImage, setRemoveImage] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ────────────────────────────────
-  // 📷 Seleccionar nueva foto (con validación)
-  // ────────────────────────────────
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -68,9 +65,6 @@ export default function EditProfileScreen() {
     setRemoveImage(false);
   };
 
-  // ────────────────────────────────
-  // 🗑️ Quitar foto actual
-  // ────────────────────────────────
   const removeProfilePicture = () => {
     Alert.alert(
       "Quitar foto",
@@ -90,9 +84,6 @@ export default function EditProfileScreen() {
     );
   };
 
-  // ────────────────────────────────
-  // 💾 Guardar cambios
-  // ────────────────────────────────
   const handleSave = async () => {
     if (!name || !email) {
       Alert.alert("Error", "Por favor completá todos los campos obligatorios.");
@@ -145,9 +136,7 @@ export default function EditProfileScreen() {
     router.push("/(main)/profile/change-password");
   };
 
-  // ────────────────────────────────
-  // 🧱 Render principal
-  // ────────────────────────────────
+
   return (
     <View style={globalStyles.container}>
       <Text style={globalStyles.title}>Editar Perfil</Text>

@@ -191,7 +191,10 @@ public class UserService {
         Optional<User> maybeUser = userRepository.findByEmail(email);
 
         if (maybeUser.isEmpty()) {
-            return;
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El correo electrónico no está registrado en el sistema"
+            );
         }
         User user = maybeUser.get();
 

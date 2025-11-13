@@ -7,9 +7,16 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export interface UserActivity {
+  id: number;
+  type: string;
+  description: string;
+  link: string;
+  createdDate: string;
+}
+
 /**
- * Cambia la contraseña del usuario autenticado.
- * El token JWT se agrega automáticamente por el interceptor.
+ * Cambiar contraseña (TU CÓDIGO ORIGINAL)
  */
 export const changePassword = async (
   oldPassword: string,
@@ -29,6 +36,28 @@ export const changePassword = async (
     console.error("[changePassword] Error:", error);
     throw new Error(
       error.response?.data?.message || "No se pudo cambiar la contraseña."
+    );
+  }
+};
+
+/**
+ * 🔹 NUEVO: Obtener actividades recientes del usuario
+ */
+export const getUserActivities = async (userCi: string): Promise<UserActivity[]> => {
+  try {
+    const { data } = await api.get<ApiResponse<UserActivity[]>>(
+      `/users/${userCi}/activities`
+    );
+
+    if (!data.success) {
+      throw new Error(data.message || "Error al obtener actividades.");
+    }
+
+    return data.data;
+  } catch (error: any) {
+    console.error("[getUserActivities] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "No se pudieron obtener las actividades."
     );
   }
 };

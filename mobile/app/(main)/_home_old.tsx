@@ -30,7 +30,7 @@ export default function HomeScreen() {
         <Text style={styles.title}>¡Bienvenido!</Text>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleCourses}>
-          <Text style={styles.buttonText}> Listado de Cursos </Text>
+          <Text style={styles.buttonText}> Listado de Cursosss </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToProfilePage}>

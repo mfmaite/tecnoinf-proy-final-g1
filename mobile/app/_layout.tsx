@@ -74,5 +74,5 @@ function AppNavigator() {
     );
   }
 
-  return <Slot key={isLoggedIn ? "(main)" : "(auth)"} />;
+  return <Slot key={isLoggedIn ? "main" : "auth"} />;
 }

@@ -243,4 +243,24 @@ export const styles = StyleSheet.create({
   errorText: {
     color: "red",
   },
+  activityCardItem: {
+  backgroundColor: "#fff",
+  borderRadius: 12,
+  padding: 12,
+  marginVertical: 6,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 2,
+},
+activityDescription: {
+  fontSize: 15,
+  fontWeight: "500",
+  color: "#333",
+},
+activityDate: {
+  fontSize: 12,
+  color: "#666",
+  marginTop: 4,
+},
 });

@@ -1,41 +1,41 @@
 package com.mentora.backend.controller;
 
-import com.mentora.backend.repository.NotificationRepository;
 import com.mentora.backend.responses.DtApiResponse;
+import com.mentora.backend.service.NotificationService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/notifications")
 public class NotificationController {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
-    public NotificationController(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
     }
 
     @PostMapping("/{notificationId}/read")
     public ResponseEntity<DtApiResponse<Void>> markAsRead(@PathVariable String notificationId) {
-        return notificationRepository.findById(notificationId)
-                .map(notification -> {
-                    notification.setRead(true);
-                    notificationRepository.save(notification);
-                    return ResponseEntity.ok(new DtApiResponse<Void>(
-                            true,
-                            HttpStatus.OK.value(),
-                            "Notificación marcada como leída",
-                            null
-                    ));
-                })
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new DtApiResponse<Void>(
-                                false,
-                                HttpStatus.NOT_FOUND.value(),
-                                "Notificación no encontrada",
-                                null
-                        )));
+        try {
+            notificationService.markAsRead(notificationId);
+
+            return ResponseEntity.ok(new DtApiResponse<Void>(
+                true,
+                HttpStatus.OK.value(),
+                "Notificación marcada como leída",
+                null)
+            );
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<Void>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null)
+            );
+        }
     }
 }

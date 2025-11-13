@@ -9,6 +9,7 @@ import com.mentora.backend.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,6 +55,7 @@ public class PostService {
         return getDtPost(updated);
     }
 
+    @Transactional
     public void deletePost(Long postId, String userCi) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));
@@ -61,6 +63,7 @@ public class PostService {
         if (!post.getAuthor().getCi().equals(userCi))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos para eliminar este post");
 
+        postResponseRepository.deleteByPost(post);
         postRepository.delete(post);
     }
 

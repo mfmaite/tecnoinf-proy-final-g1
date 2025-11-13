@@ -4,25 +4,32 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  StyleSheet,
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { api } from "@/services/api";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../../contexts/AuthContext";
+import { colors } from "../../../styles/colors";
+import { changePassword } from "@/services/userService";
 
 export default function ChangePasswordScreen() {
-  const [oldPassword, setOldPassword] = useState("");
+  const { updateUser } = useAuth();
+  const router = useRouter();
+
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (password: string) => {
+    // Al menos 8 caracteres, una mayúscula, una minúscula y un número
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return regex.test(password);
   };
 
   const handleChangePassword = async () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert("Error", "Por favor completá todos los campos.");
       return;
     }
@@ -40,81 +47,134 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await api.post("/users/change-password", {
-        oldPassword,
-        newPassword,
-        confirmPassword,
-      });
-
-      if (response.data.success) {
-        Alert.alert("Éxito", "Contraseña cambiada correctamente.", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      } else {
-        Alert.alert(
-          "Error",
-          response.data.message || "No se pudo cambiar la contraseña."
-        );
-      }
-    } catch (error: any) {
-      console.error("Error cambiando contraseña:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Ocurrió un error inesperado."
-      );
+      setLoading(true);
+      // Aquí se llamaría al backend para cambiar la contraseña
+      await changePassword( currentPassword, newPassword, confirmPassword);
+      Alert.alert("Éxito", "Contraseña cambiada correctamente.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "No se pudo cambiar la contraseña.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View className="flex-1 bg-white p-6">
-      <Text className="text-2xl font-bold mb-6 text-center">
-        Cambiar contraseña
-      </Text>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Cambiar contraseña</Text>
 
-      <Text className="text-base mb-2">Contraseña actual</Text>
-      <TextInput
-        secureTextEntry
-        value={oldPassword}
-        onChangeText={setOldPassword}
-        className="border border-gray-300 rounded-lg p-3 mb-4"
-        placeholder="Contraseña actual"
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña actual"
+          secureTextEntry
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+        />
 
-      <Text className="text-base mb-2">Nueva contraseña</Text>
-      <TextInput
-        secureTextEntry
-        value={newPassword}
-        onChangeText={setNewPassword}
-        className="border border-gray-300 rounded-lg p-3 mb-4"
-        placeholder="Nueva contraseña"
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Nueva contraseña"
+          secureTextEntry
+          value={newPassword}
+          onChangeText={setNewPassword}
+        />
 
-      <Text className="text-base mb-2">Confirmar nueva contraseña</Text>
-      <TextInput
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        className="border border-gray-300 rounded-lg p-3 mb-6"
-        placeholder="Confirmar nueva contraseña"
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar nueva contraseña"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
 
-      <TouchableOpacity
-        onPress={handleChangePassword}
-        disabled={loading}
-        className={`rounded-lg p-4 ${loading ? "bg-gray-400" : "bg-blue-600"}`}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text className="text-white text-center font-semibold">
-            Cambiar contraseña
-          </Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.6 }]}
+          onPress={handleChangePassword}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Guardar cambios</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.secondaryButtonText}>Cancelar</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary[10],
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  card: {
+    backgroundColor: colors.surfaceLight[10],
+    borderRadius: 16,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    width: "100%",
+    maxWidth: 380,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: colors.secondary[60],
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  input: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: colors.surfaceLight[40],
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: colors.surfaceLight[20],
+  },
+  button: {
+    backgroundColor: colors.primary[60],
+    borderRadius: 8,
+    paddingVertical: 12,
+    width: "100%",
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  secondaryButton: {
+    alignItems: "center",
+    marginTop: 4,
+  },
+  secondaryButtonText: {
+    color: colors.secondary[60],
+    fontWeight: "600",
+    fontSize: 15,
+    textDecorationLine: "underline",
+  },
+});

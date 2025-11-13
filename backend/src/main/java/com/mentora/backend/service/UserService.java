@@ -21,8 +21,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 import com.opencsv.CSVReader;
-
-import com.mentora.backend.requests.CreateUserRequest;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -96,18 +96,17 @@ public class UserService {
         return getUserDto(user);
     }
 
-    public BulkCreateUsersResponse createUsersFromCsv(InputStream csvInputStream) {
+    public BulkCreateUsersResponse createUsersFromCsv(InputStream csvInputStream) throws IOException, CsvException {
         if (csvInputStream == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV requerido");
         }
 
         List<DtUser> created = new ArrayList<>();
         List<String> errors = new ArrayList<>();
-        List<CreateUserRequest> pending = new ArrayList<>();
 
-        try (CSVReader reader = new CSVReader(new InputStreamReader(csvInputStream, StandardCharsets.UTF_8))) {
-
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvInputStream, StandardCharsets.UTF_8)).build()) {
             List<String[]> rows = reader.readAll();
+
             if (rows == null || rows.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
             }
@@ -116,8 +115,8 @@ public class UserService {
             for (String[] row : rows) {
                 line++;
 
-                if (row == null || row.length < 6) {
-                    errors.add("Fila " + line + ": columnas incompletas");
+                if (row == null) { continue; }
+                if (line == 1 && row.length > 0 && row[0] != null && row[0].trim().equalsIgnoreCase("ci")) {
                     continue;
                 }
 
@@ -158,39 +157,15 @@ public class UserService {
                     continue;
                 }
 
-                CreateUserRequest req = new CreateUserRequest();
-                req.setCi(ci);
-                req.setName(nombre);
-                req.setLastName(apellido);
-                req.setEmail(email);
-                req.setPassword(pass);
-                req.setRole(rol);
-
-                pending.add(req);
+                User user = new User(ci, nombre + " " + apellido, email, pass, null, null, null, mapRole(rol));
+                userRepository.save(user);
+                created.add(getUserDto(user));
             }
-
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al leer CSV");
+        } catch (CsvException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV inválido");
         }
 
-        if (!errors.isEmpty()) {
-            return new BulkCreateUsersResponse(created, errors);
-        }
-
-        for (CreateUserRequest req : pending) {
-            DtUser dto = new DtUser();
-            dto.setCi(req.getCi());
-            dto.setName(req.getName() + " " + req.getLastName());
-            dto.setEmail(req.getEmail());
-            dto.setPassword(req.getPassword());
-            dto.setRole(mapRole(req.getRole()));
-
-            DtUser u = createUser(dto);
-            created.add(u);
-            emailService.sendWelcomeEmail(u.getEmail(), req.getPassword());
-        }
-
-        return new BulkCreateUsersResponse(created, new ArrayList<>());
+        return new BulkCreateUsersResponse(created, errors);
     }
 
     private Role mapRole(String rol) {

@@ -23,12 +23,18 @@ public class UserCourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final UserCourseRepository userCourseRepository;
+    private final UserService userService;
 
-    public UserCourseService(CourseRepository courseRepository, UserRepository userRepository,
-                             UserCourseRepository userCourseRepository) {
+    public UserCourseService(
+        CourseRepository courseRepository,
+        UserRepository userRepository,
+        UserCourseRepository userCourseRepository,
+        UserService userService
+    ) {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.userCourseRepository = userCourseRepository;
+        this.userService = userService;
     }
 
     public String addUsersToCourse(String courseId, String[] usersCis) {
@@ -132,7 +138,7 @@ public class UserCourseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         return userCourseRepository.findAllByCourse(course).stream()
-            .map(userCourse -> new DtUser(userCourse.getUser().getCi(), userCourse.getUser().getName(), userCourse.getUser().getEmail(), userCourse.getUser().getDescription(), userCourse.getUser().getPictureUrl(), userCourse.getUser().getRole()))
+            .map(userCourse -> userService.getUserDto(userCourse.getUser()))
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -143,11 +149,7 @@ public class UserCourseService {
         return userRepository.findAll().stream()
             .filter(user -> user.getRole() == Role.ESTUDIANTE)
             .filter(user -> !userCourseRepository.existsByCourseAndUser(course, user))
-            .map(this::getDtUser)
+            .map(userService::getUserDto)
             .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    private DtUser getDtUser(User user) {
-        return new DtUser(user.getCi(), user.getName(), user.getEmail(), user.getDescription(), user.getPictureUrl(), user.getRole());
     }
 }

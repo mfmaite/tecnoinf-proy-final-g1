@@ -17,14 +17,70 @@ class ContentController {
         body: formData,
       });
 
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al crear contenido simple:', error);
       return {
         success: false,
-        code: (error as any)?.code ?? 500,
+        status: (error as any)?.status ?? 500,
         message: 'Error al crear contenido simple',
+        data: undefined,
+      };
+    }
+  }
+
+  async createEvaluation(
+    courseId: string,
+    formData: FormData,
+    accessToken: string
+  ): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/contents/evaluation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al crear evaluación:', error);
+      return {
+        success: false,
+        status: (error as any)?.status ?? 500,
+        message: 'Error al crear evaluación',
+        data: undefined,
+      };
+    }
+  }
+
+  async getContentByType(
+    courseId: string,
+    type: 'simpleContent' | 'evaluation' | 'quiz',
+    contentId: number | string,
+    accessToken: string
+  ): Promise<ApiResponse<any>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/contents/${type}/${contentId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        cache: 'no-store',
+      });
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al obtener contenido:', error);
+      return {
+        success: false,
+        status: (error as any)?.status ?? 500,
+        message: 'Error al obtener contenido',
         data: undefined,
       };
     }

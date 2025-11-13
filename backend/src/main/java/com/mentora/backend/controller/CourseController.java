@@ -2,7 +2,9 @@ package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.requests.CreateCourseRequest;
+import com.mentora.backend.requests.CreateEvaluationRequest;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.service.CourseService;
@@ -243,6 +245,35 @@ public class CourseController {
         }
     }
 
+    @Operation(summary = "Obtener un contenido",
+            description = "Obtiene un contenido único por tipo e ID dentro de un curso",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Contenido obtenido correctamente")
+    @ApiResponse(responseCode = "404", description = "Contenido no encontrado")
+    @GetMapping(value = "/{courseId}/contents/{type}/{contentId}")
+    public ResponseEntity<DtApiResponse<Object>> getContentByTypeAndId(
+            @PathVariable String courseId,
+            @PathVariable String type,
+            @PathVariable Long contentId
+    ) {
+        try {
+            Object content = courseService.getContentByTypeAndId(courseId, type, contentId);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                true,
+                200,
+                "Contenido obtenido correctamente",
+                content
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        }
+    }
+
     @Operation(summary = "Agregar participantes a un curso",
             description = "Agrega participantes a un curso. Solo profesores",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -463,6 +494,49 @@ public class CourseController {
                 false,
                 e.getStatusCode().value(),
                 e.getReason(),
+                null
+            ));
+        }
+    }
+
+    @Operation(summary = "Crear evaluación",
+        description = "Crea una evaluación para un curso. Solo profesores",
+        security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Evaluación creada correctamente")
+    @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
+    @PostMapping(value = "/{courseId}/contents/evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<DtEvaluation>> createEvaluation(
+        @PathVariable String courseId,
+        @ModelAttribute CreateEvaluationRequest req,
+        Authentication authentication
+    ) {
+        try {
+            DtEvaluation created = courseService.createEvaluation(courseId, req);
+
+            DtApiResponse<DtEvaluation> response = new DtApiResponse<>(
+                true,
+                200,
+                "Evaluación creada correctamente",
+                created
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DtApiResponse<>(
+                false,
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                e.getMessage(),
                 null
             ));
         }

@@ -18,11 +18,11 @@ class UserController {
         body: JSON.stringify(userData),
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -30,7 +30,7 @@ class UserController {
       console.error('Error al crear el usuario:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al crear el usuario',
         data: undefined,
       };
@@ -49,11 +49,11 @@ class UserController {
         },
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -61,7 +61,7 @@ class UserController {
       console.error('Error al cargar usuarios:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cargar usuarios',
         data: undefined,
       };
@@ -78,11 +78,11 @@ class UserController {
         },
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -98,11 +98,11 @@ class UserController {
         method: 'GET',
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -110,7 +110,7 @@ class UserController {
       console.error('Error al enviar el email de recuperación de contraseña:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+          status: (error as any).status ?? 500,
         message: 'Error al enviar el email de recuperación de contraseña',
         data: undefined,
       };
@@ -131,13 +131,13 @@ class UserController {
         body: JSON.stringify(payload),
       });
 
-      const { success, code, message } = await response.json();
-      return { success, code, message };
+      const { success, status, message } = await response.json();
+      return { success, status, message };
     } catch (error) {
       console.error('Error al cambiar la contraseña:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cambiar la contraseña',
         data: undefined,
       };

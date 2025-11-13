@@ -52,30 +52,3 @@ export async function login(ci: string, password: string) {
   }
 }
 
-/**
- * 🔹 Cambia la contraseña del usuario autenticado
- * (el token ya se inyecta automáticamente por el AuthContext)
- */
-export async function changePassword(
-  oldPassword: string,
-  newPassword: string,
-  confirmPassword: string
-): Promise<void> {
-  try {
-    const { data } = await api.post<ApiResponse<unknown>>("/users/change-password", {
-      oldPassword,
-      newPassword,
-      confirmPassword,
-    });
-
-    if (!data.success) {
-      throw new Error(data.message || "Error al cambiar contraseña");
-    }
-  } catch (error: any) {
-    console.error("[changePassword] Error:", error);
-    throw new Error(
-      error.response?.data?.message ||
-        "No se pudo cambiar la contraseña. Intentalo nuevamente."
-    );
-  }
-}

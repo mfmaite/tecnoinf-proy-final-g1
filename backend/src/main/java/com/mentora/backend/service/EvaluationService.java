@@ -79,7 +79,7 @@ public class EvaluationService {
         }
     }
 
-    return  new DtEvaluation(
+    return new DtEvaluation(
         e.getId(),
         e.getTitle(),
         e.getContent(),
@@ -101,13 +101,14 @@ public class EvaluationService {
         }
     }
 
-    return  new DtEvaluationSubmission(
+    return new DtEvaluationSubmission(
         e.getId(),
         e.getFileName(),
         signedUrl,
         e.getNote(),
         userService.getUserDto(e.getAuthor()),
-        getDtEvaluation(e.getEvaluation())
+        getDtEvaluation(e.getEvaluation()),
+        e.getSolution()
     );
   }
 

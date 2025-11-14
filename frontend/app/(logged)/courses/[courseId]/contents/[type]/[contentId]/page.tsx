@@ -11,12 +11,13 @@ import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { ContentTypeFlag } from '../../../components/content-type-flag';
 import { formatDate } from '@/helpers/utils';
 import { evaluationController } from '@/controllers/evaluationController';
-import { EvaluationSubmission } from '@/types/evaluation-submission';
+import type { EvaluationSubmission } from '@/types/evaluation-submission';
+import { EvaluationSubmissionCard } from '../../../components/evaluation-submission-card';
 
 type Params = { params: { courseId: string; type: 'simpleContent' | 'evaluation' | 'quiz'; contentId: string } };
 
 export default function ContentDetailPage({ params }: Params) {
-  const { accessToken, isLoading, isAuthenticated } = useAuth();
+  const { accessToken, isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   const [content, setContent] = useState<CourseContent | null>(null);
@@ -110,7 +111,8 @@ export default function ContentDetailPage({ params }: Params) {
               (() => {
                 const due = (content as any).dueDate as string | null;
                 const isOverdue = due ? new Date(due) < new Date() : false;
-                return !isOverdue ? (
+                const hasAnySubmission = submissions && submissions.length > 0;
+                return !isOverdue && !hasAnySubmission ? (
                   <button
                     className="px-4 py-2 rounded-md bg-secondary-color-70 text-white hover:opacity-90 transition"
                     onClick={() => setShowSubmission((v) => !v)}
@@ -132,6 +134,24 @@ export default function ContentDetailPage({ params }: Params) {
         ) : null}
       </div>
 
+      {content.type === 'evaluation' && submissions && submissions.length > 0 ? (
+        submissions.length === 1 ? (
+          <EvaluationSubmissionCard submission={submissions[0]} />
+        ) : (
+          <div className="p-4 border rounded-md">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-700">Hay {submissions.length} entregas.</p>
+              <Link
+                href={`/courses/${params.courseId}/contents/${params.type}/${params.contentId}/submissions`}
+                className="text-secondary-color-70 underline"
+              >
+                Ver entregas
+              </Link>
+            </div>
+          </div>
+        )
+      ) : null}
+
       {content.type === 'evaluation' && showSubmission ? (
         <div className="p-4 border rounded-md space-y-3">
           <h2 className="text-lg font-semibold text-secondary-color-70">Tu entrega</h2>
@@ -152,7 +172,7 @@ export default function ContentDetailPage({ params }: Params) {
               value={solution}
               onChange={(e) => setSolution(e.target.value)}
               rows={5}
-              className="w-full border rounded-md p-2 text-sm"
+              className="w-full border rounded-md p-2 text-sm text-text-neutral-50"
               placeholder="Escribí tu solución aquí..."
             />
           </div>
@@ -198,7 +218,7 @@ export default function ContentDetailPage({ params }: Params) {
               {submitting ? 'Enviando...' : 'Enviar entrega'}
             </button>
             <button
-              className="px-4 py-2 rounded-md border"
+              className="px-4 py-2 rounded-md border text-text-neutral-50"
               onClick={() => {
                 setShowSubmission(false);
                 setSubmitError(null);

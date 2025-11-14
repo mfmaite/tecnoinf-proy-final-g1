@@ -76,6 +76,7 @@ class ContentController {
       const parsed = await response.json();
       const { success, status, message } = parsed ?? {};
       const rawData = parsed?.data;
+      console.log(rawData);
 
       return { success, status, message, data: rawData };
     } catch (error) {

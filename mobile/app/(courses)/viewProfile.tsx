@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect } from "react";
+/*import React, { useEffect, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -128,4 +128,4 @@ const localStyles = StyleSheet.create({
   badgeProfesor: {
     backgroundColor: "#FEF3C7",
   },
-});
+});*/

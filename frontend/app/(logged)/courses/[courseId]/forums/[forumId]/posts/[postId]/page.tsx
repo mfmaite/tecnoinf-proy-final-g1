@@ -9,6 +9,7 @@ import type { ForumPostPageData } from '@/types/forum';
 import { formatDate } from '@/helpers/utils';
 import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
 import { Button } from '@/components/button/button';
+import { ChevronDown } from '@/public/assets/icons/chevron-down';
 
 type Params = { params: { courseId: string; forumId: string; postId: string } }
 
@@ -28,7 +29,7 @@ export default function ForumPostPage({ params }: Params) {
     let active = true;
     const load = async () => {
       if (!accessToken) return;
-      const resp = await forumController.getPostById(params.forumId, params.postId, accessToken);
+      const resp = await forumController.getPostById(params.postId, accessToken);
       if (!active) return;
       if (!resp.success || !resp.data) {
         setError(resp.message ?? 'Error desconocido');
@@ -38,7 +39,7 @@ export default function ForumPostPage({ params }: Params) {
     };
     load();
     return () => { active = false };
-  }, [accessToken, params.forumId, params.postId]);
+  }, [accessToken, params.postId]);
 
   const isConsultsForum = useMemo(() => data?.forum.type === 'CONSULTS', [data]);
   const isAuthor = useMemo(() => !!(user && data && user.ci === data.post.authorCi), [user, data]);
@@ -61,15 +62,19 @@ export default function ForumPostPage({ params }: Params) {
   }
 
   const { forum, post } = data;
+  const isLong = post.message.length > 400;
+  const preview = isLong ? `${post.message.slice(0, 400)}…` : post.message;
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Link href={`/courses/${params.courseId}/forums/${params.forumId}`} className="text-secondary-color-70">
+          <ChevronDown className="w-6 h-6 rotate-90" />
+        </Link>
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-secondary-color-70">{forum.type === 'ANNOUNCEMENTS' ? 'Anuncio' : 'Consulta'}</h1>
           <p className="text-sm text-gray-500">Curso: {params.courseId}</p>
         </div>
-        <Link href={`/courses/${params.courseId}/forums/${params.forumId}`} className="text-sm text-secondary-color-70 hover:text-secondary-color-50 underline">Volver al foro</Link>
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">

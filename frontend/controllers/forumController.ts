@@ -78,6 +78,82 @@ class ForumController {
       return { success: false, status: (error as any).status ?? 500, message: 'Error al responder el post', data: undefined };
     }
   }
+
+  async updatePost(postId: string, message: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al actualizar el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al actualizar el post', data: undefined };
+    }
+  }
+
+  async deletePost(postId: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al eliminar el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al eliminar el post', data: undefined };
+    }
+  }
+
+  async updatePostResponse(postId: string, responseId: number, message: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}/response/${responseId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al actualizar la respuesta:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al actualizar la respuesta', data: undefined };
+    }
+  }
+
+  async deletePostResponse(postId: string, responseId: number, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}/response/${responseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al eliminar la respuesta:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al eliminar la respuesta', data: undefined };
+    }
+  }
 }
 
 export const forumController = new ForumController();

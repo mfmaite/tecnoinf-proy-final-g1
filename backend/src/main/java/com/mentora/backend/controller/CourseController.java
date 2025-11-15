@@ -3,15 +3,13 @@ package com.mentora.backend.controller;
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtEvaluation;
-import com.mentora.backend.requests.CreateCourseRequest;
-import com.mentora.backend.requests.CreateEvaluationRequest;
+import com.mentora.backend.requests.*;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.service.CourseService;
 import com.mentora.backend.dt.DtSimpleContent;
-import com.mentora.backend.requests.CreateSimpleContentRequest;
-import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.*;
+import com.mentora.backend.service.EvaluationService;
 import com.mentora.backend.service.GradeService;
 import com.mentora.backend.service.UserCourseService;
 import org.springframework.http.MediaType;
@@ -39,13 +37,16 @@ public class CourseController {
     private final CourseService courseService;
     private final GradeService gradeService;
     private final UserCourseService userCourseService;
+    private final EvaluationService evaluationService;
 
     public CourseController(CourseService courseService,
                             GradeService gradeService,
-                            UserCourseService userCourseService) {
+                            UserCourseService userCourseService,
+                            EvaluationService evaluationService) {
         this.courseService = courseService;
         this.gradeService = gradeService;
         this.userCourseService = userCourseService;
+        this.evaluationService = evaluationService;
     }
 
     @Operation(
@@ -506,7 +507,7 @@ public class CourseController {
     @ApiResponse(responseCode = "200", description = "Evaluación creada correctamente")
     @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
+    @ApiResponse(responseCode = "500", description = "Error al crear evaluación")
     @PostMapping(value = "/{courseId}/contents/evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<DtEvaluation>> createEvaluation(
@@ -540,6 +541,52 @@ public class CourseController {
                 e.getMessage(),
                 null
             ));
+        }
+    }
+
+    @Operation(summary = "Editar evaluación",
+            description = "Edita una evaluación ya creada para un curso. Solo profesores",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Evaluación editada correctamente")
+    @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error al editar la evaluación")
+    @PostMapping(value = "/{courseId}/contents/{evaluationId}/e-evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<DtEvaluation>> editEvaluation(
+            @PathVariable String courseId,
+            @PathVariable Long evaluationId,
+            @ModelAttribute EditEvaluationRequest req,
+            Authentication authentication
+    ) {
+        try {
+            DtEvaluation updated = evaluationService.editEvaluation(evaluationId, req);
+
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(
+                            true,
+                            200,
+                            "Evaluación editada correctamente",
+                            updated
+                    )
+            );
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(
+                            false,
+                            e.getStatusCode().value(),
+                            e.getReason(),
+                            null
+                    ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new DtApiResponse<>(
+                            false,
+                            500,
+                            "Error al editar la evaluación",
+                            null
+                    ));
         }
     }
 }

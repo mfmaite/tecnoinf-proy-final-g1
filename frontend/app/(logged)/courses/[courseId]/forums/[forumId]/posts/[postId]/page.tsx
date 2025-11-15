@@ -5,20 +5,23 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { forumController } from '@/controllers/forumController';
 import type { ForumPostPageData } from '@/types/forum';
-import { Button } from '@/components/button/button';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { PostComposer } from '../../components/post-composer';
 import { PostItem } from '../../components/post-item';
+import { useRouter } from 'next/navigation';
 
 type Params = { params: { courseId: string; forumId: string; postId: string } }
 
 export default function ForumPostPage({ params }: Params) {
   const { accessToken, user } = useAuth();
+  const router = useRouter();
+
   const [data, setData] = useState<ForumPostPageData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const [replyOpen, setReplyOpen] = useState(false);
   const [replySubmitting, setReplySubmitting] = useState(false);
-  const [replyError, setReplyError] = useState<string | null>(null);
+
   const [replyMessage, setReplyMessage] = useState('');
   const [isAuthor, setIsAuthor] = useState(false);
   const [isConsultsForum, setIsConsultsForum] = useState(false);
@@ -28,7 +31,7 @@ export default function ForumPostPage({ params }: Params) {
     const resp = await forumController.getPostById(params.postId, accessToken);
 
     if (!resp.success || !resp.data) {
-      setError(resp.message ?? 'Error desconocido');
+      setErrorMessage(resp.message ?? 'Error desconocido');
     } else {
       setData(resp.data);
       setIsAuthor(resp.data.post.authorCi === user?.ci);
@@ -38,11 +41,12 @@ export default function ForumPostPage({ params }: Params) {
 
   const onReply = async () => {
     if (!accessToken) return;
-    setReplyError(null);
+    setErrorMessage(null);
     setReplySubmitting(true);
     const resp = await forumController.createPostResponse(params.postId, replyMessage, accessToken);
+
     if (!resp.success) {
-      setReplyError(resp.message ?? 'No se pudo responder el post');
+      setErrorMessage(resp.message ?? 'No se pudo responder el post');
     } else {
       const refreshed = await forumController.getPostById(params.postId, accessToken);
       if (refreshed.success && refreshed.data) {
@@ -54,18 +58,54 @@ export default function ForumPostPage({ params }: Params) {
     getPost();
   }
 
-  useEffect(() => {
-    getPost();
-  }, [accessToken]);
+  const onEditPost = async (newMessage: string) => {
+    if (!accessToken) return;
+    setErrorMessage(null);
+    const resp = await forumController.updatePost(params.postId, newMessage, accessToken);
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-2">No se pudo cargar el post</h1>
-        <p className="text-sm text-red-600">{error}</p>
-      </div>
-    );
+    if (!resp.success) {
+      setErrorMessage(resp.message ?? 'No se pudo actualizar el post');
+    } else {
+      await getPost();
+    }
   }
+
+  const onDeletePost = async () => {
+    if (!accessToken) return;
+    const resp = await forumController.deletePost(params.postId, accessToken);
+    if (!resp.success) {
+      setErrorMessage(resp.message ?? 'No se pudo eliminar el post');
+    } else {
+      router.push(`/courses/${params.courseId}/forums/${params.forumId}`);
+    }
+  }
+
+  const onEditResponse = async (responseId: number, newMessage: string) => {
+    if (!accessToken) return;
+    setErrorMessage(null);
+    const resp = await forumController.updatePostResponse(params.postId, responseId, newMessage, accessToken);
+    if (!resp.success) {
+      setErrorMessage(resp.message ?? 'No se pudo actualizar la respuesta');
+    } else {
+      await getPost();
+    }
+  }
+
+  const onDeleteResponse = async (responseId: number) => {
+    if (!accessToken) return;
+    const resp = await forumController.deletePostResponse(params.postId, responseId, accessToken);
+    if (!resp.success) {
+      setErrorMessage(resp.message ?? 'No se pudo eliminar la respuesta');
+    } else {
+      await getPost();
+    }
+  }
+
+  useEffect(() => {
+    if (accessToken) {
+      getPost();
+    }
+  }, [accessToken, params.postId]);
 
   if (!data) {
     return (
@@ -89,14 +129,21 @@ export default function ForumPostPage({ params }: Params) {
         </div>
       </div>
 
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: &nbsp;</strong>
+          <span className="block sm:inline">{errorMessage}</span>
+        </div>
+      )}
+
       <PostItem
         authorName={post.authorName}
         authorPictureUrl={post.authorPictureUrl}
         createdDate={post.createdDate}
-        message={post.message}
+        initialMessage={post.message}
         onReply={isConsultsForum ? () => setReplyOpen(true) : undefined}
-        onEdit={isAuthor ? () => { /* editar: futuro */ } : undefined}
-        onDelete={isAuthor ? () => { /* eliminar: futuro */ } : undefined}
+        onDelete={isAuthor ? onDeletePost : undefined}
+        onEdit={isAuthor ? (newMessage: string) => onEditPost(newMessage) : undefined}
       />
 
       {replyOpen && (
@@ -106,10 +153,10 @@ export default function ForumPostPage({ params }: Params) {
           onSubmit={() => onReply()}
           onCancel={() => {
             setReplyOpen(false);
-            setReplyError(null);
+            setErrorMessage(null);
           }}
           submitting={replySubmitting}
-          error={replyError}
+          error={errorMessage}
           placeholder="Escribe tu respuesta..."
           submitLabel="Responder"
         />
@@ -123,9 +170,9 @@ export default function ForumPostPage({ params }: Params) {
               authorName={r.authorName}
               authorPictureUrl={r.authorPictureUrl ?? null}
               createdDate={r.createdDate}
-              message={r.message}
-              onEdit={r.authorCi === user?.ci ? () => { /* editar: futuro */ } : undefined}
-              onDelete={r.authorCi === user?.ci ? () => { /* eliminar: futuro */ } : undefined}
+              initialMessage={r.message}
+              onEdit={r.authorCi === user?.ci ? (newMessage: string) => onEditResponse(r.id, newMessage) : undefined}
+              onDelete={r.authorCi === user?.ci ? () => onDeleteResponse(r.id) : undefined}
             />
           ))}
         </div>
@@ -133,5 +180,4 @@ export default function ForumPostPage({ params }: Params) {
     </div>
   );
 }
-
 

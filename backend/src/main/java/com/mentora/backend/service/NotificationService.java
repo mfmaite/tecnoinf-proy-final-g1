@@ -1,5 +1,6 @@
 package com.mentora.backend.service;
 
+import com.mentora.backend.dt.DtNotification;
 import com.mentora.backend.model.Notification;
 import com.mentora.backend.model.User;
 import com.mentora.backend.repository.NotificationRepository;
@@ -39,5 +40,14 @@ public class NotificationService {
 
     public List<Notification> getUserNotifications(User user) {
         return notificationRepository.findByUserOrderByIdDesc(user);
+    }
+
+    public DtNotification toDto(Notification n) {
+        return new DtNotification(
+                n.getId(),
+                n.getMessage(),
+                n.getLink(),
+                n.getRead()
+        );
     }
 }

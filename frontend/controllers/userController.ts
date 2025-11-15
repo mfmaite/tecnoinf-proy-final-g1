@@ -38,6 +38,35 @@ class UserController {
     }
   }
 
+  async getProfile(
+    accessToken: string,
+    ci?: string
+  ): Promise<ApiResponse<UserResponse>> {
+    try {
+      const search = new URLSearchParams();
+      if (ci) search.set('ci', ci);
+      const qs = search.toString();
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}/profile${qs ? `?${qs}` : ''}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al obtener el perfil de usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al obtener el perfil de usuario',
+        data: undefined,
+      };
+    }
+  }
+
   async getUsers(
     accessToken: string,
     filter: UserFilter = "todos",

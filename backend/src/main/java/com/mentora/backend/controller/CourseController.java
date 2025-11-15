@@ -248,10 +248,12 @@ public class CourseController {
     public ResponseEntity<DtApiResponse<Object>> getContentByTypeAndId(
             @PathVariable String courseId,
             @PathVariable String type,
-            @PathVariable Long contentId
+            @PathVariable Long contentId,
+            Authentication authentication
     ) {
         try {
-            Object content = courseService.getContentByTypeAndId(courseId, type, contentId);
+            String userCi = authentication.getName();
+            Object content = courseService.getContentByTypeAndId(courseId, type, contentId, userCi);
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,
                 200,

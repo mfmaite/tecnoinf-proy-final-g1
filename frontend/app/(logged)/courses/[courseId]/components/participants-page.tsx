@@ -114,7 +114,9 @@ function ParticipantsTable({ courseId }: Props) {
             {data.map((u: any) => (
               <tr key={u.ci}>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.ci}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">{u.name}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  <Link href={`/profile/${u.ci}`} className="text-secondary-color-70 hover:text-secondary-color-50 underline">{u.name}</Link>
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.role}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">

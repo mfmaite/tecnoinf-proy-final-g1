@@ -33,6 +33,9 @@ public class Evaluation {
   @Column(name = "dueDate")
   private LocalDateTime dueDate;
 
+  @Column(name = "notified24hs")
+  private boolean notified;
+
   public Evaluation() {}
 
   public Evaluation(String title, Course course, String fileName, String fileUrl, String content, LocalDateTime dueDate) {
@@ -42,6 +45,7 @@ public class Evaluation {
     this.fileUrl = fileUrl;
     this.content = content;
     this.dueDate = dueDate;
+    this.notified = false;
   }
 
   // ====== Getters y Setters ======
@@ -68,4 +72,7 @@ public class Evaluation {
 
   public LocalDateTime getDueDate() { return dueDate; }
   public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+  public boolean isNotified() { return notified; }
+  public void setNotified(boolean notified) { this.notified = notified; }
 }

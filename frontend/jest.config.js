@@ -1,7 +1,7 @@
 module.exports = {
   testEnvironment: 'jsdom',
   transform: {
-    '^.+\\.(t|j)sx?$': 'babel-jest',
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './test/babel.config.js' }],
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",

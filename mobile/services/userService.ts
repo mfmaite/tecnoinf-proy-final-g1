@@ -8,7 +8,7 @@ interface ApiResponse<T> {
 }
 
 /**
- * Cambia la contraseña del usuario autenticado.
+ * 🔐 Cambia la contraseña del usuario autenticado.
  * El token JWT se agrega automáticamente por el interceptor.
  */
 export const changePassword = async (
@@ -32,3 +32,29 @@ export const changePassword = async (
     );
   }
 };
+
+export async function updateUserProfile(data: {
+  name: string;
+  email: string;
+  description: string;
+  picture?: any | null;
+}) {
+  const formData = new FormData();
+  formData.append("name", data.name);
+  formData.append("email", data.email);
+  formData.append("description", data.description || "");
+
+  if (data.picture && data.picture !== null) {
+    formData.append("picture", data.picture);
+  }
+
+  const response = await api.put<ApiResponse<any>>("/users", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || "Error al actualizar usuario.");
+  }
+
+  return response.data.data;
+}

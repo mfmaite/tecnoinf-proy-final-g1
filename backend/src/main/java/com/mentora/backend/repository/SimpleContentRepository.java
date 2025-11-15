@@ -9,4 +9,6 @@ import java.util.List;
 public interface SimpleContentRepository extends JpaRepository<SimpleContent, Long> {
 
     List<SimpleContent> findByCourse_IdOrderByCreatedDateAsc(String courseId);
+
+    SimpleContent findByIdAndCourse_Id(Long id, String courseId);
 }

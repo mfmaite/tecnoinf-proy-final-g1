@@ -17,11 +17,11 @@ class CourseController {
         cache: 'no-store',
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -29,7 +29,7 @@ class CourseController {
       console.error('Error al obtener el curso:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al obtener el curso',
         data: undefined,
       };
@@ -47,11 +47,11 @@ class CourseController {
         body: JSON.stringify(courseData),
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -60,7 +60,7 @@ class CourseController {
 
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al crear el curso',
         data: undefined,
       };
@@ -80,7 +80,7 @@ class CourseController {
         if (data.success && data.data) {
           return {
             success: true,
-            code: response.status,
+            status: response.status,
             data: data.data,
             message: 'Cursos obtenidos correctamente',
           };
@@ -90,7 +90,7 @@ class CourseController {
       console.error('Error al cargar cursos:', response.statusText);
       return {
         success: false,
-        code: response.status,
+        status: response.status,
         message: 'Error al cargar cursos',
         data: undefined,
       };
@@ -98,7 +98,7 @@ class CourseController {
       console.error('Error al cargar cursos:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cargar cursos',
         data: undefined,
       };
@@ -118,11 +118,11 @@ class CourseController {
         body: formData,
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         message,
         data,
       };
@@ -130,7 +130,7 @@ class CourseController {
       console.error('Error al crear cursos desde CSV:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al crear cursos desde CSV',
         data: undefined,
       };
@@ -146,11 +146,16 @@ class CourseController {
         },
         cache: 'no-store',
       });
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al obtener participantes:', error);
-      return { success: false, code: 500, message: 'Error al obtener participantes', data: undefined };
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al obtener participantes',
+        data: undefined
+      };
     }
   }
 
@@ -162,11 +167,11 @@ class CourseController {
           'Accept': 'application/json',
         },
       });
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al obtener no participantes:', error);
-      return { success: false, code: 500, message: 'Error al obtener no participantes', data: undefined };
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al obtener no participantes', data: undefined };
     }
   }
 
@@ -180,11 +185,11 @@ class CourseController {
         },
         body: JSON.stringify({ participantIds: cis }),
       });
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al agregar participantes:', error);
-      return { success: false, code: 500, message: 'Error al agregar participantes', data: undefined };
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al agregar participantes', data: undefined };
     }
   }
 
@@ -198,11 +203,11 @@ class CourseController {
         },
         body: JSON.stringify({ participantIds: cis }),
       });
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al eliminar participantes:', error);
-      return { success: false, code: 500, message: 'Error al eliminar participantes', data: undefined };
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al eliminar participantes', data: undefined };
     }
   }
 }

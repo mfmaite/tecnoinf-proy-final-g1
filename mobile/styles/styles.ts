@@ -4,7 +4,8 @@ import { colors } from "./colors";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surfaceLight[20],
+    backgroundColor: colors.primary[10],
+    // justifyContent: "center", NO USAR
     paddingTop: 10,
     paddingHorizontal: 20,
   },
@@ -178,6 +179,16 @@ export const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  input: {
+      width: "100%",
+      borderWidth: 1,
+      borderColor: colors.surfaceLight[40],
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+      fontSize: 16,
+      backgroundColor: colors.surfaceLight[20],
+    },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
   contentText: { fontSize: 14, marginBottom: 4 },
   contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },

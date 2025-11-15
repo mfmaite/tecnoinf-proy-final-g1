@@ -13,11 +13,11 @@ class ForumController {
         cache: 'no-store',
       });
       const json = await response.json();
-      const { success, code, message, data } = json;
-      return { success, code, message, data };
+      const { success, status, message, data } = json;
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al obtener el foro:', error);
-      return { success: false, code: 500, message: 'Error al obtener foro', data: undefined };
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al obtener foro', data: undefined };
     }
   }
 
@@ -31,11 +31,11 @@ class ForumController {
         cache: 'no-store',
       });
       const json = await response.json();
-      const { success, code, message, data } = json;
-      return { success, code, message, data };
+      const { success, status, message, data } = json;
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al obtener el post:', error);
-      return { success: false, code: 500, message: 'Error al obtener post', data: undefined };
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al obtener post', data: undefined };
     }
   }
 }

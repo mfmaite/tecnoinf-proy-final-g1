@@ -73,8 +73,12 @@ class ContentController {
         },
         cache: 'no-store',
       });
-      const { success, status, message, data } = await response.json();
-      return { success, status, message, data };
+      const parsed = await response.json();
+      const { success, status, message } = parsed ?? {};
+      const rawData = parsed?.data;
+      console.log(rawData);
+
+      return { success, status, message, data: rawData };
     } catch (error) {
       console.error('Error al obtener contenido:', error);
       return {

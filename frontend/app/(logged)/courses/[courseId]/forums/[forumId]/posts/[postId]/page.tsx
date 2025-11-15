@@ -10,6 +10,7 @@ import { formatDate } from '@/helpers/utils';
 import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
 import { Button } from '@/components/button/button';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
+import { PostComposer } from '../../components/post-composer';
 
 type Params = { params: { courseId: string; forumId: string; postId: string } }
 
@@ -18,6 +19,27 @@ export default function ForumPostPage({ params }: Params) {
   const router = useRouter();
   const [data, setData] = useState<ForumPostPageData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replySubmitting, setReplySubmitting] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [replyMessage, setReplyMessage] = useState('');
+
+  const onReply = async () => {
+    if (!accessToken) return;
+    setReplyError(null);
+    setReplySubmitting(true);
+    const resp = await forumController.createPostResponse(params.postId, replyMessage, accessToken);
+    if (!resp.success) {
+      setReplyError(resp.message ?? 'No se pudo responder el post');
+    } else {
+      const refreshed = await forumController.getPostById(params.postId, accessToken);
+      if (refreshed.success && refreshed.data) {
+        setData(refreshed.data);
+      }
+      setReplyOpen(false);
+    }
+    setReplySubmitting(false);
+  }
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -62,8 +84,6 @@ export default function ForumPostPage({ params }: Params) {
   }
 
   const { forum, post } = data;
-  const isLong = post.message.length > 400;
-  const preview = isLong ? `${post.message.slice(0, 400)}…` : post.message;
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -80,6 +100,7 @@ export default function ForumPostPage({ params }: Params) {
       <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
         <div className="flex items-start gap-4">
           <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl ?? undefined} size="lg" />
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="truncate">
@@ -88,7 +109,7 @@ export default function ForumPostPage({ params }: Params) {
               </div>
               <div className="flex items-center gap-2">
                 {isConsultsForum && (
-                  <Button size="sm" variant="outline" color="secondary" onClick={() => { /* responder: futuro */ }}>
+                  <Button size="sm" variant="outline" color="secondary" onClick={() => setReplyOpen(true)}>
                     Responder
                   </Button>
                 )}
@@ -108,6 +129,22 @@ export default function ForumPostPage({ params }: Params) {
           </div>
         </div>
       </div>
+
+      {replyOpen && (
+        <PostComposer
+          message={replyMessage}
+          setMessage={setReplyMessage}
+          onSubmit={() => onReply()}
+          onCancel={() => {
+            setReplyOpen(false);
+            setReplyError(null);
+          }}
+          submitting={replySubmitting}
+          error={replyError}
+          placeholder="Escribe tu respuesta..."
+          submitLabel="Responder"
+        />
+      )}
     </div>
   );
 }

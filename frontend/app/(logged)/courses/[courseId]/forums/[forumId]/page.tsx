@@ -8,6 +8,7 @@ import { forumController } from '@/controllers/forumController'
 import type { ForumPageData, ForumPost } from '@/types/forum'
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { PostCard } from './components/post-card';
+import { PostComposer } from './components/post-composer';
 
 type Params = { params: { courseId: string; forumId: string } }
 
@@ -123,35 +124,16 @@ const ForumsPage = ({ params }: Params) => {
       </div>
 
       {isCreating && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-          <label className="text-sm text-gray-600">Mensaje</label>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full border border-gray-300 rounded-md p-3 text-sm text-text-neutral-50"
-            rows={4}
-            placeholder="Escribe el contenido del post..."
-          />
-          {createError ? (
-            <div className="text-sm text-red-600">{createError}</div>
-          ) : null}
-          <div className="flex items-center gap-2 justify-end">
-            <button
-              className="px-4 py-2 rounded-md border border-gray-300 text-secondary-color-70"
-              onClick={() => { setIsCreating(false); setMessage(''); setCreateError(null); }}
-              disabled={isPosting}
-            >
-              Cancelar
-            </button>
-            <button
-              className={`px-4 py-2 rounded-md text-white ${isPosting ? 'bg-primary-color-40' : 'bg-primary-color-60 hover:bg-primary-color-70'}`}
-              onClick={onPublish}
-              disabled={isPosting}
-            >
-              {isPosting ? 'Publicando...' : 'Publicar'}
-            </button>
-          </div>
-        </div>
+        <PostComposer
+          message={message}
+          setMessage={setMessage}
+          onSubmit={onPublish}
+          onCancel={() => setIsCreating(false)}
+          submitting={isPosting}
+          error={createError}
+          placeholder="Escribe el contenido del post..."
+          submitLabel="Publicar"
+        />
       )}
 
       <div className="flex flex-col gap-4">

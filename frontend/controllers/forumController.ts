@@ -58,6 +58,26 @@ class ForumController {
       return { success: false, status: (error as any).status ?? 500, message: 'Error al crear post', data: undefined };
     }
   }
+
+  async createPostResponse(postId: string, message: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}/response`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al responder el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al responder el post', data: undefined };
+    }
+  }
 }
 
 export const forumController = new ForumController();

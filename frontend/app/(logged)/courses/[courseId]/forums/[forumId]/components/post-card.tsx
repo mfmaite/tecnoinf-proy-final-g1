@@ -32,12 +32,9 @@ const PostCard = ({ post, courseId, forumId }: { post: ForumPost, courseId: stri
           {preview.truncated && (
             <>
               ...{' '}
-              <Link
-                href={`/courses/${courseId}/forums/${forumId}/posts/${post.id}`}
-                className="text-primary-color-60 hover:underline"
-              >
+              <span className="text-primary-color-60 hover:underline">
                 Ver más
-              </Link>
+              </span>
             </>
           )}
         </div>

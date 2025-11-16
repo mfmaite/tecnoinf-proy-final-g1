@@ -10,6 +10,7 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   useEffect(() => {
     const loadNotifications = async () => {
@@ -62,6 +63,18 @@ const NotificationsPage = () => {
             <h1 className="text-3xl font-bold text-secondary-color-70 mb-2">
               Lista de Notificaciones
             </h1>
+
+            <div className="flex w-full justify-end">
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showUnreadOnly}
+                  onChange={(e) => setShowUnreadOnly(e.target.checked)}
+                  className="h-4 w-4 text-secondary-color-70 border-gray-300 rounded"
+                />
+                Mostrar solo no leídas
+              </label>
+            </div>
           </div>
 
           {error && (
@@ -73,12 +86,12 @@ const NotificationsPage = () => {
           )}
 
           <div className="overflow-x-auto">
-            {notifications.length === 0 ? (
+            {(showUnreadOnly ? notifications.filter(n => !n.isRead) : notifications).length === 0 ? (
               <div className="px-6 py-8 text-sm text-gray-600">
-                No hay notificaciones por ahora.
+                {showUnreadOnly ? 'No hay notificaciones no leídas.' : 'No hay notificaciones por ahora.'}
               </div>
             ) : (
-              notifications.map((notification) => (
+              (showUnreadOnly ? notifications.filter(n => !n.isRead) : notifications).map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificationService {
@@ -32,14 +33,27 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
 
-    public void markAsRead(String notificationId) {
+    public void markAsRead(String notificationId, String userCi) {
+        User user = userRepository.findById(userCi)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notificación no encontrada"));
+
+        if (!notification.getUser().equals(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos para marcar esta notificación como leída");
+        }
+
         notification.setRead(Boolean.TRUE);
         notificationRepository.save(notification);
     }
 
-    public List<Notification> getUserNotifications(User user) {
-        return notificationRepository.findByUserOrderByIdDesc(user);
+    public List<DtNotification> getUserNotifications(String userCi) {
+        User user = userRepository.findById(userCi)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        return notificationRepository.findByUserOrderByIdDesc(user).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     public DtNotification toDto(Notification n) {

@@ -1,7 +1,6 @@
 package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtNotification;
-import com.mentora.backend.model.User;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.NotificationService;
 
@@ -37,9 +36,13 @@ public class NotificationController {
     @ApiResponse(responseCode = "404", description = "La notificación no existe")
     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     @PostMapping("/{notificationId}/read")
-    public ResponseEntity<DtApiResponse<Void>> markAsRead(@PathVariable String notificationId) {
+    public ResponseEntity<DtApiResponse<Void>> markAsRead(
+        @PathVariable String notificationId,
+        Authentication authentication
+    ) {
         try {
-            notificationService.markAsRead(notificationId);
+            String userCi = authentication.getName();
+            notificationService.markAsRead(notificationId, userCi);
 
             return ResponseEntity.ok(new DtApiResponse<>(
                     true,
@@ -71,13 +74,9 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<DtApiResponse<List<DtNotification>>> getUserNotifications(Authentication authentication) {
         try {
-            User user = (User) authentication.getPrincipal();
+            String userCi = authentication.getName();
 
-            List<DtNotification> notifications = notificationService
-                    .getUserNotifications(user)
-                    .stream()
-                    .map(DtNotification::new)
-                    .toList();
+            List<DtNotification> notifications = notificationService.getUserNotifications(userCi);
 
             return ResponseEntity.ok(new DtApiResponse<>(
                     true,

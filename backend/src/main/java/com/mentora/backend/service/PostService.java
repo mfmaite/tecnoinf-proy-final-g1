@@ -95,6 +95,28 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    public DtPostResponse editResponse(Long responseId, String userCi, String message) {
+        PostResponse resp = postResponseRepository.findById(responseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Respuesta no encontrada"));
+
+        if (!resp.getAuthor().getCi().equals(userCi))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puede editar esta respuesta");
+
+        resp.setMessage(message);
+        PostResponse saved = postResponseRepository.save(resp);
+        return getDtPostResponse(saved);
+    }
+
+    public void deleteResponse(Long responseId, String userCi) {
+        PostResponse resp = postResponseRepository.findById(responseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Respuesta no encontrada"));
+
+        if (!resp.getAuthor().getCi().equals(userCi))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puede eliminar esta respuesta");
+
+        postResponseRepository.delete(resp);
+    }
+
     public GetSinglePostResponse getPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post no encontrado"));

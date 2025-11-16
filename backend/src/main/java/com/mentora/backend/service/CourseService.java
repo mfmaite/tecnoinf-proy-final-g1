@@ -46,14 +46,6 @@ public class CourseService {
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
     private final QuizRepository quizRepository;
-
-    public CourseService(
-            CourseRepository courseRepository,
-            UserCourseService userCourseService,
-            SimpleContentRepository simpleContentRepository,
-            FileStorageService fileStorageService,
-            ForumRepository forumRepository,
-            QuizRepository quizRepository
     private final EvaluationRepository evaluationRepository;
     private final EvaluationService evaluationService;
 
@@ -63,6 +55,7 @@ public class CourseService {
         SimpleContentRepository simpleContentRepository,
         FileStorageService fileStorageService,
         ForumRepository forumRepository,
+        QuizRepository quizRepository,
         EvaluationRepository evaluationRepository,
         EvaluationService evaluationService
     ) {
@@ -125,10 +118,10 @@ public class CourseService {
 
         List<DtSimpleContent> contents = simpleContentRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(this::getDtSimpleContent)
-                .collect(Collectors.toList());
+                .toList();
         List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(evaluationService::getDtEvaluation)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Object> allContents = new ArrayList<>();
         allContents.addAll(contents);
@@ -149,6 +142,35 @@ public class CourseService {
                 .collect(Collectors.toList());
 
         return new GetCourseResponse(getDtCourse(course), allContents, dtForums);
+    }
+
+    public Object getContentByTypeAndId(String courseId, String type, Long contentId, String userCi) {
+        if (type == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido obligatorio");
+        }
+        switch (type) {
+            case "simpleContent": {
+                SimpleContent sc = simpleContentRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (sc == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                return getDtSimpleContent(sc);
+            }
+            case "evaluation": {
+                Evaluation e = evaluationRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (e == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                // Retornar evaluación con submissions según el rol del usuario (profesor: todas; estudiante: solo la suya)
+                return evaluationService.getEvaluation(e.getId(), userCi);
+            }
+            case "quiz": {
+                // No implementado aún
+                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Quiz no implementado");
+            }
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido inválido");
+        }
     }
 
     public DtSimpleContent createSimpleContent(String courseId, CreateSimpleContentRequest req) throws IOException {
@@ -448,4 +470,21 @@ public class CourseService {
 
         return evaluationService.getDtEvaluation(saved);
     }
+
+    public DtSimpleContent updateSimpleContent(Long contentId, CreateSimpleContentRequest req) throws IOException {
+        SimpleContent sc = simpleContentRepository.findById(contentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado"));
+
+        if (req.getTitle() != null) sc.setTitle(req.getTitle());
+        if (req.getContent() != null) sc.setContent(req.getContent());
+        if (req.getFile() != null) {
+            DtFileResource file = fileStorageService.store(req.getFile());
+            sc.setFileName(file.getFilename());
+            sc.setFileUrl(file.getStoragePath());
+        }
+
+        SimpleContent saved = simpleContentRepository.save(sc);
+        return getDtSimpleContent(saved);
+    }
+
 }

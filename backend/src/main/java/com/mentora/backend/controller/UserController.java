@@ -3,8 +3,10 @@ package com.mentora.backend.controller;
 import com.mentora.backend.requests.ChangePasswordRequest;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtActivity;
+import com.mentora.backend.responses.BulkCreateUsersResponse;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
+import com.opencsv.exceptions.CsvException;
 import com.mentora.backend.requests.ResetPasswordRequest;
 import com.mentora.backend.requests.UpdateUserRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,10 +20,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.format.annotation.DateTimeFormat;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -60,6 +65,65 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
                             "Error al crear usuario", null));
+        }
+    }
+
+    @Operation(
+        summary = "Alta masiva de usuarios desde CSV",
+        description = "Crea múltiples usuarios desde un archivo CSV. Si hay errores en alguna fila, no se crea ninguno.",
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Usuarios creados correctamente")
+    @ApiResponse(responseCode = "207", description = "Algunos usuarios no pudieron crearse")
+    @ApiResponse(responseCode = "400", description = "CSV invalido")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<BulkCreateUsersResponse>> bulkCreateUsers(
+        @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            BulkCreateUsersResponse response = userService.createUsersFromCsv(file.getInputStream());
+
+            if (response.getErrors().isEmpty() ||  response.getErrors() == null) {
+                return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Usuarios creados correctamente",
+                    response
+                ));
+            }
+
+            if (response.getCreatedUsers() != null && !response.getCreatedUsers().isEmpty()) {
+                return ResponseEntity.status(207).body(new DtApiResponse<>(
+                        false,
+                        207,
+                        "Algunos usuarios no pudieron crearse",
+                        response
+                ));
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Ningún curso se creó. Revise los errores",
+                    response
+            ));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo CSV",
+                    null
+            ));
+        } catch (CsvException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "CSV inválido",
+                    null
+            ));
         }
     }
 

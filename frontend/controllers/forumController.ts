@@ -21,9 +21,9 @@ class ForumController {
     }
   }
 
-  async getPostById(forumId: string, postId: string, accessToken: string): Promise<ApiResponse<ForumPostPageData>> {
+  async getPostById(postId: string, accessToken: string): Promise<ApiResponse<ForumPostPageData>> {
     try {
-      const response = await fetch(`${API_ENDPOINTS.FORUM}/${forumId}/post/${postId}`, {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',

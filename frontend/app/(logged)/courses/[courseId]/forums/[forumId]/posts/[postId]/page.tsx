@@ -28,7 +28,7 @@ export default function ForumPostPage({ params }: Params) {
     let active = true;
     const load = async () => {
       if (!accessToken) return;
-      const resp = await forumController.getPostById(params.forumId, params.postId, accessToken);
+      const resp = await forumController.getPostById(params.postId, accessToken);
       if (!active) return;
       if (!resp.success || !resp.data) {
         setError(resp.message ?? 'Error desconocido');
@@ -38,7 +38,7 @@ export default function ForumPostPage({ params }: Params) {
     };
     load();
     return () => { active = false };
-  }, [accessToken, params.forumId, params.postId]);
+  }, [accessToken, params.postId]);
 
   const isConsultsForum = useMemo(() => data?.forum.type === 'CONSULTS', [data]);
   const isAuthor = useMemo(() => !!(user && data && user.ci === data.post.authorCi), [user, data]);

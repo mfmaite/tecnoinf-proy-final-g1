@@ -36,9 +36,6 @@ public class Quiz {
         this.expirationDate = expirationDate;
         this.course = course;
         this.questions = questions;
-        for (QuizQuestion q : questions) {
-            q.setQuiz(this);
-        }
     }
 
     public Long getId() { return id; }
@@ -70,18 +67,5 @@ public class Quiz {
 
     public void setQuestions(List<QuizQuestion> questions) {
         this.questions = questions;
-        for (QuizQuestion q : questions) {
-            q.setQuiz(this);
-        }
-    }
-
-    public void addQuestion(QuizQuestion question) {
-        questions.add(question);
-        question.setQuiz(this);
-    }
-
-    public void removeQuestion(QuizQuestion question) {
-        questions.remove(question);
-        question.setQuiz(null);
     }
 }

@@ -1,5 +1,6 @@
 package com.mentora.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ public class Course {
     private List<SimpleContent> simpleContents = new ArrayList<>();
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "course-quizzes")
     private List<Quiz> quizzes = new ArrayList<>();
 
     // Constructores

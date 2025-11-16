@@ -11,13 +11,13 @@ export function Navbar() {
   const { user } = useAuth();
 
   const userDropdownItems = [
-    { href: '/admin/users', label: 'Listado', adminOnly: true },
-    { href: '/admin/users/new', label: 'Crear', adminOnly: true },
+    { href: '/admin/users', label: 'Listado', userRole: ['ADMIN'] },
+    { href: '/admin/users/new', label: 'Crear', userRole: ['ADMIN'] },
   ];
 
   const courseDropdownItems = [
-    { href: '/courses', label: 'Listado' },
-    { href: '/admin/courses/new', label: 'Crear', adminOnly: true },
+    { href: '/courses', label: 'Listado', userRole: ['ADMIN', 'PROFESOR', 'ESTUDIANTE'] },
+    { href: '/admin/courses/new', label: 'Crear', userRole: ['ADMIN'] },
   ];
 
   return (
@@ -33,19 +33,31 @@ export function Navbar() {
               <Dropdown
                 label="Usuarios"
                 items={userDropdownItems}
-                userRole={user?.role}
+                loggedUserRole={user?.role}
               />
               <Dropdown
                 label="Cursos"
                 items={courseDropdownItems}
-                userRole={user?.role}
+                loggedUserRole={user?.role}
               />
-              <Link
-                href="/chats"
-                className="text-gray-600 hover:text-primary-color-80 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
-              >
-                  Mensajes
-              </Link>
+
+              {user?.role !== 'ADMIN' && (
+                  <Link
+                    href="/chats"
+                    className="text-gray-600 hover:text-primary-color-80 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+                  >
+                    Mensajes
+                  </Link>
+              )}
+
+              {user?.role === 'ESTUDIANTE' && (
+                  <Link
+                    href="/notifications"
+                    className="text-gray-600 hover:text-primary-color-80 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+                  >
+                    Notificaciones
+                  </Link>
+              )}
             </div>
           </div>
 

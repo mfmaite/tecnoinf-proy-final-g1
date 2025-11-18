@@ -86,7 +86,7 @@ public class CourseService {
         }
 
         if (Objects.equals(req.getId(), "")) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La Id no puede estar vacia");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
         }
 
         Course c = new Course(

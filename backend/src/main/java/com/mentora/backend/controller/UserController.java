@@ -45,6 +45,7 @@ public class UserController {
                description = "Crea un usuario con nombre, email y password. Solo administradores.",
                security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
+    @ApiResponse(responseCode = "400", description = "La contraseña no cumple los requisitos")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene permisos de administrador")
     @ApiResponse(responseCode = "409", description = "Usuario ya existe o rol inválido")

@@ -40,7 +40,7 @@ export default function HomeScreen() {
     const forumId = parts[3];
 
     return {
-      pathname: "/(courses)/[courseId]/forums/[forumId]",
+      pathname: "/(main)/(courses)/[courseId]/forums/[forumId]",
       params: { courseId, forumId },
     } as const;
   }

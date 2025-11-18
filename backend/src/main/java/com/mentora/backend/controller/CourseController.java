@@ -216,7 +216,7 @@ public class CourseController {
             DtApiResponse<DtSimpleContent> response = new DtApiResponse<>(
                 true,
                 200,
-                "Simple content created successfully",
+                "Contenido cimple creado correctamente",
                 created
             );
 

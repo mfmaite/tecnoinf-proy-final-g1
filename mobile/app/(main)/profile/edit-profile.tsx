@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
 import { styles as globalStyles } from "../../../styles/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProfileScreen() {
   const { user } = useAuth();
@@ -92,6 +93,7 @@ export default function EditProfileScreen() {
   };
 
   return (
+    <SafeAreaView style={globalStyles.safeArea}>
     <View style={globalStyles.container}>
       <Text style={globalStyles.title}>Editar Perfil</Text>
 
@@ -156,6 +158,7 @@ export default function EditProfileScreen() {
         <Text style={globalStyles.buttonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 

@@ -9,12 +9,12 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
+import { styles as globalStyles } from "../../../styles/styles";
 import { changePassword } from "@/services/userService";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChangePasswordScreen() {
-  const { updateUser } = useAuth();
   const router = useRouter();
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -63,6 +63,7 @@ export default function ChangePasswordScreen() {
   };
 
   return (
+    <SafeAreaView style={globalStyles.safeArea}>
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Cambiar contraseña</Text>
@@ -111,6 +112,7 @@ export default function ChangePasswordScreen() {
         </TouchableOpacity>
       </View>
     </View>
+    </SafeAreaView>
   );
 }
 

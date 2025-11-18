@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { styles as globalStyles } from "../../../styles/styles";
 import { colors } from "../../../styles/colors";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -20,6 +21,7 @@ export default function ProfileScreen() {
   };
 
   return (
+    <SafeAreaView style={globalStyles.safeArea}>
     <View style={globalStyles.container}>
       <Text style={globalStyles.title}>Mi Perfil</Text>
 
@@ -62,6 +64,7 @@ export default function ProfileScreen() {
         <Text style={globalStyles.buttonText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 

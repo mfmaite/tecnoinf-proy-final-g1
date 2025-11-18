@@ -4,7 +4,7 @@ import { colors } from "./colors";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surfaceLight[20],
+    backgroundColor: colors.primary[10],
     paddingTop: 10,
     paddingHorizontal: 20,
   },
@@ -168,7 +168,7 @@ export const styles = StyleSheet.create({
   header: { backgroundColor: colors.primary[20], padding: 16, borderRadius: 8, marginBottom: 16 },
   headerTitle: { fontSize: 24, fontWeight: "700", color: colors.secondary[60], marginBottom: 16 },
     contentCard: {
-    backgroundColor: colors.primary[10],
+    backgroundColor: colors.primary[20],
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
@@ -262,5 +262,9 @@ activityDate: {
   fontSize: 12,
   color: "#666",
   marginTop: 4,
+},
+safeArea: {
+  flex: 1,
+  backgroundColor: colors.surfaceLight[20],
 },
 });

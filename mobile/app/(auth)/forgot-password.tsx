@@ -12,6 +12,8 @@ import {
 import { useRouter } from "expo-router";
 import { api } from "../../services/api";
 import { colors } from "../../styles/colors";
+import { styles as globalStyles } from "../../styles/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -44,42 +46,44 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.title}>Mentora</Text>
+    <SafeAreaView style={globalStyles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.card}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.title}>Mentora</Text>
 
-        <Text style={styles.subtitle}>Recuperar contraseña</Text>
+          <Text style={styles.subtitle}>Recuperar contraseña</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Correo electrónico"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Correo electrónico"
+            placeholderTextColor="#999"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.7 }]}
-          onPress={handleForgotPassword}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Enviar instrucciones</Text>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            onPress={handleForgotPassword}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Enviar instrucciones</Text>
+            )}
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-          <Text style={styles.back}>Volver al inicio de sesión</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+            <Text style={styles.back}>Volver al inicio de sesión</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

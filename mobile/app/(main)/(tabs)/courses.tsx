@@ -1,20 +1,10 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
-import { styles } from "../../../styles/styles";
+// Este tab NO es una pantalla real.
+// Es solo para que Tabs lo registre.
+// Impedimos que sea navegable.
 
 export default function CoursesTab() {
-  const router = useRouter();
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Cursos</Text>
-
-      <TouchableOpacity
-        style={styles.buttonPrimary}
-        onPress={() => router.push("/(courses)/coursesList")}
-      >
-        <Text style={styles.buttonText}>Ir al listado de cursos</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  return null;
 }
+
+// Evita hidratación o navegación accidental
+export const dynamic = "force-static";

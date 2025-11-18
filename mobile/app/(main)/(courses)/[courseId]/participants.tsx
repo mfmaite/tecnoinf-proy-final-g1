@@ -10,75 +10,51 @@ import {
   StyleSheet,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { styles } from "../../styles/styles";
-import { api } from "../../services/api";
-
-interface Participant {
-  ci: string;
-  name: string;
-  email?: string | null;
-  description?: string | null;
-  pictureUrl?: string | null;
-  role?: string | null;
-}
+import { styles } from "../../../../styles/styles";
+import {
+  Participant,
+  getCourseParticipants,
+} from "../../../../services/courses";
 
 export default function ParticipantsList() {
   const { courseId } = useLocalSearchParams<{ courseId?: string }>();
+  const safeCourseId = String(courseId ?? "");
+
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!courseId) return;
-    const fetchParticipants = async () => {
-      setLoading(true);
-      setError("");
+    if (!safeCourseId) return;
+
+    let active = true;
+
+    const load = async () => {
       try {
-        const base =
-          typeof (api as any).getUri === "function"
-            ? (api as any).getUri()
-            : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
-        const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(
-          String(courseId)
-        )}/participants`;
-
-        const res = await fetch(url, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-        });
-
-        const text = await res.text();
-
-        if (!res.ok) {
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-        }
-
-        const parsed = JSON.parse(text);
-        const data = parsed?.data ?? [];
-        if (!Array.isArray(data)) {
-          throw new Error("Formato inesperado de respuesta (data no es array)");
-        }
-
-        setParticipants(data as Participant[]);
+        const list = await getCourseParticipants(safeCourseId);
+        if (active) setParticipants(list);
       } catch (err: any) {
-        console.error("[getParticipants] error:", err);
-        setError(err?.message ?? "Error al obtener participantes");
+        if (active) setError(err.message);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
-    fetchParticipants();
-  }, [courseId]);
+    load();
+    return () => {
+      active = false;
+    };
+  }, [safeCourseId]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return participants;
+
     return participants.filter(
       (p) =>
-        (p.name ?? "").toLowerCase().includes(q) ||
-        (p.ci ?? "").toLowerCase().includes(q)
+        p.name?.toLowerCase().includes(q) ||
+        p.ci?.toLowerCase().includes(q)
     );
   }, [participants, search]);
 
@@ -88,21 +64,22 @@ export default function ParticipantsList() {
         <Text style={localStyles.name}>{item.name}</Text>
         <Text style={localStyles.ci}>CI: {item.ci}</Text>
       </View>
+
       <Text style={localStyles.meta}>{item.email ?? ""}</Text>
       <Text style={localStyles.meta}>{item.description ?? ""}</Text>
+
       <View style={localStyles.actionsRow}>
         <TouchableOpacity
-            style={styles.button}
-            onPress={() => Alert.alert("Ver Perfil", "Funcionalidad no implementada")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Ver Perfil</Text>
-          </TouchableOpacity>
+          style={styles.button}
+          onPress={() => Alert.alert("Ver Perfil", "Funcionalidad no implementada")}
+        >
+          <Text style={styles.buttonText}>Ver Perfil</Text>
+        </TouchableOpacity>
+
         {item.role === "PROFESOR" && (
           <TouchableOpacity
             style={styles.msgButton}
             onPress={() => Alert.alert("Mensajes", "Funcionalidad no implementada")}
-            activeOpacity={0.8}
           >
             <Text style={styles.msgButtonText}>Mensajes</Text>
           </TouchableOpacity>
@@ -111,16 +88,14 @@ export default function ParticipantsList() {
     </View>
   );
 
-  if (loading) {
-    return <ActivityIndicator style={styles.loader} size="large" />;
-  }
-  if (error) {
+  if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
+
+  if (error)
     return (
       <View style={localStyles.center}>
         <Text style={localStyles.errorText}>{error}</Text>
       </View>
     );
-  }
 
   return (
     <View style={[styles.container, localStyles.container]}>
@@ -131,7 +106,6 @@ export default function ParticipantsList() {
         style={localStyles.searchInput}
         autoCorrect={false}
         autoCapitalize="none"
-        clearButtonMode="while-editing"
       />
 
       <FlatList
@@ -149,10 +123,7 @@ export default function ParticipantsList() {
 }
 
 const localStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 8,
-  },
+  container: { flex: 1, paddingTop: 8 },
   searchInput: {
     height: 42,
     borderWidth: 1,
@@ -175,28 +146,11 @@ const localStyles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 6,
   },
-  name: {
-    fontWeight: "700",
-  },
-  ci: {
-    color: "#666",
-  },
-  meta: {
-    color: "#444",
-    marginTop: 2,
-  },
-  actionsRow: {
-    marginTop: 8,
-    flexDirection: "row",
-  },
-  center: {
-    padding: 20,
-    alignItems: "center",
-  },
-  emptyText: {
-    color: "#666",
-  },
-  errorText: {
-    color: "red",
-  },
+  name: { fontWeight: "700" },
+  ci: { color: "#666" },
+  meta: { color: "#444", marginTop: 2 },
+  actionsRow: { marginTop: 8, flexDirection: "row" },
+  center: { padding: 20, alignItems: "center" },
+  emptyText: { color: "#666" },
+  errorText: { color: "red" },
 });

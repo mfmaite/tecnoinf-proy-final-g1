@@ -11,6 +11,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../styles/colors";
+import { styles as globalStyles } from "../../styles/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -24,60 +26,62 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       await login(ci, password);
-      router.replace("/(main)/home");
+      router.replace("/(main)/(tabs)/");
     } catch {
       setError("Credenciales inválidas");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.title}>Mentora</Text>
+    <SafeAreaView style={globalStyles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.card}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.title}>Mentora</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Cédula"
-          placeholderTextColor="#999"
-          value={ci}
-          onChangeText={setCi}
-        />
-
-        <View style={styles.passwordContainer}>
           <TextInput
-            style={[styles.input, styles.passwordInput]}
-            placeholder="Contraseña"
+            style={styles.input}
+            placeholder="Cédula"
             placeholderTextColor="#999"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
+            value={ci}
+            onChangeText={setCi}
           />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#266C35" // $secondary-color-60
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="Contraseña"
+              placeholderTextColor="#999"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
             />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={22}
+                color="#266C35" // $secondary-color-60
+              />
+            </TouchableOpacity>
+          </View>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Iniciar sesión</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push("/forgot-password")}>
+            <Text className="text-blue-500 text-center mt-3">
+              ¿Olvidaste tu contraseña?
+            </Text>
           </TouchableOpacity>
         </View>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-          <Text className="text-blue-500 text-center mt-3">
-            ¿Olvidaste tu contraseña?
-          </Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   passwordInput: {
-    paddingRight: 40, // espacio para el ícono
+    paddingRight: 40,
   },
   eyeIcon: {
     position: "absolute",

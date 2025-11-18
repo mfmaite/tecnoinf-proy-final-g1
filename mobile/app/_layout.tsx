@@ -1,7 +1,7 @@
 // app/_layout.tsx
+import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Slot, useRouter } from "expo-router";
-import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { AuthProvider } from "../contexts/AuthContext";
 import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
 import { ActivityIndicator, View } from "react-native";
@@ -9,45 +9,44 @@ import { ActivityIndicator, View } from "react-native";
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <AppNavigator />
+      <SessionGate />
     </AuthProvider>
   );
 }
 
-function AppNavigator() {
-  const { token } = useAuth();
-
+function SessionGate() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setLoggedIn] = useState(false);
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-
+  // ───────────────────────────────────────────────
+  // 🔐 Chequear token en secure storage
+  // ───────────────────────────────────────────────
   useEffect(() => {
-    const checkToken = async () => {
+    async function loadToken() {
       try {
-        // Buscamos el token guardado en el almacenamiento seguro
         const storedToken = await SecureStore.getItemAsync("token");
-
-        // Si existe, el usuario tiene sesión activa
-        setIsLoggedIn(!!storedToken);
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setIsLoggedIn(false);
+        setLoggedIn(!!storedToken);
+      } catch (err) {
+        console.error("Error reading token:", err);
+        setLoggedIn(false);
       } finally {
-        // Terminamos la carga
         setLoading(false);
       }
-    };
+    }
+    loadToken();
+  }, []);
 
-    checkToken();
-  }, [token]);
-
+  // ───────────────────────────────────────────────
+  // 🔗 Manejo de deep linking (reset-password)
+  // ───────────────────────────────────────────────
   useEffect(() => {
     const handleDeepLink = (event: Linking.EventType) => {
       const url = event.url;
       const { path, queryParams } = Linking.parse(url);
 
+      // Ejemplo URL: myapp://reset-password?token=abc123
       if (path === "reset-password" && queryParams?.token) {
         router.push(`/reset-password?token=${queryParams.token}`);
       }
@@ -55,24 +54,36 @@ function AppNavigator() {
 
     const subscription = Linking.addEventListener("url", handleDeepLink);
 
-    const checkInitialUrl = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        handleDeepLink({ url: initialUrl } as Linking.EventType);
-      }
-    };
-    checkInitialUrl();
+    // Para links que abren la app desde cero
+    (async () => {
+      const initial = await Linking.getInitialURL();
+      if (initial) handleDeepLink({ url: initial } as Linking.EventType);
+    })();
 
     return () => subscription.remove();
-  }, [router]);
+  }, []);
 
+  // ───────────────────────────────────────────────
+  // 🌀 Pantalla de carga inicial
+  // ───────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
-  return <Slot key={isLoggedIn ? "main" : "auth"} />;
+  // ───────────────────────────────────────────────
+  // 🏛️ Root navigation (IMPORTANTE)
+  // ───────────────────────────────────────────────
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      {isLoggedIn ? (
+        <Stack.Screen name="(main)" />
+      ) : (
+        <Stack.Screen name="(auth)" />
+      )}
+    </Stack>
+  );
 }

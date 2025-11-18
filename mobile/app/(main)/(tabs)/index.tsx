@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { getUserActivities, UserActivity } from "../../../services/userService";
 import { styles } from "../../../styles/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
@@ -91,45 +92,51 @@ export default function HomeScreen() {
   // 🔹 Render principal
   // ─────────────────────────────────────────────
   return (
-    <View style={styles.container}>
-      {/* Header con el logo */}
-      <View style={{ alignItems: "center", marginBottom: 20 }}>
-        <Image source={logo} style={{ width: 120, height: 120 }} resizeMode="contain" />
-        <Text style={styles.title}>Mentora</Text>
-        <Text style={[styles.title, { fontSize: 18 }]}>
-          ¡Bienvenido, {user?.name || user?.ci}!
-        </Text>
-      </View>
-
-      {/* Actividad reciente */}
-      <Text style={[styles.subtitle, { marginBottom: 10 }]}>
-        Actividad reciente
-      </Text>
-
-      {loading ? (
-        <ActivityIndicator size="large" />
-      ) : activities.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>No hay actividad reciente</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header con el logo */}
+        <View style={{ alignItems: "center", marginBottom: 20 }}>
+          <Image
+            source={logo}
+            style={{ width: 120, height: 120 }}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Mentora</Text>
+          <Text style={[styles.title, { fontSize: 18 }]}>
+            ¡Bienvenido, {user?.name || user?.ci}!
+          </Text>
         </View>
-      ) : (
-        <FlatList
-          data={[...activities].reverse().slice(0, 15)}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-        />
-      )}
 
-      {/* Logout */}
-      <TouchableOpacity
-        onPress={async () => {
-          await logout();
-          router.replace("/(auth)/login");
-        }}
-        style={[styles.buttonPrimary, { marginTop: 20 }]}
-      >
-        <Text style={styles.buttonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Actividad reciente */}
+        <Text style={[styles.subtitle, { marginBottom: 10 }]}>
+          Actividad reciente
+        </Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" />
+        ) : activities.length === 0 ? (
+          <View style={styles.center}>
+            <Text style={styles.emptyText}>No hay actividad reciente</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={[...activities].reverse().slice(0, 15)}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id.toString()}
+          />
+        )}
+
+        {/* Logout */}
+        <TouchableOpacity
+          onPress={async () => {
+            await logout();
+            router.replace("/(auth)/login");
+          }}
+          style={[styles.buttonPrimary, { marginTop: 20 }]}
+        >
+          <Text style={styles.buttonText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }

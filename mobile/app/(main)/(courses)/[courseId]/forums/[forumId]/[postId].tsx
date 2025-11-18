@@ -11,15 +11,17 @@ import {
   StyleSheet,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+
 import {
   getPostById,
   createResponse,
   deletePost,
   updatePost,
-} from "../../../../../services/posts";
-import { useAuth } from "../../../../../contexts/AuthContext";
-import { colors } from "../../../../../styles/colors";
-import { styles as globalStyles } from "../../../../../styles/styles";
+} from "../../../../../../services/posts";
+
+import { useAuth } from "../../../../../../contexts/AuthContext";
+import { colors } from "../../../../../../styles/colors";
+import { styles as globalStyles } from "../../../../../../styles/styles";
 
 interface Post {
   id: number;
@@ -32,12 +34,15 @@ interface Post {
 
 export default function PostDetail() {
   const { postId } = useLocalSearchParams<{ postId?: string }>();
+  const safePostId = String(postId ?? "");
+
   const { user } = useAuth();
 
   const [post, setPost] = useState<Post | null>(null);
   const [responses, setResponses] = useState<Post[]>([]);
   const [forumType, setForumType] = useState<string>("");
   const [loading, setLoading] = useState(true);
+
   const [replyText, setReplyText] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedText, setEditedText] = useState("");
@@ -49,10 +54,11 @@ export default function PostDetail() {
     🔁 Cargar post y respuestas
   ───────────────────────────────*/
   const loadPost = useCallback(async () => {
-    if (!postId) return;
+    if (!safePostId) return;
+
     setLoading(true);
     try {
-      const result = await getPostById(postId);
+      const result = await getPostById(safePostId);
       setPost(result.post);
       setResponses(result.responses || []);
       if (result.forum?.type) setForumType(result.forum.type);
@@ -62,7 +68,7 @@ export default function PostDetail() {
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, [safePostId]);
 
   useEffect(() => {
     loadPost();
@@ -72,34 +78,36 @@ export default function PostDetail() {
     🗨️ Crear respuesta
   ───────────────────────────────*/
   async function handleReply() {
-    if (!replyText.trim()) return Alert.alert("Escribí una respuesta.");
+    if (!replyText.trim())
+      return Alert.alert("Escribí una respuesta.");
 
     try {
-      await createResponse(String(postId), replyText);
+      await createResponse(safePostId, replyText);
       setReplyText("");
       await loadPost();
     } catch (err: any) {
       console.error("[handleReply] Error:", err);
-      const rawMessage = err.message || "";
-      let message = "No se pudo enviar la respuesta.";
+      const raw = err.message || "";
+      let msg = "No se pudo enviar la respuesta.";
 
-      if (rawMessage.includes("anuncios")) {
-        message = "No se pueden responder publicaciones del foro de anuncios.";
-      } else if (rawMessage.includes("403")) {
-        message = "No tenés permisos para responder en este foro.";
-      } else if (rawMessage.includes("401")) {
-        message = "Sesión expirada. Iniciá sesión nuevamente.";
-      }
+      if (raw.includes("anuncios"))
+        msg = "No se pueden responder publicaciones del foro de anuncios.";
+      else if (raw.includes("403"))
+        msg = "No tenés permisos para responder.";
+      else if (raw.includes("401"))
+        msg = "Sesión expirada. Iniciá sesión nuevamente.";
 
-      Alert.alert("Aviso", message);
+      Alert.alert("Aviso", msg);
     }
   }
 
   /*───────────────────────────────
-    ✏️ Editar post o respuesta
+    ✏️ Editar
   ───────────────────────────────*/
   async function handleEdit(id: number, message: string) {
-    if (!message.trim()) return Alert.alert("Mensaje vacío.");
+    if (!message.trim())
+      return Alert.alert("Mensaje vacío.");
+
     try {
       await updatePost(String(id), message);
       setEditingId(null);
@@ -112,7 +120,7 @@ export default function PostDetail() {
   }
 
   /*───────────────────────────────
-    🗑️ Eliminar post o respuesta
+    🗑️ Eliminar
   ───────────────────────────────*/
   async function handleDelete(id: number) {
     Alert.alert("Confirmar", "¿Seguro que querés eliminar este mensaje?", [
@@ -136,8 +144,9 @@ export default function PostDetail() {
             const msg =
               err.message?.includes("foreign key constraint") ||
               err.message?.includes("Cannot delete or update a parent row")
-                ? "No se puede eliminar este post porque tiene respuestas asociadas."
-                : err.message || "No se pudo eliminar el mensaje.";
+                ? "No se puede eliminar porque tiene respuestas asociadas."
+                : err.message || "No se pudo eliminar.";
+
             Alert.alert("Aviso", msg);
           }
         },
@@ -146,7 +155,7 @@ export default function PostDetail() {
   }
 
   /*───────────────────────────────
-    ⏳ Estado de carga
+    ⏳ Loading
   ───────────────────────────────*/
   if (loading)
     return (
@@ -158,7 +167,9 @@ export default function PostDetail() {
     );
 
   if (!post)
-    return <Text style={globalStyles.error}>No se encontró el post.</Text>;
+    return (
+      <Text style={globalStyles.error}>No se encontró el post.</Text>
+    );
 
   /*───────────────────────────────
     🎨 Render principal
@@ -182,8 +193,8 @@ export default function PostDetail() {
             <TextInput
               value={editedText}
               onChangeText={setEditedText}
-              style={localStyles.inputEdit}
               multiline
+              style={localStyles.inputEdit}
             />
             <View style={globalStyles.actionsRow}>
               <TouchableOpacity
@@ -206,6 +217,7 @@ export default function PostDetail() {
             <Text style={localStyles.replyDate}>
               {new Date(post.createdDate).toLocaleString("es-ES")}
             </Text>
+
             {(String(post.authorCi) === userCi || isProfessor) && (
               <View style={[globalStyles.actionsRow, { marginTop: 10 }]}>
                 <TouchableOpacity
@@ -217,6 +229,7 @@ export default function PostDetail() {
                 >
                   <Text style={globalStyles.buttonText}>Editar</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={() => handleDelete(post.id)}
                   style={globalStyles.buttonPrimary}
@@ -229,7 +242,7 @@ export default function PostDetail() {
         )}
       </View>
 
-      {/* ✏️ Campo para responder — solo si no es foro de anuncios */}
+      {/* ✏️ Responder → solo si no es foro de anuncios */}
       {forumType !== "ANNOUNCEMENTS" && (
         <View style={localStyles.replyBox}>
           <TextInput
@@ -248,11 +261,13 @@ export default function PostDetail() {
         </View>
       )}
 
-      {/* 💬 Lista de respuestas */}
+      {/* 💬 Respuestas */}
       <Text style={[globalStyles.title, { marginTop: 16 }]}>Respuestas</Text>
+
       {responses.length ? (
         responses.map((r) => {
           const isAuthor = String(r.authorCi) === userCi;
+
           return (
             <View
               key={r.id}
@@ -273,8 +288,8 @@ export default function PostDetail() {
                   <TextInput
                     value={editedText}
                     onChangeText={setEditedText}
-                    style={localStyles.inputEdit}
                     multiline
+                    style={localStyles.inputEdit}
                   />
                   <View style={globalStyles.actionsRow}>
                     <TouchableOpacity
@@ -283,6 +298,7 @@ export default function PostDetail() {
                     >
                       <Text style={globalStyles.buttonText}>Cancelar</Text>
                     </TouchableOpacity>
+
                     <TouchableOpacity
                       onPress={() => handleEdit(r.id, editedText)}
                       style={globalStyles.buttonPrimary}
@@ -297,8 +313,11 @@ export default function PostDetail() {
                   <Text style={localStyles.replyDate}>
                     {new Date(r.createdDate).toLocaleString("es-ES")}
                   </Text>
+
                   {(isAuthor || isProfessor) && (
-                    <View style={[globalStyles.actionsRow, { marginTop: 8 }]}>
+                    <View
+                      style={[globalStyles.actionsRow, { marginTop: 8 }]}
+                    >
                       <TouchableOpacity
                         onPress={() => {
                           setEditingId(r.id);
@@ -311,6 +330,7 @@ export default function PostDetail() {
                       >
                         <Text style={globalStyles.buttonText}>Editar</Text>
                       </TouchableOpacity>
+
                       <TouchableOpacity
                         onPress={() => handleDelete(r.id)}
                         style={globalStyles.buttonPrimary}
@@ -335,20 +355,33 @@ export default function PostDetail() {
   🎨 Estilos
 ────────────────────────────────*/
 const localStyles = StyleSheet.create({
-  mainPost: { borderLeftWidth: 4, borderLeftColor: colors.primary[70] },
+  mainPost: {
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary[70],
+  },
   replyCard: {
     marginVertical: 6,
     borderLeftWidth: 3,
     borderLeftColor: colors.primary[40],
   },
-  replyHeader: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  replyAuthor: { fontWeight: "bold", color: colors.primary[70] },
+  replyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  replyAuthor: {
+    fontWeight: "bold",
+    color: colors.primary[70],
+  },
   replyDate: {
     fontSize: 12,
     color: colors.textNeutral[40],
     textAlign: "right",
   },
-  replyBox: { marginTop: 20, marginBottom: 10 },
+  replyBox: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
   inputReply: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -365,6 +398,16 @@ const localStyles = StyleSheet.create({
     backgroundColor: "#fff",
     marginBottom: 6,
   },
-  avatarLarge: { width: 36, height: 36, borderRadius: 18, marginRight: 8 },
-  avatarSmall: { width: 28, height: 28, borderRadius: 14, marginRight: 8 },
+  avatarLarge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 8,
+  },
+  avatarSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+  },
 });

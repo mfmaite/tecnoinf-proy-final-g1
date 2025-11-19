@@ -85,6 +85,10 @@ public class CourseService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
         }
 
+        if (Objects.equals(req.getId(), "")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
+        }
+
         Course c = new Course(
                 req.getId(),
                 req.getName(),

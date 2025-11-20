@@ -30,6 +30,12 @@ public class Course {
     @JsonManagedReference(value = "course-quizzes")
     private List<Quiz> quizzes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Evaluation> evaluations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserCourse> userCourses = new ArrayList<>();
+
     // Constructores
     public Course() {}
 
@@ -86,6 +92,31 @@ public class Course {
     public void removeQuiz(Quiz quiz) {
         quizzes.remove(quiz);
         quiz.setCourse(null);
+    }
+
+    public List<Evaluation> getEvaluations() { return evaluations; }
+    public void setEvaluations(List<Evaluation> evaluations) { this.evaluations = evaluations; }
+
+    public void addEvaluation(Evaluation evaluation) {
+        evaluations.add(evaluation);
+    }
+
+    public void removeEvaluation(Evaluation evaluation) {
+        evaluations.remove(evaluation);
+        evaluation.setCourse(null);
+    }
+
+    public List<UserCourse> getUserCourses() { return userCourses; }
+    public void setUserCourses(List<UserCourse> userCourses) { this.userCourses = userCourses; }
+
+    public void addUserCourse(UserCourse uc) {
+        userCourses.add(uc);
+        uc.setCourse(this);
+    }
+
+    public void removeUserCourse(UserCourse uc) {
+        userCourses.remove(uc);
+        uc.setCourse(null);
     }
 
 }

@@ -18,6 +18,16 @@ export type ForumPost = {
   createdDate: string;
 }
 
+export type ForumPostResponse = {
+  id: number;
+  message: string;
+  createdDate: string;
+  authorCi: string;
+  authorName: string;
+  postId: number;
+  authorPictureUrl?: string | null;
+}
+
 export type ForumPageData = {
   forum: Forum;
   posts: ForumPost[];
@@ -26,4 +36,5 @@ export type ForumPageData = {
 export type ForumPostPageData = {
   forum: Forum;
   post: ForumPost;
+  responses: ForumPostResponse[];
 }

@@ -3,46 +3,59 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
 import { forumController } from '@/controllers/forumController';
 import type { ForumPostPageData } from '@/types/forum';
-import { formatDate } from '@/helpers/utils';
-import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
-import { Button } from '@/components/button/button';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
+import { PostComposer } from '../../components/post-composer';
+import { PostItem } from '../../components/post-item';
 
 type Params = { params: { courseId: string; forumId: string; postId: string } }
 
 export default function ForumPostPage({ params }: Params) {
-  const { accessToken, isLoading, isAuthenticated, user } = useAuth();
-  const router = useRouter();
+  const { accessToken, user } = useAuth();
   const [data, setData] = useState<ForumPostPageData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replySubmitting, setReplySubmitting] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [isAuthor, setIsAuthor] = useState(false);
+  const [isConsultsForum, setIsConsultsForum] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+  const getPost = async() => {
+    if (!accessToken) return;
+    const resp = await forumController.getPostById(params.postId, accessToken);
+
+    if (!resp.success || !resp.data) {
+      setError(resp.message ?? 'Error desconocido');
+    } else {
+      setData(resp.data);
+      setIsAuthor(resp.data.post.authorCi === user?.ci);
+      setIsConsultsForum(resp.data.forum.type === 'CONSULTS');
     }
-  }, [isLoading, isAuthenticated, router]);
+  };
+
+  const onReply = async () => {
+    if (!accessToken) return;
+    setReplyError(null);
+    setReplySubmitting(true);
+    const resp = await forumController.createPostResponse(params.postId, replyMessage, accessToken);
+    if (!resp.success) {
+      setReplyError(resp.message ?? 'No se pudo responder el post');
+    } else {
+      const refreshed = await forumController.getPostById(params.postId, accessToken);
+      if (refreshed.success && refreshed.data) {
+        setData(refreshed.data);
+      }
+      setReplyOpen(false);
+    }
+    setReplySubmitting(false);
+    getPost();
+  }
 
   useEffect(() => {
-    let active = true;
-    const load = async () => {
-      if (!accessToken) return;
-      const resp = await forumController.getPostById(params.postId, accessToken);
-      if (!active) return;
-      if (!resp.success || !resp.data) {
-        setError(resp.message ?? 'Error desconocido');
-      } else {
-        setData(resp.data);
-      }
-    };
-    load();
-    return () => { active = false };
-  }, [accessToken, params.postId]);
-
-  const isConsultsForum = useMemo(() => data?.forum.type === 'CONSULTS', [data]);
-  const isAuthor = useMemo(() => !!(user && data && user.ci === data.post.authorCi), [user, data]);
+    getPost();
+  }, [accessToken]);
 
   if (error) {
     return (
@@ -61,9 +74,7 @@ export default function ForumPostPage({ params }: Params) {
     );
   }
 
-  const { forum, post } = data;
-  const isLong = post.message.length > 400;
-  const preview = isLong ? `${post.message.slice(0, 400)}…` : post.message;
+  const { forum, post, responses } = data as NonNullable<typeof data>;
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -77,37 +88,47 @@ export default function ForumPostPage({ params }: Params) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
-        <div className="flex items-start gap-4">
-          <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl ?? undefined} size="lg" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <div className="truncate">
-                <div className="text-sm font-semibold text-gray-800 truncate">{post.authorName}</div>
-                <div className="text-xs text-gray-500">{formatDate(post.createdDate)}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isConsultsForum && (
-                  <Button size="sm" variant="outline" color="secondary" onClick={() => { /* responder: futuro */ }}>
-                    Responder
-                  </Button>
-                )}
-                {isAuthor && (
-                  <>
-                    <Button size="sm" variant="outline" color="secondary" onClick={() => { /* editar: futuro */ }}>
-                      Editar
-                    </Button>
-                    <Button size="sm" variant="outline" color="secondary" onClick={() => { /* eliminar: futuro */ }}>
-                      Eliminar
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="mt-4 whitespace-pre-wrap text-text-neutral-50">{post.message}</div>
-          </div>
+      <PostItem
+        authorName={post.authorName}
+        authorPictureUrl={post.authorPictureUrl}
+        createdDate={post.createdDate}
+        message={post.message}
+        onReply={isConsultsForum ? () => setReplyOpen(true) : undefined}
+        onEdit={isAuthor ? () => { /* editar: futuro */ } : undefined}
+        onDelete={isAuthor ? () => { /* eliminar: futuro */ } : undefined}
+      />
+
+      {replyOpen && (
+        <PostComposer
+          message={replyMessage}
+          setMessage={setReplyMessage}
+          onSubmit={() => onReply()}
+          onCancel={() => {
+            setReplyOpen(false);
+            setReplyError(null);
+          }}
+          submitting={replySubmitting}
+          error={replyError}
+          placeholder="Escribe tu respuesta..."
+          submitLabel="Responder"
+        />
+      )}
+
+      {responses?.length && (
+        <div className="space-y-4 pl-10">
+          {responses.map((r) => (
+            <PostItem
+              key={r.id}
+              authorName={r.authorName}
+              authorPictureUrl={r.authorPictureUrl ?? null}
+              createdDate={r.createdDate}
+              message={r.message}
+              onEdit={r.authorCi === user?.ci ? () => { /* editar: futuro */ } : undefined}
+              onDelete={r.authorCi === user?.ci ? () => { /* eliminar: futuro */ } : undefined}
+            />
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

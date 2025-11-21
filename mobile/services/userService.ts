@@ -7,9 +7,16 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export interface UserActivity {
+  id: number;
+  type: string;
+  description: string;
+  link: string;
+  createdDate: string;
+}
+
 /**
- * 🔐 Cambia la contraseña del usuario autenticado.
- * El token JWT se agrega automáticamente por el interceptor.
+ * Cambiar contraseña (TU CÓDIGO ORIGINAL)
  */
 export const changePassword = async (
   oldPassword: string,
@@ -33,28 +40,24 @@ export const changePassword = async (
   }
 };
 
-export async function updateUserProfile(data: {
-  name: string;
-  email: string;
-  description: string;
-  picture?: any | null;
-}) {
-  const formData = new FormData();
-  formData.append("name", data.name);
-  formData.append("email", data.email);
-  formData.append("description", data.description || "");
+/**
+ * 🔹 NUEVO: Obtener actividades recientes del usuario
+ */
+export const getUserActivities = async (userCi: string): Promise<UserActivity[]> => {
+  try {
+    const { data } = await api.get<ApiResponse<UserActivity[]>>(
+      `/users/${userCi}/activities`
+    );
 
-  if (data.picture && data.picture !== null) {
-    formData.append("picture", data.picture);
+    if (!data.success) {
+      throw new Error(data.message || "Error al obtener actividades.");
+    }
+
+    return data.data;
+  } catch (error: any) {
+    console.error("[getUserActivities] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "No se pudieron obtener las actividades."
+    );
   }
-
-  const response = await api.put<ApiResponse<any>>("/users", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-
-  if (!response.data.success) {
-    throw new Error(response.data.message || "Error al actualizar usuario.");
-  }
-
-  return response.data.data;
-}
+};

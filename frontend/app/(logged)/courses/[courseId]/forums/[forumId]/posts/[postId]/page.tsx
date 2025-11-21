@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { forumController } from '@/controllers/forumController';
 import type { ForumPostPageData } from '@/types/forum';
-import { Button } from '@/components/button/button';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { PostComposer } from '../../components/post-composer';
 import { PostItem } from '../../components/post-item';

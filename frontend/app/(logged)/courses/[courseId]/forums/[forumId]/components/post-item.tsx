@@ -1,27 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
+
 import UserProfilePicture from '@/components/user-profile-picture/user-profile-picture';
 import { formatDate } from '@/helpers/utils';
 import { Button } from '@/components/button/button';
+import Modal from '@/components/modal/modal';
 
 type Props = {
   authorName: string;
   authorPictureUrl?: string | null;
   createdDate: string;
-  message: string;
+  initialMessage: string;
   onReply?: () => void;
-  onEdit?: () => void;
+  onEdit?: (newMessage: string) => void;
   onDelete?: () => void;
+  setMessage?: (message: string) => void;
 };
 
 export function PostItem({
   authorName,
   authorPictureUrl,
   createdDate,
-  message,
+  initialMessage,
   onReply,
   onEdit,
   onDelete,
 }: Props) {
+  const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [message, setMessage] = useState<string>(initialMessage);
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
       <div className="flex items-start gap-4">
@@ -39,20 +46,62 @@ export function PostItem({
                 </Button>
               )}
               {onEdit && (
-                <Button size="sm" variant="outline" color="secondary" onClick={onEdit}>
+                <Button size="sm" variant="outline" color="secondary" onClick={() => setEditing(true)}>
                   Editar
                 </Button>
               )}
               {onDelete && (
-                <Button size="sm" variant="outline" color="secondary" onClick={onDelete}>
+                <Button size="sm" variant="outline" color="secondary" onClick={() => setDeleting(true)}>
                   Eliminar
                 </Button>
               )}
             </div>
           </div>
-          <div className="mt-4 whitespace-pre-wrap text-text-neutral-50">{message}</div>
+          {editing ? (
+            <>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage?.(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-3 mt-3 text-sm text-text-neutral-50"
+                rows={4}
+              />
+
+              <div className="flex items-center gap-2 justify-end">
+                <Button size="sm" variant="outline" color="secondary" onClick={() => setEditing(false)}>
+                  Cancelar
+                </Button>
+
+                <Button
+                  size="sm"
+                  color="primary"
+                  onClick={() => {
+                    onEdit?.(message);
+                    setEditing(false);
+                  }}
+                >
+                  Guardar
+                </Button>
+              </div>
+            </>
+          )
+          : <div className="mt-4 whitespace-pre-wrap text-text-neutral-50">{message}</div>}
         </div>
       </div>
+
+      <Modal
+        isOpen={deleting}
+        onClose={() => setDeleting(false)}
+        footer={(
+          <Button color="primary" onClick={() => onDelete?.()}>
+            Eliminar
+          </Button>
+        )}
+      >
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-secondary-color-70">¿Estás seguro de querer eliminar este post?</h2>
+          <p className="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+        </div>
+      </Modal>
     </div>
   );
 }

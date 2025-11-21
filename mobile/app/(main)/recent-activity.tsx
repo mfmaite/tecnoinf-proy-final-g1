@@ -23,23 +23,30 @@ export default function RecentActivityScreen() {
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Convierte un link del backend en { courseId, forumId }
+   * Ej: "/courses/AAH2025/forums/4"
+   */
   function parseBackendLink(link: string) {
     const parts = link.split("/").filter(Boolean);
+
+    // parts = ["courses", "AAH2025", "forums", "4"]
     if (parts[0] !== "courses" || parts[2] !== "forums") return null;
 
     return {
-      pathname: "/(main)/(courses)/[courseId]/forums/[forumId]",
-      params: {
-        courseId: parts[1],
-        forumId: parts[3],
-      },
+      courseId: parts[1],
+      forumId: parts[3],
     };
   }
 
+  // ─────────────────────────────────────────────
+  // 🔹 Cargar actividades recientes
+  // ─────────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
       try {
         if (!user?.ci) return;
+
         const data = await getUserActivities(user.ci);
         setActivities(data);
       } catch (e) {
@@ -48,15 +55,27 @@ export default function RecentActivityScreen() {
         setLoading(false);
       }
     };
+
     load();
   }, [user]);
 
+  // ─────────────────────────────────────────────
+  // 🔹 Render de cada item de actividad
+  // ─────────────────────────────────────────────
   const renderItem = ({ item }: { item: UserActivity }) => {
     const route = parseBackendLink(item.link);
+
     return (
       <TouchableOpacity
         disabled={!route}
-        onPress={() => route && router.push(route)}
+        onPress={() => {
+          if (!route) return;
+
+          // Navegación usando string (más segura con TS)
+          router.push(
+            `/courses/${route.courseId}/forums/${route.forumId}`
+          );
+        }}
       >
         <View style={styles.activityCardItem}>
           <Text style={styles.activityDescription}>{item.description}</Text>
@@ -68,6 +87,9 @@ export default function RecentActivityScreen() {
     );
   };
 
+  // ─────────────────────────────────────────────
+  // 🔹 Render principal
+  // ─────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>

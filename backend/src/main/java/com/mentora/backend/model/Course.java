@@ -1,5 +1,6 @@
 package com.mentora.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,9 +20,15 @@ public class Course {
     @Column(name = "createdDate")
     private LocalDateTime createdDate = LocalDateTime.now();
 
-    // Lista de foros
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Forum> forums = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SimpleContent> simpleContents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "course-quizzes")
+    private List<Quiz> quizzes = new ArrayList<>();
 
     // Constructores
     public Course() {}
@@ -54,4 +61,31 @@ public class Course {
         forums.remove(forum);
         forum.setCourse(null);
     }
+
+    public List<SimpleContent> getSimpleContents() { return simpleContents; }
+    public void setSimpleContents(List<SimpleContent> simpleContents) { this.simpleContents = simpleContents; }
+
+    public void addSimpleContent(SimpleContent sc) {
+        simpleContents.add(sc);
+        sc.setCourse(this);
+    }
+
+    public void removeSimpleContent(SimpleContent sc) {
+        simpleContents.remove(sc);
+        sc.setCourse(null);
+    }
+
+    public List<Quiz> getQuizzes() { return quizzes; }
+    public void setQuizzes(List<Quiz> quizzes) { this.quizzes = quizzes; }
+
+    public void addQuiz(Quiz quiz) {
+        quizzes.add(quiz);
+        quiz.setCourse(this);
+    }
+
+    public void removeQuiz(Quiz quiz) {
+        quizzes.remove(quiz);
+        quiz.setCourse(null);
+    }
+
 }

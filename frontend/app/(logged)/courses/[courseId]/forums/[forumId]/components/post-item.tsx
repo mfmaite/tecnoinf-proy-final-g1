@@ -33,7 +33,6 @@ export function PostItem({
     <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
       <div className="flex items-start gap-4">
         <UserProfilePicture name={authorName} pictureUrl={authorPictureUrl ?? undefined} size="lg" />
-
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div className="truncate">

@@ -1,6 +1,6 @@
 import { API_ENDPOINTS } from '@/config/api';
 import { ApiResponse } from '@/types/api-response';
-import { ForumPageData, ForumPostPageData } from '@/types/forum';
+import { ForumPageData, ForumPost, ForumPostPageData } from '@/types/forum';
 
 class ForumController {
   async getForumById(forumId: string, accessToken: string): Promise<ApiResponse<ForumPageData>> {
@@ -36,6 +36,122 @@ class ForumController {
     } catch (error) {
       console.error('Error al obtener el post:', error);
       return { success: false, status: (error as any).status ?? 500, message: 'Error al obtener post', data: undefined };
+    }
+  }
+
+  async createPost(forumId: string, message: string, accessToken: string): Promise<ApiResponse<ForumPost>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.FORUM}/${forumId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al crear el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al crear post', data: undefined };
+    }
+  }
+
+  async createPostResponse(postId: string, message: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}/response`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al responder el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al responder el post', data: undefined };
+    }
+  }
+
+  async updatePost(postId: string, message: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al actualizar el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al actualizar el post', data: undefined };
+    }
+  }
+
+  async deletePost(postId: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al eliminar el post:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al eliminar el post', data: undefined };
+    }
+  }
+
+  async updatePostResponse(postId: string, responseId: number, message: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}/response/${responseId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al actualizar la respuesta:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al actualizar la respuesta', data: undefined };
+    }
+  }
+
+  async deletePostResponse(postId: string, responseId: number, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.POSTS}/${postId}/response/${responseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const json = await response.json();
+      const { success, status, message: msg, data } = json;
+      return { success, status, message: msg, data };
+    } catch (error) {
+      console.error('Error al eliminar la respuesta:', error);
+      return { success: false, status: (error as any).status ?? 500, message: 'Error al eliminar la respuesta', data: undefined };
     }
   }
 }

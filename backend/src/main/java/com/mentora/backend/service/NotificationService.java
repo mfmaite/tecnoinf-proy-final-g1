@@ -51,7 +51,7 @@ public class NotificationService {
         User user = userRepository.findById(userCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        return notificationRepository.findByUserOrderByIdDesc(user).stream()
+        return notificationRepository.findByUserOrderByCreatedDateDesc(user).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }

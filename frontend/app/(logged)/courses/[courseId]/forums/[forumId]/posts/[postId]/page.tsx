@@ -117,14 +117,13 @@ export default function ForumPostPage({ params }: Params) {
     return () => { active = false };
   }, [accessToken, params.postId]);
 
-  if (errorMessage) {
-    return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-2">No se pudo cargar el post</h1>
-        <p className="text-sm text-red-600">{errorMessage}</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (accessToken) {
+      getPost();
+    }
+  }, [accessToken, params.postId]);
+
+  const { forum, post, responses } = data ?? {};
 
   if (!data) {
     return (
@@ -134,7 +133,14 @@ export default function ForumPostPage({ params }: Params) {
     );
   }
 
-  const { forum, post, responses } = data as NonNullable<typeof data>;
+  if (errorMessage) {
+    return (
+      <div className="p-6">
+        <h1 className="text-xl font-semibold mb-2">No se pudo cargar el post</h1>
+        <p className="text-sm text-red-600">{errorMessage}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -143,7 +149,7 @@ export default function ForumPostPage({ params }: Params) {
           <ChevronDown className="w-6 h-6 rotate-90" />
         </Link>
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-secondary-color-70">{forum.type === 'ANNOUNCEMENTS' ? 'Anuncio' : 'Consulta'}</h1>
+          <h1 className="text-2xl font-bold text-secondary-color-70">{forum?.type === 'ANNOUNCEMENTS' ? 'Anuncio' : 'Consulta'}</h1>
           <p className="text-sm text-gray-500">Curso: {params.courseId}</p>
         </div>
       </div>
@@ -156,10 +162,10 @@ export default function ForumPostPage({ params }: Params) {
       )}
 
       <PostItem
-        authorName={post.authorName}
-        authorPictureUrl={post.authorPictureUrl}
-        createdDate={post.createdDate}
-        initialMessage={post.message}
+        authorName={post?.authorName ?? ''}
+        authorPictureUrl={post?.authorPictureUrl ?? null}
+        createdDate={post?.createdDate ?? ''}
+        initialMessage={post?.message ?? ''}
         onReply={isConsultsForum ? () => setReplyOpen(true) : undefined}
         onDelete={isAuthor ? onDeletePost : undefined}
         onEdit={isAuthor ? (newMessage: string) => onEditPost(newMessage) : undefined}

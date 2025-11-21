@@ -102,10 +102,29 @@ export default function ForumPostPage({ params }: Params) {
   }
 
   useEffect(() => {
-    if (accessToken) {
-      getPost();
-    }
+    let active = true;
+    const load = async () => {
+      if (!accessToken) return;
+      const resp = await forumController.getPostById(params.postId, accessToken);
+      if (!active) return;
+      if (!resp.success || !resp.data) {
+        setErrorMessage(resp.message ?? 'Error desconocido');
+      } else {
+        setData(resp.data);
+      }
+    };
+    load();
+    return () => { active = false };
   }, [accessToken, params.postId]);
+
+  if (errorMessage) {
+    return (
+      <div className="p-6">
+        <h1 className="text-xl font-semibold mb-2">No se pudo cargar el post</h1>
+        <p className="text-sm text-red-600">{errorMessage}</p>
+      </div>
+    );
+  }
 
   if (!data) {
     return (

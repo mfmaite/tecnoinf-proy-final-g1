@@ -20,15 +20,18 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostResponseRepository postResponseRepository;
+    private final NotificationService notificationService;
 
     public PostService(
             PostRepository postRepository,
             UserRepository userRepository,
-            PostResponseRepository postResponseRepository
+            PostResponseRepository postResponseRepository,
+            NotificationService notificationService
     ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.postResponseRepository = postResponseRepository;
+        this.notificationService = notificationService;
     }
 
     private DtPost getDtPost(Post post) {
@@ -76,6 +79,14 @@ public class PostService {
 
         User author = userRepository.findById(authorCi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        notificationService.createNotification(
+            post.getAuthor().getCi(),
+            "Nueva respuesta en tu post en el foro de "
+                + (post.getForum().getType() == ForumType.ANNOUNCEMENTS ? "anuncios" : "consultas")
+                + " de " + post.getForum().getCourse().getName(),
+            "/courses/" + post.getForum().getCourse().getId() + "/forums/" + post.getForum().getId() + "/posts/" + post.getId()
+        );
 
         PostResponse response = new PostResponse(
             message,

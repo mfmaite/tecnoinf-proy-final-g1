@@ -40,6 +40,15 @@ export interface CourseResponse {
   contents: Content[];
 }
 
+export interface Participant {
+  ci: string;
+  name: string;
+  email?: string | null;
+  description?: string | null;
+  pictureUrl?: string | null;
+  role?: string | null;
+}
+
 // 🔹 Estructura genérica de respuesta del backend
 interface ApiResponse<T> {
   success: boolean;
@@ -58,6 +67,7 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
     );
 
     const { success, message, data } = response.data;
+
     if (!success) {
       throw new Error(message || "Error al obtener curso.");
     }
@@ -67,6 +77,7 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
     }
 
     const c = data.course;
+
     const course: CourseData = {
       id: String(c.id),
       name: c.name,
@@ -75,6 +86,7 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
     };
 
     const contents: Content[] = data.contents || [];
+
     return { course, contents };
   } catch (error: any) {
     console.error("[getCourseById] Error:", error.response?.data || error.message);
@@ -83,7 +95,6 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
         "No se pudo obtener la información del curso."
     );
   }
-
 }
 
 // ─────────────────────────────────────
@@ -100,11 +111,11 @@ export const getCourses = async (): Promise<CourseListItem[]> => {
     const response = await api.get<ApiResponse<CourseListItem[]>>("/courses");
 
     const { success, message, data } = response.data;
+
     if (!success) {
       throw new Error(message || "Error al obtener cursos.");
     }
 
-    // ✅ Aseguramos siempre un array, aunque venga vacío
     return Array.isArray(data) ? data : [];
   } catch (error: any) {
     console.error("[getCourses] Error:", error.response?.data || error.message);
@@ -113,3 +124,33 @@ export const getCourses = async (): Promise<CourseListItem[]> => {
     );
   }
 };
+
+// ─────────────────────────────────────
+// 👥 GET /courses/:courseId/participants
+// ─────────────────────────────────────
+export async function getCourseParticipants(
+  courseId: string
+): Promise<Participant[]> {
+  try {
+    const response = await api.get<ApiResponse<Participant[]>>(
+      `/courses/${encodeURIComponent(courseId)}/participants`
+    );
+
+    const { success, message, data } = response.data;
+
+    if (!success) {
+      throw new Error(message || "Error al obtener participantes.");
+    }
+
+    return Array.isArray(data) ? data : [];
+  } catch (error: any) {
+    console.error(
+      "[getCourseParticipants] Error:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      error.response?.data?.message ||
+        "No se pudo obtener la lista de participantes."
+    );
+  }
+}

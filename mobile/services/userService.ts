@@ -46,7 +46,7 @@ export const changePassword = async (
 export const getUserActivities = async (userCi: string): Promise<UserActivity[]> => {
   try {
     const { data } = await api.get<ApiResponse<UserActivity[]>>(
-      `/users/${userCi}/activities`
+      `/users/activities`
     );
 
     if (!data.success) {

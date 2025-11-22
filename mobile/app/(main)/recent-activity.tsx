@@ -70,10 +70,8 @@ export default function RecentActivityScreen() {
         disabled={!route}
         onPress={() => {
           if (!route) return;
-
-          // Navegación usando string (más segura con TS)
           router.push(
-            `/courses/${route.courseId}/forums/${route.forumId}`
+            `/(courses)/${route.courseId}/forums/${route.forumId}`
           );
         }}
       >

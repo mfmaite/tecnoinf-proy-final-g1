@@ -81,4 +81,18 @@ public class FileStorageService {
 
         return signedUrl.toString();
     }
+
+    public void delete(String gcsPath) {
+        if (gcsPath == null || gcsPath.isBlank()) return;
+        if (!gcsPath.startsWith("gs://")) return;
+
+        String noPrefix = gcsPath.replace("gs://", "");
+        int slash = noPrefix.indexOf("/");
+        if (slash <= 0) return;
+
+        String bucket = noPrefix.substring(0, slash);
+        String objectPath = noPrefix.substring(slash + 1);
+
+        storage.delete(bucket, objectPath);
+    }
 }

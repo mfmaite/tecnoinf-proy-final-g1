@@ -12,7 +12,7 @@ interface ContentCardProps {
 }
 
 const ContentCard = ({ courseId, content }: ContentCardProps) => {
-  const isEvaluation = content.type === 'evaluation';
+  const isEvaluation = content.type === 'evaluation' || content.type === 'quiz';
   const dueDate = isEvaluation ? (content as any).dueDate as string | null : null;
   const isOverdue = isEvaluation && dueDate ? new Date(dueDate) < new Date() : false;
 

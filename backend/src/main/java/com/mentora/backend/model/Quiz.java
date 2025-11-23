@@ -20,7 +20,7 @@ public class Quiz {
     private LocalDateTime createdDate = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime expirationDate;
+    private LocalDateTime dueDate;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "course_id", referencedColumnName = "id")
@@ -31,9 +31,9 @@ public class Quiz {
 
     public Quiz() {}
 
-    public Quiz(String title, LocalDateTime expirationDate, Course course, List<QuizQuestion> questions) {
+    public Quiz(String title, LocalDateTime dueDate, Course course, List<QuizQuestion> questions) {
         this.title = title;
-        this.expirationDate = expirationDate;
+        this.dueDate = dueDate;
         this.course = course;
         this.questions = questions;
     }
@@ -41,7 +41,7 @@ public class Quiz {
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public LocalDateTime getCreatedDate() { return createdDate; }
-    public LocalDateTime getExpirationDate() { return expirationDate; }
+    public LocalDateTime getDueDate() { return dueDate; }
     public Course getCourse() { return course; }
     public List<QuizQuestion> getQuestions() { return questions; }
 
@@ -57,8 +57,8 @@ public class Quiz {
         this.createdDate = createdDate;
     }
 
-    public void setExpirationDate(LocalDateTime expirationDate) {
-        this.expirationDate = expirationDate;
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
     }
 
     public void setCourse(Course course) {

@@ -17,7 +17,7 @@ import { EvaluationSubmissionCard } from '../../../components/evaluation-submiss
 type Params = { params: { courseId: string; type: 'simpleContent' | 'evaluation' | 'quiz'; contentId: string } };
 
 export default function ContentDetailPage({ params }: Params) {
-  const { accessToken, isLoading, isAuthenticated, user } = useAuth();
+  const { accessToken, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
   const [content, setContent] = useState<CourseContent | null>(null);
@@ -30,6 +30,14 @@ export default function ContentDetailPage({ params }: Params) {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<
+    { id: number; question: string; answers: { id: number; text: string; correct: boolean }[] }[]
+  >([]);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | null>>({});
+
+  const selectQuizAnswer = (questionId: number, answerId: number) => {
+    setSelectedAnswers((prev) => ({ ...prev, [questionId]: answerId }));
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -50,8 +58,15 @@ export default function ContentDetailPage({ params }: Params) {
         );
         if (!active) return;
         if (resp.success && resp.data) {
-          setContent(resp.data.evaluation as CourseContent);
-          setSubmissions(resp.data.submissions as EvaluationSubmission[]);
+          if (params.type === 'evaluation') {
+            setContent(resp.data.evaluation as CourseContent);
+            setSubmissions(resp.data.submissions as EvaluationSubmission[]);
+          } else if (params.type === 'quiz') {
+            setContent(resp.data.quiz as CourseContent);
+            setQuizQuestions(resp.data.questions || []);
+          } else {
+            setContent(resp.data as CourseContent);
+          }
         } else {
           setError(resp.message ?? 'No se pudo cargar el contenido');
         }
@@ -125,10 +140,10 @@ export default function ContentDetailPage({ params }: Params) {
           </div>
         </div>
 
-        {content.type === 'evaluation' && content.dueDate ? (
+        {(content.type === 'evaluation' || content.type === 'quiz') && (content as any).dueDate ? (
           <div className="mt-4">
             <p className="text-sm text-gray-500">
-              Vence: {formatDate(content.dueDate)}
+              Vence: {formatDate((content as any).dueDate)}
             </p>
           </div>
         ) : null}
@@ -233,7 +248,42 @@ export default function ContentDetailPage({ params }: Params) {
         </div>
       ) : null}
 
-      <ContentDetail content={content} />
+      {content.type === 'simpleContent' ? (
+        <ContentDetail content={content} />
+      ) : null}
+
+      {content.type === 'quiz' ? (
+        <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-6 text-text-neutral-50">
+          {quizQuestions.length === 0 ? (
+            <p className="text-sm text-gray-500">Este quiz no tiene preguntas.</p>
+          ) : (
+            quizQuestions.map((q, idx) => (
+              <div key={q.id ?? idx} className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-secondary-color-10 text-secondary-color-70 text-xs font-semibold">
+                    {idx + 1}
+                  </span>
+                  <h2 className="text-lg font-semibold text-secondary-color-70">{q.question}</h2>
+                </div>
+                <div className="space-y-2 pl-8">
+                  {(q.answers ?? []).map((a) => (
+                    <div key={a.id} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`quiz-q-${q.id}`}
+                        className="h-4 w-4 text-secondary-color-70 border-gray-300"
+                        checked={selectedAnswers[q.id] === a.id}
+                        onChange={() => selectQuizAnswer(q.id, a.id)}
+                      />
+                      <span>{a.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

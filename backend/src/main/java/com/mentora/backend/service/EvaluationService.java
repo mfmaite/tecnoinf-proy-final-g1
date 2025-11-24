@@ -4,6 +4,7 @@ import com.mentora.backend.repository.EvaluationRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.dt.DtEvaluationSubmission;
+import com.mentora.backend.requests.UpdateEvaluationRequest;
 import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.ActivityType;
 import com.mentora.backend.model.Evaluation;
@@ -11,7 +12,6 @@ import com.mentora.backend.model.EvaluationSubmission;
 import com.mentora.backend.model.User;
 import com.mentora.backend.model.Role;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
 import com.mentora.backend.repository.UserRepository;
@@ -172,20 +172,19 @@ public class EvaluationService {
     return getDtEvaluationSubmission(saved);
   }
 
-    @Transactional
-    public DtEvaluation updateEvaluation(String courseId, DtEvaluation dto) {
-        Evaluation ev = evaluationRepository.findById(dto.getId())
+    public DtEvaluation updateEvaluation(Long evaluationId, UpdateEvaluationRequest req) throws IOException {
+        Evaluation ev = evaluationRepository.findById(evaluationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
 
-        if (!ev.getCourse().getId().equals(courseId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La evaluación no pertenece a este curso");
-        }
+        if (req.getTitle() != null) ev.setTitle(req.getTitle());
+        if (req.getContent() != null) ev.setContent(req.getContent());
+        if (req.getDueDate() != null) ev.setDueDate(req.getDueDate());
 
-        if (dto.getTitle() != null) ev.setTitle(dto.getTitle());
-        if (dto.getContent() != null) ev.setContent(dto.getContent());
-        if (dto.getFileName() != null) ev.setFileName(dto.getFileName());
-        if (dto.getFileUrl() != null) ev.setFileUrl(dto.getFileUrl());
-        if (dto.getDueDate() != null) ev.setDueDate(dto.getDueDate());
+        if (req.getFile() != null) {
+          DtFileResource file = fileStorageService.store(req.getFile());
+          ev.setFileName(file.getFilename());
+          ev.setFileUrl(file.getStoragePath());
+        }
 
         Evaluation saved = evaluationRepository.save(ev);
 

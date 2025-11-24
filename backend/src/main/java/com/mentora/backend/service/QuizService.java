@@ -10,11 +10,16 @@ import com.mentora.backend.model.QuizAnswer;
 import com.mentora.backend.repository.QuizRepository;
 import com.mentora.backend.requests.UpdateQuizRequest;
 import com.mentora.backend.dt.DtQuiz;
+import com.mentora.backend.responses.GetQuizResponse;
+import com.mentora.backend.responses.QuizQuestionResponse;
+import com.mentora.backend.responses.QuizAnswerResponse;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
@@ -23,6 +28,27 @@ public class QuizService {
 
   public QuizService(QuizRepository quizRepository) {
     this.quizRepository = quizRepository;
+  }
+
+  public GetQuizResponse getQuiz(Quiz quiz) {
+    DtQuiz dtQuiz = getDtQuiz(quiz);
+
+    List<QuizQuestionResponse> questions = quiz.getQuestions().stream().map(q -> {
+      List<QuizAnswerResponse> answers = q.getAnswers().stream()
+        .map(a -> new QuizAnswerResponse(
+          a.getId(),
+          a.getAnswerText(),
+          a.getCorrect()
+        ))
+        .collect(Collectors.toList());
+      return new QuizQuestionResponse(
+        q.getId(),
+        q.getQuestionText(),
+        answers
+      );
+    }).collect(Collectors.toList());
+
+    return new GetQuizResponse(dtQuiz, questions);
   }
 
   public DtQuiz editQuiz(Long quizId, UpdateQuizRequest req) {
@@ -34,7 +60,7 @@ public class QuizService {
     }
 
     if (req.getDueDate() != null) {
-      quiz.setExpirationDate(req.getDueDate());
+      quiz.setDueDate(req.getDueDate());
     }
 
     // Si hay preguntas que se quieren eliminar, se eliminan
@@ -139,8 +165,9 @@ public class QuizService {
       return new DtQuiz(
           quiz.getId(),
           quiz.getTitle(),
-          quiz.getExpirationDate(),
-          quiz.getCourse().getId()
+          quiz.getDueDate(),
+          quiz.getCourse().getId(),
+          quiz.getCreatedDate()
       );
   }
 

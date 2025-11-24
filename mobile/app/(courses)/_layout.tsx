@@ -1,6 +1,5 @@
-import { Stack } from "expo-router";
 import { styles } from "../../styles/styles";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { getCourseById } from "../../services/courses";
 import { getPostById } from "../../services/posts";

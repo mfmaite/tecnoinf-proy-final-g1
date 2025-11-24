@@ -65,7 +65,7 @@ export function useActivityNavigation() {
       const response = await api.get(`/chats/${chatId}`);
       return response.data?.data?.partnerCi ?? null;
     } catch (err) {
-      console.error("❌ Error obteniendo partnerCi del chat:", err);
+      console.error("Error obteniendo partnerCi del chat:", err);
       return null;
     }
   }
@@ -132,5 +132,5 @@ export function useActivityNavigation() {
   }
 }
 
-  return { navigateByActivityLink, parseBackendLink };
+  return { navigateByActivityLink };
 }

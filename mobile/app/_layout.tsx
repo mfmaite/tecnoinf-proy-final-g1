@@ -5,8 +5,10 @@ import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
 import { ActivityIndicator, View } from "react-native";
+import { useNotificationListeners } from "../notifications/notificationListeners";
 
 export default function RootLayout() {
+  useNotificationListeners();
   return (
     <AuthProvider>
       <AppNavigator />

@@ -512,8 +512,6 @@ public class CourseController {
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
     @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
     @PostMapping(value = "/{courseId}/contents/evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-
-
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<DtEvaluation>> createEvaluation(
         @PathVariable String courseId,

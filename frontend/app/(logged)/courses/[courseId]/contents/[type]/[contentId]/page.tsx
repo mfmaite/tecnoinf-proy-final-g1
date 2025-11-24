@@ -17,7 +17,7 @@ import { EvaluationSubmissionCard } from '../../../components/evaluation-submiss
 type Params = { params: { courseId: string; type: 'simpleContent' | 'evaluation' | 'quiz'; contentId: string } };
 
 export default function ContentDetailPage({ params }: Params) {
-  const { accessToken, isLoading, isAuthenticated } = useAuth();
+  const { accessToken, isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   const [content, setContent] = useState<CourseContent | null>(null);

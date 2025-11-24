@@ -107,7 +107,7 @@ export default function ContentDetailPage({ params }: Params) {
           </div>
 
           <div>
-            {content.type === 'evaluation' ? (
+            {content.type === 'evaluation' && user?.role === 'ESTUDIANTE' ? (
               (() => {
                 const due = (content as any).dueDate as string | null;
                 const isOverdue = due ? new Date(due) < new Date() : false;
@@ -135,7 +135,7 @@ export default function ContentDetailPage({ params }: Params) {
       </div>
 
       {content.type === 'evaluation' && submissions && submissions.length > 0 ? (
-        submissions.length === 1 ? (
+        user?.role === 'ESTUDIANTE' ? (
           <EvaluationSubmissionCard submission={submissions[0]} />
         ) : (
           <div className="p-4 border rounded-md">

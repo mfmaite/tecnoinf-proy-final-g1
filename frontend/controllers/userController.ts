@@ -2,6 +2,7 @@ import { API_ENDPOINTS } from '../config/api';
 import { ApiResponse } from '@/types/api-response';
 import { UserSignUpData, UserResponse } from '@/types/user';
 import { ChangePasswordRequest } from '@/types/user';
+import { UserActivity } from '@/types/activity';
 
 type UserFilter = "todos" | "profesores" | "estudiantes" | "administradores";
 
@@ -18,11 +19,11 @@ class UserController {
         body: JSON.stringify(userData),
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -30,8 +31,37 @@ class UserController {
       console.error('Error al crear el usuario:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al crear el usuario',
+        data: undefined,
+      };
+    }
+  }
+
+  async getProfile(
+    accessToken: string,
+    ci?: string
+  ): Promise<ApiResponse<UserResponse>> {
+    try {
+      const search = new URLSearchParams();
+      if (ci) search.set('ci', ci);
+      const qs = search.toString();
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}/profile${qs ? `?${qs}` : ''}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al obtener el perfil de usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al obtener el perfil de usuario',
         data: undefined,
       };
     }
@@ -49,11 +79,11 @@ class UserController {
         },
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -61,8 +91,44 @@ class UserController {
       console.error('Error al cargar usuarios:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cargar usuarios',
+        data: undefined,
+      };
+    }
+  }
+
+  async getUserActivities(
+    accessToken: string,
+    params?: { startDate?: string; endDate?: string }
+  ): Promise<ApiResponse<UserActivity[]>> {
+    try {
+      const search = new URLSearchParams();
+      if (params?.startDate) search.set('startDate', params.startDate);
+      if (params?.endDate) search.set('endDate', params.endDate);
+      const qs = search.toString();
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}/activities${qs ? `?${qs}` : ''}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const { success, status, message, data } = await response.json();
+
+      return {
+        success,
+        status,
+        data,
+        message,
+      };
+    } catch (error) {
+      console.error('Error al obtener actividades del usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al obtener actividades del usuario',
         data: undefined,
       };
     }
@@ -78,11 +144,11 @@ class UserController {
         },
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -98,11 +164,11 @@ class UserController {
         method: 'GET',
       });
 
-      const { success, code, message, data } = await response.json();
+      const { success, status, message, data } = await response.json();
 
       return {
         success,
-        code,
+        status,
         data,
         message,
       };
@@ -110,7 +176,7 @@ class UserController {
       console.error('Error al enviar el email de recuperación de contraseña:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+          status: (error as any).status ?? 500,
         message: 'Error al enviar el email de recuperación de contraseña',
         data: undefined,
       };
@@ -131,13 +197,13 @@ class UserController {
         body: JSON.stringify(payload),
       });
 
-      const { success, code, message } = await response.json();
-      return { success, code, message };
+      const { success, status, message } = await response.json();
+      return { success, status, message };
     } catch (error) {
       console.error('Error al cambiar la contraseña:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cambiar la contraseña',
         data: undefined,
       };

@@ -126,7 +126,7 @@ export default function CourseView({ params }: Params) {
       <div className="space-y-4">
         {contents?.length ? (
           contents.map((c) => (
-            <ContentCard key={c.id} content={c} />
+            <ContentCard key={c.id} courseId={params.courseId} content={c} />
           ))
         ) : (
           <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 text-gray-500">
@@ -153,14 +153,28 @@ export default function CourseView({ params }: Params) {
             <div className="font-semibold text-secondary-color-70">Contenido Simple</div>
             <div className="text-sm text-gray-500 mt-1">Texto en Markdown o archivo</div>
           </button>
-          <div className="rounded-lg border border-gray-200 p-4 text-left opacity-60">
-            <div className="font-semibold">Evaluación</div>
-            <div className="text-sm text-gray-500 mt-1">Próximamente</div>
-          </div>
-          <div className="rounded-lg border border-gray-200 p-4 text-left opacity-60">
-            <div className="font-semibold">Quiz</div>
-            <div className="text-sm text-gray-500 mt-1">Próximamente</div>
-          </div>
+
+          <button
+            onClick={() => {
+              setIsAddContentOpen(false);
+              router.push(`/courses/${params.courseId}/contents/evaluation`);
+            }}
+            className="rounded-lg border border-gray-200 hover:border-secondary-color-60 hover:shadow-sm p-4 text-left transition-colors"
+          >
+            <div className="font-semibold text-secondary-color-70">Evaluación</div>
+            <div className="text-sm text-gray-500 mt-1">Entrega con texto/archivo y fecha límite</div>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsAddContentOpen(false);
+              router.push(`/courses/${params.courseId}/contents/quiz`);
+            }}
+            className="rounded-lg border border-gray-200 hover:border-secondary-color-60 hover:shadow-sm p-4 text-left transition-colors"
+          >
+            <div className="font-semibold text-secondary-color-70">Quiz</div>
+            <div className="text-sm text-gray-500 mt-1">Preguntas y respuestas</div>
+          </button>
         </div>
       </Modal>
     </div>

@@ -9,9 +9,20 @@ import com.mentora.backend.model.UserCourse;
 import com.mentora.backend.repository.CourseRepository;
 import com.mentora.backend.repository.UserCourseRepository;
 import com.mentora.backend.repository.UserRepository;
+import com.mentora.backend.responses.BulkMatricularUsuariosResponse;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +74,60 @@ public class UserCourseService {
             return "Algunos usuarios no se pudieron matricular: " + String.join(", ", errorUsers);
         }
         return "Usuarios matriculados correctamente";
+    }
+
+    public BulkMatricularUsuariosResponse addUsersToCourseFromCsv(String courseId, InputStream csvInputStream) throws IOException, CsvException {
+        if (csvInputStream == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV requerido");
+        }
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        List<DtUser> matriculados = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvInputStream, StandardCharsets.UTF_8)).build()) {
+            List<String[]> rows = reader.readAll();
+            if (rows == null || rows.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+            }
+
+            int lineNumber = 0;
+            for (String[] row : rows) {
+                if (row == null) { continue; }
+                //ignora la primera linea si es el header
+                if (lineNumber == 1 && row.length > 0 && row[0] != null && row[0].trim().equalsIgnoreCase("ci")) {
+                    continue;
+                }
+
+                String ci = row.length > 0 && row[0] != null ? row[0].trim() : "";
+                if (ci.isEmpty()) {
+                    errors.add("Fila " + lineNumber + ": CI obligatorio");
+                    continue;
+                }
+
+                User user = userRepository.findById(ci).orElse(null);
+                if (user == null) {
+                    errors.add("Fila " + lineNumber + ": Usuario no encontrado");
+                    continue;
+                }
+
+                if (userCourseRepository.existsByCourseAndUser(course, user)) {
+                    errors.add("Fila " + lineNumber + ": Usuario ya matriculado");
+                    continue;
+                }
+
+                UserCourse userCourse = new UserCourse(course, user, null);
+                userCourseRepository.save(userCourse);
+                matriculados.add(userService.getUserDto(user));
+                lineNumber++;
+            }
+        } catch (CsvException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV inválido");
+        }
+
+        return new BulkMatricularUsuariosResponse(matriculados, errors);
     }
 
     public List<DtCourse> getCoursesForUser(String ci) {
@@ -119,4 +184,7 @@ public class UserCourseService {
             .map(userService::getUserDto)
             .collect(Collectors.toCollection(ArrayList::new));
     }
+
+
+
 }

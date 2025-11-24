@@ -1,28 +1,25 @@
 package com.mentora.backend.dt;
 
-import com.mentora.backend.model.User;
-
 public class DtChat {
 
     private Long id;
-    private String participant1Ci;
-    private String participant2Ci;
+    private DtUser participant1;
+    private DtUser participant2;
 
     public DtChat() {}
 
-    public DtChat(Long id, User participant1, User participant2) {
+    public DtChat(Long id, DtUser participant1, DtUser participant2) {
         this.id = id;
-        this.participant1Ci = participant1 != null ? participant1.getCi() : null;
-        this.participant2Ci = participant2 != null ? participant2.getCi() : null;
+        this.participant1 = participant1;
+        this.participant2 = participant2;
     }
 
-    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getParticipant1Ci() { return participant1Ci; }
-    public void setParticipant1Ci(String participant1Ci) { this.participant1Ci = participant1Ci; }
+    public DtUser getParticipant1() { return participant1; }
+    public void setParticipant1(DtUser participant1) { this.participant1 = participant1; }
 
-    public String getParticipant2Ci() { return participant2Ci; }
-    public void setParticipant2Ci(String participant2Ci) { this.participant2Ci = participant2Ci; }
+    public DtUser getParticipant2() { return participant2; }
+    public void setParticipant2(DtUser participant2) { this.participant2 = participant2; }
 }

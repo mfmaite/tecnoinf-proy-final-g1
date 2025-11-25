@@ -3,6 +3,25 @@ import { api } from "./api";
 // ─────────────────────────────────────
 // 🧩 Tipos base
 // ─────────────────────────────────────
+export type ContentType =
+  | "simpleContent"
+  | "quiz"
+  | "evaluation";
+
+export interface Content {
+  id: number;
+  title?: string;
+  content?: string | null;
+  type: ContentType;
+  createdDate?: string | null;
+
+  fileName?: string | null;
+  fileUrl?: string | null;
+
+  dueDate?: string | null; 
+  courseId?: string | null;
+}
+
 export interface ForumPost {
   id: number;
   authorCi: string;
@@ -24,15 +43,6 @@ export interface CourseData {
   name?: string;
   createdDate?: string | null;
   forums?: Forum[];
-}
-
-export interface Content {
-  id: number;
-  title?: string;
-  content?: string;
-  fileName?: string | null;
-  fileUrl?: string | null;
-  createdDate?: string | null;
 }
 
 export interface CourseResponse {
@@ -74,7 +84,21 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
       forums: data.forums || c.forums || [],
     };
 
-    const contents: Content[] = data.contents || [];
+    const contents: Content[] = (data.contents || []).map((c: any) => ({
+      id: c.id,
+      title: c.title,
+      content: c.content ?? null,
+      type: c.type,                     // ✔ tipo real
+      createdDate: c.createdDate ?? null,
+
+      // simpleContent
+      fileName: c.fileName ?? null,
+      fileUrl: c.fileUrl ?? null,
+
+      // quiz + evaluation
+      dueDate: c.dueDate ?? null,
+      courseId: c.courseId ?? null,
+    }));
     return { course, contents };
   } catch (error: any) {
     console.error("[getCourseById] Error:", error.response?.data || error.message);

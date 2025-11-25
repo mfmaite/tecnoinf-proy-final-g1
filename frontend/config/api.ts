@@ -9,4 +9,6 @@ export const API_ENDPOINTS = {
   RESET_PASSWORD: `${API_BASE_URL}/users/reset-password`,
   FORUM: `${API_BASE_URL}/forum`,
   CHATS: `${API_BASE_URL}/chats`,
+  NOTIFICATIONS: `${API_BASE_URL}/notifications`,
+  POSTS: `${API_BASE_URL}/post`,
 } as const;

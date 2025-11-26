@@ -215,6 +215,23 @@ public class QuizService {
       );
   }
 
+  public List<DtQuizSubmission> getQuizSubmissions(Long quizId) {
+      quizRepository.findById(quizId)
+              .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+      List<QuizSubmission> submissions = quizSubmissionRepository.findByQuizId(quizId);
+      return submissions.stream().map(this::getDtQuizSubmission).collect(Collectors.toList());
+  }
+
+  public DtQuizSubmission getUserQuizSubmission(Long quizId, String userCi) {
+      quizRepository.findById(quizId)
+              .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+      List<QuizSubmission> existing = quizSubmissionRepository.findByQuizIdAndAuthorCi(quizId, userCi);
+      if (existing.isEmpty()) {
+          return null;
+      }
+      return getDtQuizSubmission(existing.get(0));
+  }
+
   public DtQuizSubmission createQuizSubmission(Long quizId, String userCi, CreateQuizSubmissionRequest req) {
       if (req == null || req.getAnswerIds() == null || req.getAnswerIds().isEmpty()) {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe seleccionar al menos una respuesta");

@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, Long> {
     List<QuizSubmission> findByQuizIdAndAuthorCi(Long quizId, String authorCi);
+    List<QuizSubmission> findByQuizId(Long quizId);
 }
 
 

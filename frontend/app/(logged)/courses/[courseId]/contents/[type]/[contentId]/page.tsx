@@ -13,6 +13,8 @@ import { formatDate } from '@/helpers/utils';
 import { evaluationController } from '@/controllers/evaluationController';
 import type { EvaluationSubmission } from '@/types/evaluation-submission';
 import { EvaluationSubmissionCard } from '../../../components/evaluation-submission-card';
+import { quizController } from '@/controllers/quizzControler';
+import type { QuizSubmission } from '@/types/quiz-submission';
 
 type Params = { params: { courseId: string; type: 'simpleContent' | 'evaluation' | 'quiz'; contentId: string } };
 
@@ -34,6 +36,10 @@ export default function ContentDetailPage({ params }: Params) {
     { id: number; question: string; answers: { id: number; text: string; correct: boolean }[] }[]
   >([]);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | null>>({});
+  const [myQuizSubmission, setMyQuizSubmission] = useState<QuizSubmission | null>(null);
+  const [quizSubmitError, setQuizSubmitError] = useState<string | null>(null);
+  const [quizSubmitSuccess, setQuizSubmitSuccess] = useState<string | null>(null);
+  const [quizSubmitting, setQuizSubmitting] = useState<boolean>(false);
 
   const selectQuizAnswer = (questionId: number, answerId: number) => {
     setSelectedAnswers((prev) => ({ ...prev, [questionId]: answerId }));
@@ -64,6 +70,21 @@ export default function ContentDetailPage({ params }: Params) {
           } else if (params.type === 'quiz') {
             setContent(resp.data.quiz as CourseContent);
             setQuizQuestions(resp.data.questions || []);
+            // cargar mi submission de quiz si existe
+            const mySub = await quizController.getMySubmission(params.contentId, accessToken);
+            if (mySub.success) {
+              const subData = (mySub.data ?? null) as QuizSubmission | null;
+              setMyQuizSubmission(subData);
+              if (subData && Array.isArray(subData.answerIds) && subData.answerIds.length > 0) {
+                // precargar selección
+                const byQuestion: Record<number, number | null> = {};
+                for (const q of resp.data.questions || []) {
+                  const match = (q.answers || []).find((a: any) => subData.answerIds.includes(a.id));
+                  byQuestion[q.id] = match?.id ?? null;
+                }
+                setSelectedAnswers(byQuestion);
+              }
+            }
           } else {
             setContent(resp.data as CourseContent);
           }
@@ -136,6 +157,34 @@ export default function ContentDetailPage({ params }: Params) {
                   </button>
                 ) : null;
               })()
+            ) : null}
+            {content.type === 'quiz' && user?.role === 'ESTUDIANTE' ? (
+              (() => {
+                const due = (content as any).dueDate as string | null;
+                const isOverdue = due ? new Date(due) < new Date() : false;
+                const hasSubmission = !!myQuizSubmission;
+                return !isOverdue && !hasSubmission ? (
+                  <button
+                    className="px-4 py-2 rounded-md bg-secondary-color-70 text-white hover:opacity-90 transition"
+                    onClick={async () => {
+                      // no abre modal, el quiz está en la misma página
+                      // solo mostramos botón de enviar más abajo
+                      const el = document.getElementById('quiz-form');
+                      el?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Completar y enviar
+                  </button>
+                ) : null;
+              })()
+            ) : null}
+            {content.type === 'quiz' && user?.role === 'PROFESOR' ? (
+              <Link
+                href={`/courses/${params.courseId}/contents/${params.type}/${params.contentId}/submissions`}
+                className="px-4 py-2 rounded-md bg-secondary-color-70 text-white hover:opacity-90 transition"
+              >
+                Ver respuestas de estudiantes
+              </Link>
             ) : null}
           </div>
         </div>
@@ -274,14 +323,67 @@ export default function ContentDetailPage({ params }: Params) {
                         className="h-4 w-4 text-secondary-color-70 border-gray-300"
                         checked={selectedAnswers[q.id] === a.id}
                         onChange={() => selectQuizAnswer(q.id, a.id)}
+                        disabled={!!myQuizSubmission || user?.role === 'PROFESOR'}
                       />
-                      <span>{a.text}</span>
+                      <span>
+                        {a.text}
+                        {user?.role === 'PROFESOR' && a.correct ? ' (correcta)' : ''}
+                        {user?.role === 'ESTUDIANTE' && myQuizSubmission && a.correct ? ' (correcta)' : ''}
+                        {user?.role === 'ESTUDIANTE' && myQuizSubmission && selectedAnswers[q.id] === a.id && !a.correct ? ' (tu respuesta)' : ''}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
             ))
           )}
+          {user?.role === 'ESTUDIANTE' ? (
+            <div id="quiz-form" className="pt-2">
+              {quizSubmitError ? <p className="text-sm text-red-600">{quizSubmitError}</p> : null}
+              {quizSubmitSuccess ? <p className="text-sm text-green-600">{quizSubmitSuccess}</p> : null}
+              {!myQuizSubmission ? (
+                <div className="flex gap-2">
+                  <button
+                    className="px-4 py-2 rounded-md bg-secondary-color-70 text-white disabled:opacity-60"
+                    disabled={quizSubmitting || !accessToken}
+                    onClick={async () => {
+                      if (!content || content.type !== 'quiz' || !accessToken) return;
+                      setQuizSubmitting(true);
+                      setQuizSubmitError(null);
+                      setQuizSubmitSuccess(null);
+                      try {
+                        const answers = Object.values(selectedAnswers).filter((v): v is number => typeof v === 'number');
+                        if (answers.length === 0) {
+                          setQuizSubmitError('Seleccioná al menos una respuesta.');
+                          return;
+                        }
+                        const resp = await quizController.createSubmission(content.id, answers, accessToken);
+                        if (resp.success && resp.data) {
+                          setQuizSubmitSuccess('Entrega enviada correctamente.');
+                          setMyQuizSubmission(resp.data);
+                        } else {
+                          setQuizSubmitError(resp.message ?? 'No se pudo enviar la entrega.');
+                        }
+                      } finally {
+                        setQuizSubmitting(false);
+                      }
+                    }}
+                  >
+                    {quizSubmitting ? 'Enviando...' : 'Enviar entrega'}
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 p-3 rounded-md border">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">Nota:</span> {myQuizSubmission.note ?? 0}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Se muestran tus respuestas seleccionadas y las correctas en verde.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -1,43 +1,8 @@
 import { api } from "./api";
 
 // ─────────────────────────────────────
-// 🧩 Tipos base
+// 📌 Tipos mínimos que este servicio usa
 // ─────────────────────────────────────
-export type ContentType =
-  | "simpleContent"
-  | "quiz"
-  | "evaluation";
-
-export interface Content {
-  id: number;
-  title?: string;
-  content?: string | null;
-  type: ContentType;
-  createdDate?: string | null;
-
-  fileName?: string | null;
-  fileUrl?: string | null;
-
-  dueDate?: string | null; 
-  courseId?: string | null;
-}
-
-export interface ForumPost {
-  id: number;
-  authorCi: string;
-  authorName: string;
-  message: string;
-  createdDate: string;
-}
-
-export interface Forum {
-  id: string;
-  type: string;
-  courseId: string;
-  createdAt: string;
-  posts?: ForumPost[];
-}
-
 export interface CourseData {
   id: string;
   name?: string;
@@ -45,9 +10,25 @@ export interface CourseData {
   forums?: Forum[];
 }
 
+export interface Forum {
+  id: string;
+  type: string;
+  courseId: string;
+  createdAt: string;
+}
+
+export interface ContentListItem {
+  id: number;
+  title?: string;
+  type: "simpleContent" | "quiz" | "evaluation";
+  createdDate?: string | null;
+  dueDate?: string | null;
+}
+
+// Respuesta de getCourseById
 export interface CourseResponse {
   course: CourseData;
-  contents: Content[];
+  contents: ContentListItem[];
 }
 
 // 🔹 Estructura genérica de respuesta del backend
@@ -60,6 +41,8 @@ interface ApiResponse<T> {
 
 // ─────────────────────────────────────
 // 📘 GET /courses/:courseId
+// Devuelve el curso + listado de contenidos
+// (pero NO detalles de cada contenido)
 // ─────────────────────────────────────
 export async function getCourseById(courseId: string): Promise<CourseResponse> {
   try {
@@ -68,37 +51,24 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
     );
 
     const { success, message, data } = response.data;
-    if (!success) {
-      throw new Error(message || "Error al obtener curso.");
-    }
-
-    if (!data || !data.course) {
-      throw new Error("Formato inesperado del servidor.");
-    }
+    if (!success) throw new Error(message || "Error al obtener curso");
 
     const c = data.course;
     const course: CourseData = {
       id: String(c.id),
       name: c.name,
       createdDate: c.createdDate ?? null,
-      forums: data.forums || c.forums || [],
+      forums: data.forums || [],
     };
 
-    const contents: Content[] = (data.contents || []).map((c: any) => ({
-      id: c.id,
-      title: c.title,
-      content: c.content ?? null,
-      type: c.type,                     // ✔ tipo real
-      createdDate: c.createdDate ?? null,
-
-      // simpleContent
-      fileName: c.fileName ?? null,
-      fileUrl: c.fileUrl ?? null,
-
-      // quiz + evaluation
-      dueDate: c.dueDate ?? null,
-      courseId: c.courseId ?? null,
+    const contents: ContentListItem[] = (data.contents || []).map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      createdDate: item.createdDate ?? null,
+      dueDate: item.dueDate ?? null,
     }));
+
     return { course, contents };
   } catch (error: any) {
     console.error("[getCourseById] Error:", error.response?.data || error.message);
@@ -107,11 +77,11 @@ export async function getCourseById(courseId: string): Promise<CourseResponse> {
         "No se pudo obtener la información del curso."
     );
   }
-
 }
 
 // ─────────────────────────────────────
 // 🧾 GET /courses
+// Lista de cursos sin contenidos
 // ─────────────────────────────────────
 export interface CourseListItem {
   id: string;
@@ -119,16 +89,13 @@ export interface CourseListItem {
   createdDate?: string | null;
 }
 
-export const getCourses = async (): Promise<CourseListItem[]> => {
+export async function getCourses(): Promise<CourseListItem[]> {
   try {
     const response = await api.get<ApiResponse<CourseListItem[]>>("/courses");
 
-    const { success, message, data } = response.data;
-    if (!success) {
-      throw new Error(message || "Error al obtener cursos.");
-    }
+    const { success, data, message } = response.data;
+    if (!success) throw new Error(message || "Error al obtener cursos");
 
-    // ✅ Aseguramos siempre un array, aunque venga vacío
     return Array.isArray(data) ? data : [];
   } catch (error: any) {
     console.error("[getCourses] Error:", error.response?.data || error.message);
@@ -136,4 +103,4 @@ export const getCourses = async (): Promise<CourseListItem[]> => {
       error.response?.data?.message || "No se pudieron listar los cursos."
     );
   }
-};
+}

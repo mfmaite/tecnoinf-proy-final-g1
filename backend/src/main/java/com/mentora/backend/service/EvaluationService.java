@@ -4,6 +4,7 @@ import com.mentora.backend.repository.EvaluationRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.dt.DtEvaluationSubmission;
+import com.mentora.backend.requests.UpdateEvaluationRequest;
 import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.ActivityType;
 import com.mentora.backend.model.Evaluation;
@@ -170,4 +171,24 @@ public class EvaluationService {
 
     return getDtEvaluationSubmission(saved);
   }
+
+    public DtEvaluation updateEvaluation(Long evaluationId, UpdateEvaluationRequest req) throws IOException {
+        Evaluation ev = evaluationRepository.findById(evaluationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
+
+        if (req.getTitle() != null) ev.setTitle(req.getTitle());
+        if (req.getContent() != null) ev.setContent(req.getContent());
+        if (req.getDueDate() != null) ev.setDueDate(req.getDueDate());
+
+        if (req.getFile() != null) {
+          DtFileResource file = fileStorageService.store(req.getFile());
+          ev.setFileName(file.getFilename());
+          ev.setFileUrl(file.getStoragePath());
+        }
+
+        Evaluation saved = evaluationRepository.save(ev);
+
+        return getDtEvaluation(saved);
+    }
+
 }

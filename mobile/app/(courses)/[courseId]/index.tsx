@@ -131,7 +131,7 @@ export default function CourseView() {
   // ─────────────────────────────────────────────
   function renderSimple(item: Content) {
     return (
-      <View key={item.id} style={styles.contentCard}>
+      <View key={`simple-${item.id}`} style={styles.contentCard}>
         <Text style={styles.subtitle}>{item.title || "Sin título"}</Text>
         {renderContentWithLinks(item.content)}
 
@@ -164,7 +164,7 @@ export default function CourseView() {
   function renderEvaluation(item: Content) {
     return (
       <View
-        key={item.id}
+        key={`evaluation-${item.id}`}
         style={[
           styles.contentCard,
           { borderLeftWidth: 4, borderLeftColor: colors.primary[60] },
@@ -215,7 +215,7 @@ export default function CourseView() {
   function renderQuiz(item: Content) {
     return (
       <View
-        key={item.id}
+        key={`quiz-${item.id}`}
         style={[
           styles.contentCard,
           { borderLeftWidth: 4, borderLeftColor: "#3B82F6" },

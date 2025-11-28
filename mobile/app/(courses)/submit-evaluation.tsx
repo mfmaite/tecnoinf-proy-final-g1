@@ -13,11 +13,9 @@ import { colors } from "../../styles/colors";
 import { styles } from "../../styles/styles";
 import { getContentByType } from "../../services/content";
 import { submitEvaluation } from "../../services/evaluation";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function SubmitEvaluation() {
   const router = useRouter();
-  const { user } = useAuth(); // si necesitás token, agregalo aquí
   const { courseId, contentId } = useLocalSearchParams<{
     courseId?: string;
     contentId?: string;
@@ -48,7 +46,7 @@ export default function SubmitEvaluation() {
         if ("evaluation" in resp) setEvaluation(resp.evaluation);
         else setEvaluation(resp); // fallback defensivo (no debería pasar)
 
-      } catch (err) {
+      } catch {
         Alert.alert("Error", "No se pudo cargar la evaluación.");
       } finally {
         setLoading(false);

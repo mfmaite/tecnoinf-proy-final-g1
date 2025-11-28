@@ -47,6 +47,7 @@ export interface SimpleContent extends BaseContent {
 }
 
 export type ContentDetail = SimpleContent | EvaluationDetail | QuizDetail;
+export type AnyContent = SimpleContent | EvaluationContent | QuizContent;
 
 interface ApiResponse<T> {
   success: boolean;

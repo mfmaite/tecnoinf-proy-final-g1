@@ -15,7 +15,13 @@ import * as Sharing from "expo-sharing";
 
 import { colors } from "../../../styles/colors";
 import { styles } from "../../../styles/styles";
-import { getCourseById, CourseData, Content } from "../../../services/courses";
+
+// 👇 IMPORT CORRECTO — SOLO DESDE courses.ts
+import {
+  getCourseById,
+  type CourseData,
+  type ContentListItem,
+} from "../../../services/courses";
 
 export default function CourseView() {
   const router = useRouter();
@@ -23,13 +29,11 @@ export default function CourseView() {
   const { courseId } = useLocalSearchParams<{ courseId?: string }>();
 
   const [courseData, setCourseData] = useState<CourseData | null>(null);
-  const [contents, setContents] = useState<Content[]>([]);
+  const [contents, setContents] = useState<ContentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ─────────────────────────────────────────────
-  // 📚 Cargar curso
-  // ─────────────────────────────────────────────
+  // 📌 Cargar curso y contenidos
   useEffect(() => {
     if (!courseId) return;
 
@@ -37,9 +41,9 @@ export default function CourseView() {
       try {
         const data = await getCourseById(courseId);
         setCourseData(data.course);
-        setContents((data.contents || []).sort((a, b) => a.id - b.id));
+        setContents([...data.contents].sort((a, b) => a.id - b.id));
       } catch (err: any) {
-        console.error("[CourseView] Error al cargar curso:", err.response?.data || err);
+        console.error("[CourseView] Error:", err);
         setError(err.message || "No se pudieron cargar los datos del curso.");
       } finally {
         setLoading(false);
@@ -49,22 +53,15 @@ export default function CourseView() {
     fetchCourse();
   }, [courseId]);
 
-  // ─────────────────────────────────────────────
-  // 🧭 Actualizar título dinámico
-  // ─────────────────────────────────────────────
+  // 🔁 Título dinámico
   useLayoutEffect(() => {
-    if (!courseData) return;
-    (navigation as any).setOptions?.({ title: courseData.name ?? "Curso" });
+    if (courseData)
+      (navigation as any).setOptions?.({ title: courseData.name ?? "Curso" });
   }, [courseData, navigation]);
 
-  // ─────────────────────────────────────────────
-  // 📎 Descarga y apertura de archivos
-  // ─────────────────────────────────────────────
+  // 📎 Descargar archivo
   async function handleDownload(url?: string | null, fileName?: string | null) {
-    if (!url) {
-      Alert.alert("Archivo no disponible");
-      return;
-    }
+    if (!url) return Alert.alert("Archivo no disponible");
 
     try {
       const name = fileName || url.split("/").pop() || `archivo_${Date.now()}`;
@@ -73,125 +70,60 @@ export default function CourseView() {
       const file = await File.downloadFileAsync(url, destination);
       const uri = file.uri;
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
-      } else {
-        await Linking.openURL(uri);
-      }
-    } catch (err) {
-      console.warn("[handleDownload] Error al descargar:", err);
-      try {
-        if (url) await Linking.openURL(url);
-      } catch {
-        Alert.alert("No se puede abrir el archivo.");
-      }
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri);
+      else await Linking.openURL(uri);
+    } catch {
+      Alert.alert("No se pudo abrir el archivo.");
     }
   }
 
-  // ─────────────────────────────────────────────
-  // 🔗 Render de texto con enlaces clicables
-  // ─────────────────────────────────────────────
+  // 🔗 Texto con enlaces clicables
   function renderContentWithLinks(content?: string | null) {
     if (!content) return null;
 
-    const parts = content.split(/(https?:\/\/[^\s]+)/g);
-
     return (
       <Text style={styles.contentText}>
-        {parts.map((part, idx) => {
-          if (!part) return null;
-          const isUrl = part.startsWith("http://") || part.startsWith("https://");
-
-          return isUrl ? (
+        {content.split(/(https?:\/\/[^\s]+)/g).map((part, idx) =>
+          part.startsWith("http") ? (
             <Text
               key={idx}
               style={styles.link}
-              onPress={async () => {
-                try {
-                  const supported = await Linking.canOpenURL(part);
-                  if (supported) await Linking.openURL(part);
-                  else Alert.alert("No se puede abrir el enlace.");
-                } catch {
-                  Alert.alert("Error al abrir el enlace.");
-                }
-              }}
+              onPress={() => Linking.openURL(part)}
             >
               {part}
             </Text>
           ) : (
             <Text key={idx}>{part}</Text>
-          );
-        })}
+          )
+        )}
       </Text>
     );
   }
 
-  // ─────────────────────────────────────────────
-  // 🎨 RENDER SIMPLE CONTENT
-  // ─────────────────────────────────────────────
-  function renderSimple(item: Content) {
+  // 🎨 RENDERIZADORES
+  function renderSimple(item: ContentListItem) {
     return (
-      <View key={`simple-${item.id}`} style={styles.contentCard}>
-        <Text style={styles.subtitle}>{item.title || "Sin título"}</Text>
-        {renderContentWithLinks(item.content)}
-
-        {item.fileName && item.fileUrl && (
-          <>
-            <Text style={styles.contentFile}>Archivo: {item.fileName}</Text>
-
-            <TouchableOpacity
-              style={styles.buttonPrimary}
-              onPress={() => handleDownload(item.fileUrl!, item.fileName!)}
-            >
-              <Text style={styles.buttonText}>Descargar</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        <Text style={styles.contentDate}>
-          Creado:{" "}
-          {item.createdDate
-            ? new Date(item.createdDate).toLocaleDateString("es-ES")
-            : "—"}
-        </Text>
+      <View
+        key={item.id}
+        style={[styles.contentCard, { borderLeftWidth: 4, borderLeftColor: "#22C55E" }]}
+      >
+        <Text style={styles.subtitle}>📄 {item.title}</Text>
       </View>
     );
   }
 
-  // ─────────────────────────────────────────────
-  // 🎨 RENDER EVALUATION (tarea)
-  // ─────────────────────────────────────────────
-  function renderEvaluation(item: Content) {
+  function renderEvaluation(item: ContentListItem) {
     return (
       <View
-        key={`evaluation-${item.id}`}
-        style={[
-          styles.contentCard,
-          { borderLeftWidth: 4, borderLeftColor: colors.primary[60] },
-        ]}
+        key={item.id}
+        style={[styles.contentCard, { borderLeftWidth: 4, borderLeftColor: "#F97316" }]}
       >
         <Text style={styles.subtitle}>📝 Evaluación: {item.title}</Text>
 
-        {item.content && renderContentWithLinks(item.content)}
-
         {item.dueDate && (
           <Text style={styles.contentDate}>
-            Fecha límite:{" "}
-            {new Date(item.dueDate).toLocaleDateString("es-ES")}
+            Límite: {new Date(item.dueDate).toLocaleDateString("es-ES")}
           </Text>
-        )}
-
-        {item.fileName && item.fileUrl && (
-          <>
-            <Text style={styles.contentFile}>Archivo: {item.fileName}</Text>
-
-            <TouchableOpacity
-              style={styles.buttonPrimary}
-              onPress={() => handleDownload(item.fileUrl!, item.fileName!)}
-            >
-              <Text style={styles.buttonText}>Descargar archivo</Text>
-            </TouchableOpacity>
-          </>
         )}
 
         <TouchableOpacity
@@ -209,26 +141,13 @@ export default function CourseView() {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // 🎨 RENDER QUIZ
-  // ─────────────────────────────────────────────
-  function renderQuiz(item: Content) {
+  function renderQuiz(item: ContentListItem) {
     return (
       <View
-        key={`quiz-${item.id}`}
-        style={[
-          styles.contentCard,
-          { borderLeftWidth: 4, borderLeftColor: "#3B82F6" },
-        ]}
+        key={item.id}
+        style={[styles.contentCard, { borderLeftWidth: 4, borderLeftColor: "#3B82F6" }]}
       >
         <Text style={styles.subtitle}>📘 Quiz: {item.title}</Text>
-
-        {item.dueDate && (
-          <Text style={styles.contentDate}>
-            Fecha límite:{" "}
-            {new Date(item.dueDate).toLocaleDateString("es-ES")}
-          </Text>
-        )}
 
         <TouchableOpacity
           style={[styles.buttonPrimary, { marginTop: 10 }]}
@@ -245,57 +164,14 @@ export default function CourseView() {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // ⏳ Render principal
-  // ─────────────────────────────────────────────
+  // ⏳ ESTADOS
   if (loading)
-    return (
-      <ActivityIndicator
-        size="large"
-        color={colors.primary[60]}
-        style={styles.loader}
-      />
-    );
-
+    return <ActivityIndicator size="large" color={colors.primary[60]} style={styles.loader} />;
   if (error) return <Text style={styles.error}>{error}</Text>;
+  if (!courseData) return <Text style={styles.error}>Curso no encontrado.</Text>;
 
-  if (!courseData)
-    return <Text style={styles.error}>Curso no encontrado.</Text>;
-
-  // ─────────────────────────────────────────────
-  // 🎨 Render UI final
-  // ─────────────────────────────────────────────
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-    >
-      {/* Participantes */}
-      <TouchableOpacity
-        style={styles.buttonPrimary}
-        onPress={() =>
-          router.push({
-            pathname: "/(courses)/participants",
-            params: { courseId: String(courseId) },
-          })
-        }
-      >
-        <Text style={styles.buttonText}>Ver Participantes</Text>
-      </TouchableOpacity>
-
-      {/* Encabezado */}
-      <View style={styles.header}>
-        <Text style={styles.subtitle}>
-          ID: {courseData.id}
-          {"\n"}
-          Creado:{" "}
-          {courseData.createdDate
-            ? new Date(courseData.createdDate).toLocaleDateString("es-ES")
-            : "—"}
-        </Text>
-      </View>
-
-      {/* CONTENIDOS */}
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <Text style={styles.title}>Contenidos</Text>
 
       {contents.length ? (
@@ -303,48 +179,16 @@ export default function CourseView() {
           switch (item.type) {
             case "simpleContent":
               return renderSimple(item);
-
             case "evaluation":
               return renderEvaluation(item);
-
             case "quiz":
               return renderQuiz(item);
-
             default:
-              return renderSimple(item);
+              return null;
           }
         })
       ) : (
         <Text style={styles.emptyText}>No hay contenidos disponibles.</Text>
-      )}
-
-      {/* FOROS */}
-      <Text style={styles.title}>Foros</Text>
-
-      {courseData.forums?.length ? (
-        courseData.forums.map((forum) => (
-          <TouchableOpacity
-            key={forum.id}
-            style={[styles.contentCard, { marginBottom: 12 }]}
-            onPress={() =>
-              router.push({
-                pathname: "/[courseId]/forums/[forumId]",
-                params: {
-                  courseId: String(courseData.id),
-                  forumId: String(forum.id),
-                },
-              })
-            }
-          >
-            <Text style={styles.subtitle}>
-              {forum.type === "ANNOUNCEMENTS"
-                ? "Foro de Anuncios"
-                : "Foro de Consultas"}
-            </Text>
-          </TouchableOpacity>
-        ))
-      ) : (
-        <Text style={styles.emptyText}>No hay foros disponibles.</Text>
       )}
     </ScrollView>
   );

@@ -63,12 +63,6 @@ public class UserCourseService {
                 continue;
             }
 
-            // Validación de rol
-            if (!(user.getRole() == Role.ESTUDIANTE || user.getRole() == Role.PROFESOR)) {
-                errorUsers.add(userCi + " tiene un rol no permitido");
-                continue;
-            }
-
             // Ya estaba matriculado
             if (userCourseRepository.existsByCourseAndUser(course, user)) {
                 repeatedUsers.add(userCi);
@@ -80,11 +74,9 @@ public class UserCourseService {
             userCourseRepository.save(uc);
         }
 
-        // Construcción del mensaje final
         boolean anyEnrolled = repeatedUsers.size() < usersCis.length;
 
         if (!anyEnrolled && errorUsers.isEmpty()) {
-            // Caso: absolutamente todos estaban repetidos
             return "Todos los usuarios enviados ya estaban matriculados: " + String.join(", ", repeatedUsers);
         }
 
@@ -143,12 +135,6 @@ public class UserCourseService {
                     continue;
                 }
 
-                // Bloqueo de ADMIN
-                if (user.getRole() == Role.ADMIN) {
-                    errors.add("Fila " + lineNumber + ": Usuario con rol ADMIN no puede ser matriculado");
-                    continue;
-                }
-
                 if (userCourseRepository.existsByCourseAndUser(course, user)) {
                     errors.add("Fila " + lineNumber + ": Usuario ya matriculado");
                     continue;
@@ -191,7 +177,6 @@ public class UserCourseService {
                 continue;
             }
 
-            // Bloqueo: no permitir borrar PROFESORES
             if (user.getRole() == Role.PROFESOR) {
                 errorUsers.add(userCi + " no puede ser desmatriculado porque tiene rol PROFESOR");
                 continue;

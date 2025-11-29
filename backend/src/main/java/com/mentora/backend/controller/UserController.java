@@ -291,25 +291,26 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Listar actividades de un usuario",
-            description = "Lista todas las actividades de un usuario",
+    @Operation(summary = "Listar actividades del usuario loggeado",
+            description = "Lista todas las actividades del usuario loggeado",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Actividades obtenidas correctamente")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @GetMapping("/{userId}/activities")
+    @GetMapping("/activities")
     public ResponseEntity<DtApiResponse<List<DtActivity>>> getActivitiesForUser(
-            @PathVariable String userId,
+            @RequestParam(name = "ci", required = false) String ci,
             @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
         try {
-        List<DtActivity> activities = userService.getActivitiesForUser(userId, startDate, endDate);
-        return ResponseEntity.ok().body(new DtApiResponse<>(
-            true,
-            HttpStatus.OK.value(),
-            "Actividades obtenidas correctamente",
-            activities
-        ));
+            String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+            List<DtActivity> activities = userService.getActivitiesForUser(userId, startDate, endDate);
+            return ResponseEntity.ok().body(new DtApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Actividades obtenidas correctamente",
+                activities
+            ));
 
         } catch (ResponseStatusException e) {
         return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(

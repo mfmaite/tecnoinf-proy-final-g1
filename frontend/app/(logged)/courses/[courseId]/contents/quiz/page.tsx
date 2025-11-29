@@ -49,8 +49,8 @@ export default function CreateQuizPage({ params }: Params) {
     for (const q of questions) {
       if (!q.question.trim()) return 'Cada pregunta debe tener texto';
       if (!q.answers || q.answers.length < 2) return 'Cada pregunta debe tener al menos dos respuestas';
-      const hasCorrect = q.answers.some(a => a.correct === true);
-      if (!hasCorrect) return 'Cada pregunta debe tener al menos una respuesta correcta';
+      const numCorrect = q.answers.filter(a => a.correct === true).length;
+      if (numCorrect !== 1) return 'Cada pregunta debe tener exactamente una respuesta correcta';
       for (const a of q.answers) {
         if (!a.text.trim()) return 'Las respuestas no pueden estar vacías';
       }
@@ -99,12 +99,14 @@ export default function CreateQuizPage({ params }: Params) {
     }));
   };
 
-  const toggleAnswerCorrect = (qIdx: number, aIdx: number, correct: boolean) => {
-    setQuestions(prev => prev.map((q, i) => {
-      if (i !== qIdx) return q;
-      const next = q.answers.map((a, ai) => ai === aIdx ? { ...a, correct } : a);
-      return { ...q, answers: next };
-    }));
+  const setCorrectAnswer = (qIdx: number, aIdx: number) => {
+    setQuestions(prev =>
+      prev.map((q, i) => {
+        if (i !== qIdx) return q;
+        const next = q.answers.map((a, ai) => ({ ...a, correct: ai === aIdx }));
+        return { ...q, answers: next };
+      })
+    );
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -206,7 +208,7 @@ export default function CreateQuizPage({ params }: Params) {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Respuestas (mínimo 2, al menos una correcta)</span>
+                  <span className="text-sm text-gray-700">Respuestas (mínimo 2, una correcta)</span>
                   <Button type="button" variant="outline" color="secondary" onClick={() => addAnswer(qIdx)}>
                     Agregar respuesta
                   </Button>
@@ -220,12 +222,14 @@ export default function CreateQuizPage({ params }: Params) {
                       placeholder={`Respuesta #${aIdx + 1}`}
                       className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-color-20 text-text-neutral-50"
                     />
+
                     <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                       <input
-                        type="checkbox"
+                        type="radio"
+                        name={`correct-${qIdx}`}
                         checked={a.correct}
-                        onChange={(e) => toggleAnswerCorrect(qIdx, aIdx, e.target.checked)}
-                        className="h-4 w-4 text-secondary-color-70 border-gray-300 rounded"
+                        onChange={() => setCorrectAnswer(qIdx, aIdx)}
+                        className="h-4 w-4 text-secondary-color-70 border-gray-300"
                       />
                       Correcta
                     </label>

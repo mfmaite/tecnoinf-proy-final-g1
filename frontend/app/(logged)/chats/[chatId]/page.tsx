@@ -2,6 +2,7 @@
 
  import React, { useEffect, useMemo, useState } from 'react';
  import { useParams, useRouter, useSearchParams } from 'next/navigation';
+ import Link from 'next/link';
  import { useAuth } from '@/hooks/useAuth';
  import { chatController } from '@/controllers/chatController';
  import { Message } from '@/types/message';
@@ -44,12 +45,9 @@
        if (!accessToken) return;
        try {
          setIsLoading(true);
-         // Always load chats list to compute counterpart and ensure context
          const chatsRes = await chatController.getChats(accessToken);
          setChats(chatsRes.data ?? []);
 
-         // If this is a "new chat" but there are existing chats with this recipient,
-         // redirect to one of them to avoid server-side non-unique chat errors
          if (isNewChat && (chatsRes.data?.length ?? 0) > 0 && recipientCiFromParams) {
            const matches = (chatsRes.data ?? []).filter(c =>
              c.participant1?.ci === recipientCiFromParams || c.participant2?.ci === recipientCiFromParams
@@ -61,7 +59,6 @@
            }
          }
 
-         // If this is an existing chat, load its messages
          if (!isNewChat && Number.isFinite(chatId) && chatId > 0) {
            const msgsRes = await chatController.getMessages(chatId, accessToken);
            if (!msgsRes.success) throw new Error(msgsRes.message || 'Error al cargar mensajes');
@@ -70,7 +67,6 @@
            setMessages([]);
          }
 
-         // Set counterpart for header if we have a matching chat
          if (chatsRes.data && user && !isNewChat) {
            const current = chatsRes.data.find(c => c.id === chatId);
            if (current) setCounterpart(getCounterpart(current, user));
@@ -95,15 +91,12 @@
        }
        setText('');
 
-       // If this was a new chat, navigate to the created chat and then load messages
        const createdChatId = res.data.chatId;
        if (isNewChat || !Number.isFinite(chatId) || chatId <= 0) {
          router.replace(`/chats/${createdChatId}`);
-         // Reload messages for the new chat
          const msgsRes = await chatController.getMessages(createdChatId, accessToken);
          if (msgsRes.success) setMessages(msgsRes.data ?? []);
        } else {
-         // Existing chat: just reload messages
          const msgsRes = await chatController.getMessages(chatId, accessToken);
          if (msgsRes.success) setMessages(msgsRes.data ?? []);
        }
@@ -125,9 +118,11 @@
        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
          <div className="bg-white rounded-2xl shadow-lg border-4 border-surface-dark-70">
            <div className="px-6 py-4 border-b border-gray-200">
-             <h1 className="text-2xl font-bold text-secondary-color-70">
-               {counterpart?.name || 'Chat'}
-             </h1>
+             <Link href={`/profile/${counterpartCi}`} className="text-secondary-color-70 hover:text-secondary-color-50">
+              <h1 className="text-2xl font-bold text-secondary-color-70">
+                {counterpart?.name || 'Chat'}
+              </h1>
+             </Link>
            </div>
 
            {error && (
@@ -148,7 +143,8 @@
                    <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                      <div className={`px-3 py-2 rounded-lg text-sm ${mine ? 'bg-primary-color-20 text-gray-900' : 'bg-gray-100 text-gray-900'}`}>
                        <div>{m.message}</div>
-               <div className="text-[11px] text-gray-500 mt-1">
+
+                        <div className="text-[11px] text-text-neutral-50 mt-1">
                          {new Date(m.dateSent).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
                        </div>
                      </div>

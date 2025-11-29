@@ -8,11 +8,8 @@ public class EditEvaluationRequest {
     private String title;
     private String content;
     private LocalDateTime dueDate;
-
-    // Archivo opcional para reemplazar el existente
     private MultipartFile file;
 
-    // Flag opcional para eliminar el archivo actual
     private Boolean clearFile = false;
 
     public EditEvaluationRequest() {}

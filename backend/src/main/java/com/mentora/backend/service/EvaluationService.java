@@ -4,6 +4,8 @@ import com.mentora.backend.repository.EvaluationRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.dt.DtEvaluationSubmission;
+import com.mentora.backend.model.Activity;
+import com.mentora.backend.model.ActivityType;
 import com.mentora.backend.model.Evaluation;
 import com.mentora.backend.model.EvaluationSubmission;
 import com.mentora.backend.model.User;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
 import java.time.LocalDateTime;
+import com.mentora.backend.repository.ActivityRepository;
 
 @Service
 public class EvaluationService {
@@ -29,19 +32,22 @@ public class EvaluationService {
   private final UserService userService;
   private final UserRepository userRepository;
   private final EvaluationSubmissionRepository evaluationSubmissionRepository;
+  private final ActivityRepository activityRepository;
 
   public EvaluationService(
       EvaluationRepository evaluationRepository,
       FileStorageService fileStorageService,
       UserService userService,
       UserRepository userRepository,
-      EvaluationSubmissionRepository evaluationSubmissionRepository
+      EvaluationSubmissionRepository evaluationSubmissionRepository,
+      ActivityRepository activityRepository
     ) {
     this.evaluationRepository = evaluationRepository;
     this.fileStorageService = fileStorageService;
     this.userService = userService;
     this.userRepository = userRepository;
     this.evaluationSubmissionRepository = evaluationSubmissionRepository;
+    this.activityRepository = activityRepository;
   }
 
   public GetEvaluationWithSubmissionResponse getEvaluation(Long evaluationId, String userCi) {
@@ -80,7 +86,7 @@ public class EvaluationService {
         }
     }
 
-    return  new DtEvaluation(
+    return new DtEvaluation(
         e.getId(),
         e.getTitle(),
         e.getContent(),
@@ -102,13 +108,14 @@ public class EvaluationService {
         }
     }
 
-    return  new DtEvaluationSubmission(
+    return new DtEvaluationSubmission(
         e.getId(),
         e.getFileName(),
         signedUrl,
         e.getNote(),
         userService.getUserDto(e.getAuthor()),
-        getDtEvaluation(e.getEvaluation())
+        getDtEvaluation(e.getEvaluation()),
+        e.getSolution()
     );
   }
 
@@ -152,38 +159,41 @@ public class EvaluationService {
     );
 
     EvaluationSubmission saved = evaluationSubmissionRepository.save(submission);
+
+    // Crea la actividad de participación en la evaluación
+    Activity activity = new Activity(
+      ActivityType.ACTIVITY_SENT,
+      "Participación en la evaluación de " + evaluation.getTitle(),
+      "/courses/" + evaluation.getCourse().getId() + "/contents/evaluation/" + evaluation.getId(),
+      user
+    );
+    activityRepository.save(activity);
+
     return getDtEvaluationSubmission(saved);
   }
 
-    public DtEvaluation editEvaluation(Long evaluationId, EditEvaluationRequest req) throws IOException {
-        Evaluation evaluation = evaluationRepository.findById(evaluationId)
+    public DtEvaluation updateEvaluation(Long evaluationId, EditEvaluationRequest req) throws IOException {
+        Evaluation ev = evaluationRepository.findById(evaluationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
 
-        if (req.getTitle() != null) {
-            evaluation.setTitle(req.getTitle());
-        }
-
-        if (req.getContent() != null) {
-            evaluation.setContent(req.getContent());
-        }
-
-        if (req.getDueDate() != null) {
-            evaluation.setDueDate(req.getDueDate());
-        }
+        if (req.getTitle() != null) ev.setTitle(req.getTitle());
+        if (req.getContent() != null) ev.setContent(req.getContent());
+        if (req.getDueDate() != null) ev.setDueDate(req.getDueDate());
 
         if (Boolean.TRUE.equals(req.getClearFile())) {
-            evaluation.setFileName(null);
-            evaluation.setFileUrl(null);
+          ev.setFileName(null);
+          ev.setFileUrl(null);
+      }
+
+        if (req.getFile() != null) {
+          DtFileResource file = fileStorageService.store(req.getFile());
+          ev.setFileName(file.getFilename());
+          ev.setFileUrl(file.getStoragePath());
         }
 
-        // Manejo de archivo
-        if (req.getFile() != null && !req.getFile().isEmpty()) {
-            DtFileResource stored = fileStorageService.store(req.getFile());
-            evaluation.setFileName(stored.getFilename());
-            evaluation.setFileUrl(stored.getStoragePath());
-        }
+        Evaluation saved = evaluationRepository.save(ev);
 
-        Evaluation saved = evaluationRepository.save(evaluation);
         return getDtEvaluation(saved);
     }
+
 }

@@ -4,7 +4,6 @@ import com.mentora.backend.repository.EvaluationRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.dt.DtEvaluationSubmission;
-import com.mentora.backend.requests.UpdateEvaluationRequest;
 import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.ActivityType;
 import com.mentora.backend.model.Evaluation;
@@ -14,6 +13,7 @@ import com.mentora.backend.model.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
+import com.mentora.backend.requests.EditEvaluationRequest;
 import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.repository.EvaluationSubmissionRepository;
 import java.io.IOException;
@@ -172,13 +172,18 @@ public class EvaluationService {
     return getDtEvaluationSubmission(saved);
   }
 
-    public DtEvaluation updateEvaluation(Long evaluationId, UpdateEvaluationRequest req) throws IOException {
+    public DtEvaluation updateEvaluation(Long evaluationId, EditEvaluationRequest req) throws IOException {
         Evaluation ev = evaluationRepository.findById(evaluationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
 
         if (req.getTitle() != null) ev.setTitle(req.getTitle());
         if (req.getContent() != null) ev.setContent(req.getContent());
         if (req.getDueDate() != null) ev.setDueDate(req.getDueDate());
+
+        if (Boolean.TRUE.equals(req.getClearFile())) {
+          ev.setFileName(null);
+          ev.setFileUrl(null);
+      }
 
         if (req.getFile() != null) {
           DtFileResource file = fileStorageService.store(req.getFile());

@@ -2,17 +2,16 @@ package com.mentora.backend.controller;
 
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtEvaluation;
+import com.mentora.backend.requests.*;
 import com.mentora.backend.dt.DtQuiz;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
 import com.mentora.backend.dt.DtCourse;
-import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.requests.CreateQuizRequest;
 import com.mentora.backend.service.CourseService;
 import com.mentora.backend.dt.DtSimpleContent;
-import com.mentora.backend.requests.CreateSimpleContentRequest;
-import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.*;
 import com.mentora.backend.service.GradeService;
 import com.mentora.backend.service.UserCourseService;
@@ -42,9 +41,11 @@ public class CourseController {
     private final GradeService gradeService;
     private final UserCourseService userCourseService;
 
-    public CourseController(CourseService courseService,
-                            GradeService gradeService,
-                            UserCourseService userCourseService) {
+    public CourseController(
+        CourseService courseService,
+        GradeService gradeService,
+        UserCourseService userCourseService
+    ) {
         this.courseService = courseService;
         this.gradeService = gradeService;
         this.userCourseService = userCourseService;
@@ -510,7 +511,7 @@ public class CourseController {
     @ApiResponse(responseCode = "200", description = "Evaluación creada correctamente")
     @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
     @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @ApiResponse(responseCode = "500", description = "Error al crear contenido simple")
+    @ApiResponse(responseCode = "500", description = "Error al crear evaluación")
     @PostMapping(value = "/{courseId}/contents/evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<DtEvaluation>> createEvaluation(

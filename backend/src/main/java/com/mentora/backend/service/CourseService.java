@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -76,10 +75,13 @@ public class CourseService {
         return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
-    @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
+        }
+
+        if (Objects.equals(req.getId(), "")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
         }
 
         Course c = new Course(
@@ -119,15 +121,21 @@ public class CourseService {
         List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(evaluationService::getDtEvaluation)
                 .toList();
+        List<DtQuiz> quizzes = quizRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
+                .map(quizService::getDtQuiz)
+                .toList();
 
         List<Object> allContents = new ArrayList<>();
         allContents.addAll(contents);
         allContents.addAll(evaluations);
+        allContents.addAll(quizzes);
         allContents.sort(Comparator.comparing(o -> {
             if (o instanceof DtSimpleContent) {
                 return ((DtSimpleContent) o).getCreatedDate();
             } else if (o instanceof DtEvaluation) {
                 return ((DtEvaluation) o).getCreatedDate();
+            } else if (o instanceof DtQuiz) {
+                return ((DtQuiz) o).getCreatedDate();
             }
             return LocalDateTime.MIN;
         }));
@@ -158,12 +166,16 @@ public class CourseService {
                 if (e == null) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
                 }
+
                 // Retornar evaluación con submissions según el rol del usuario (profesor: todas; estudiante: solo la suya)
                 return evaluationService.getEvaluation(e.getId(), userCi);
             }
             case "quiz": {
-                // No implementado aún
-                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Quiz no implementado");
+                Quiz q = quizRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (q == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                return quizService.getQuiz(q);
             }
             default:
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido inválido");
@@ -221,7 +233,7 @@ public class CourseService {
 
         quiz.setTitle(req.getTitle());
         quiz.setCourse(course);
-        quiz.setExpirationDate(req.getDueDate());
+        quiz.setDueDate(req.getDueDate());
 
         List<QuizQuestion> questions = req.getQuestions().stream().map(q -> {
             QuizQuestion qq = new QuizQuestion();

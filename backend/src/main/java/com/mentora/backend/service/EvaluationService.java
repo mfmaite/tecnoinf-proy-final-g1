@@ -4,6 +4,8 @@ import com.mentora.backend.repository.EvaluationRepository;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtEvaluation;
 import com.mentora.backend.dt.DtEvaluationSubmission;
+import com.mentora.backend.model.Activity;
+import com.mentora.backend.model.ActivityType;
 import com.mentora.backend.model.Evaluation;
 import com.mentora.backend.model.EvaluationSubmission;
 import com.mentora.backend.model.User;
@@ -11,6 +13,7 @@ import com.mentora.backend.model.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
+import com.mentora.backend.requests.EditEvaluationRequest;
 import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.repository.EvaluationSubmissionRepository;
 import java.io.IOException;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
 import java.time.LocalDateTime;
+import com.mentora.backend.repository.ActivityRepository;
 
 @Service
 public class EvaluationService {
@@ -28,19 +32,22 @@ public class EvaluationService {
   private final UserService userService;
   private final UserRepository userRepository;
   private final EvaluationSubmissionRepository evaluationSubmissionRepository;
+  private final ActivityRepository activityRepository;
 
   public EvaluationService(
       EvaluationRepository evaluationRepository,
       FileStorageService fileStorageService,
       UserService userService,
       UserRepository userRepository,
-      EvaluationSubmissionRepository evaluationSubmissionRepository
+      EvaluationSubmissionRepository evaluationSubmissionRepository,
+      ActivityRepository activityRepository
     ) {
     this.evaluationRepository = evaluationRepository;
     this.fileStorageService = fileStorageService;
     this.userService = userService;
     this.userRepository = userRepository;
     this.evaluationSubmissionRepository = evaluationSubmissionRepository;
+    this.activityRepository = activityRepository;
   }
 
   public GetEvaluationWithSubmissionResponse getEvaluation(Long evaluationId, String userCi) {
@@ -152,6 +159,41 @@ public class EvaluationService {
     );
 
     EvaluationSubmission saved = evaluationSubmissionRepository.save(submission);
+
+    // Crea la actividad de participación en la evaluación
+    Activity activity = new Activity(
+      ActivityType.ACTIVITY_SENT,
+      "Participación en la evaluación de " + evaluation.getTitle(),
+      "/courses/" + evaluation.getCourse().getId() + "/contents/evaluation/" + evaluation.getId(),
+      user
+    );
+    activityRepository.save(activity);
+
     return getDtEvaluationSubmission(saved);
   }
+
+    public DtEvaluation updateEvaluation(Long evaluationId, EditEvaluationRequest req) throws IOException {
+        Evaluation ev = evaluationRepository.findById(evaluationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
+
+        if (req.getTitle() != null) ev.setTitle(req.getTitle());
+        if (req.getContent() != null) ev.setContent(req.getContent());
+        if (req.getDueDate() != null) ev.setDueDate(req.getDueDate());
+
+        if (Boolean.TRUE.equals(req.getClearFile())) {
+          ev.setFileName(null);
+          ev.setFileUrl(null);
+      }
+
+        if (req.getFile() != null) {
+          DtFileResource file = fileStorageService.store(req.getFile());
+          ev.setFileName(file.getFilename());
+          ev.setFileUrl(file.getStoragePath());
+        }
+
+        Evaluation saved = evaluationRepository.save(ev);
+
+        return getDtEvaluation(saved);
+    }
+
 }

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -79,10 +78,13 @@ public class CourseService {
         return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
-    @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
+        }
+
+        if (Objects.equals(req.getId(), "")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
         }
 
         Course c = new Course(

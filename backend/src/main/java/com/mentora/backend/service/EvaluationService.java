@@ -93,7 +93,8 @@ public class EvaluationService {
         e.getFileName(),
         signedUrl,
         e.getCreatedDate(),
-        e.getDueDate()
+        e.getDueDate(),
+        e.getCourse().getId()
     );
   }
 

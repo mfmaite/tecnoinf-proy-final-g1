@@ -438,15 +438,13 @@ public class CourseService {
         return getDtSimpleContent(saved);
     }
 
-    public void deleteContent(String type, Long id, String userId) {
+    public void deleteContent(String type, Long id) {
         switch (type.toLowerCase()) {
 
             case "evaluation" -> {
                 Evaluation ev = evaluationRepository.findById(id)
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND, "Evaluation no encontrada"));
-
-                userCourseService.validateProfessorAccess(ev.getCourse(), userId);
 
                 fileStorageService.delete(ev.getFileUrl());
                 evaluationRepository.delete(ev);
@@ -457,7 +455,6 @@ public class CourseService {
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND, "Quiz no encontrado"));
 
-                userCourseService.validateProfessorAccess(quiz.getCourse(), userId);
                 quizRepository.delete(quiz);
             }
 
@@ -465,8 +462,6 @@ public class CourseService {
                 SimpleContent sc = simpleContentRepository.findById(id)
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND, "Contenido simple no encontrado"));
-
-                userCourseService.validateProfessorAccess(sc.getCourse(), userId);
 
                 fileStorageService.delete(sc.getFileUrl());
                 simpleContentRepository.delete(sc);

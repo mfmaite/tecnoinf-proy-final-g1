@@ -648,25 +648,4 @@ public class CourseController {
             ));
         }
     }
-
-    @Operation(
-            summary = "Eliminar contenido temático",
-            description = "Elimina un contenido temático de un curso según su tipo e ID. Solo profesores",
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @ApiResponse(responseCode = "204", description = "Contenido eliminado correctamente")
-    @ApiResponse(responseCode = "400", description = "Parámetros inválidos")
-    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @ApiResponse(responseCode = "404", description = "Contenido no encontrado")
-    @DeleteMapping("/thematic/{type}/{id}")
-    @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<Void> borrarContenidoTematico(
-            @PathVariable String type,
-            @PathVariable Long id,
-            Authentication authentication
-    ) {
-        String userCi = authentication.getName();
-        courseService.deleteContent(type, id, userCi);
-        return ResponseEntity.noContent().build();
-    }
 }

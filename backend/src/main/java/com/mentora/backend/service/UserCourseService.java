@@ -230,10 +230,6 @@ public class UserCourseService {
                     HttpStatus.FORBIDDEN, "No pertenecés a este curso");
         }
 
-        UserCourse uc = userCourseRepository.findByCourseAndUser(course, user)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Sin permisos"));
-
         if (user.getRole() != Role.PROFESOR) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "Solo profesores pueden borrar contenido");

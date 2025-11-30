@@ -219,6 +219,20 @@ public class UserCourseService {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    public void validateProfessorAccess(Course course, String userId) {
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
+        if (!userCourseRepository.existsByCourseAndUser(course, user)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "No pertenecés a este curso");
+        }
+
+        if (user.getRole() != Role.PROFESOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Solo profesores pueden borrar contenido");
+        }
+    }
 }

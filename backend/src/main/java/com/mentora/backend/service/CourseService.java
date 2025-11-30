@@ -2,11 +2,7 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.*;
 import com.mentora.backend.model.*;
-import com.mentora.backend.repository.CourseRepository;
-import com.mentora.backend.repository.ForumRepository;
-import com.mentora.backend.repository.QuizRepository;
-import com.mentora.backend.repository.EvaluationRepository;
-import com.mentora.backend.repository.SimpleContentRepository;
+import com.mentora.backend.repository.*;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
 import java.util.*;
@@ -47,15 +43,16 @@ public class CourseService {
     private final QuizService quizService;
 
     public CourseService(
-        CourseRepository courseRepository,
-        UserCourseService userCourseService,
-        SimpleContentRepository simpleContentRepository,
-        FileStorageService fileStorageService,
-        ForumRepository forumRepository,
-        QuizRepository quizRepository,
-        EvaluationRepository evaluationRepository,
-        EvaluationService evaluationService,
-        QuizService quizService
+            CourseRepository courseRepository,
+            UserCourseService userCourseService,
+            SimpleContentRepository simpleContentRepository,
+            FileStorageService fileStorageService,
+            ForumRepository forumRepository,
+            QuizRepository quizRepository,
+            EvaluationRepository evaluationRepository,
+            EvaluationService evaluationService,
+            QuizService quizService,
+            UserRepository userRepository
     ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
@@ -386,6 +383,8 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + " (" + id + "): Error inesperado al crear el curso");
                 }
             }
+
+
         }
 
         return new BulkCreateCoursesResponse(createdCourses, errors);
@@ -439,4 +438,37 @@ public class CourseService {
         return getDtSimpleContent(saved);
     }
 
+    public void deleteContent(String type, Long id) {
+        switch (type.toLowerCase()) {
+
+            case "evaluation" -> {
+                Evaluation ev = evaluationRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Evaluation no encontrada"));
+
+                fileStorageService.delete(ev.getFileUrl());
+                evaluationRepository.delete(ev);
+            }
+
+            case "quiz" -> {
+                Quiz quiz = quizRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+
+                quizRepository.delete(quiz);
+            }
+
+            case "simple" -> {
+                SimpleContent sc = simpleContentRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Contenido simple no encontrado"));
+
+                fileStorageService.delete(sc.getFileUrl());
+                simpleContentRepository.delete(sc);
+            }
+
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Tipo inválido");
+        }
+    }
 }

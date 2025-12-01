@@ -2,8 +2,6 @@ import { api } from "./api";
 
 export async function getChats() {
   const res = await api.get("/chats");
-
-
   return res.data.data;
 }
 
@@ -25,6 +23,5 @@ export async function getOrCreateChatWith(partnerCi: string) {
     throw new Error("Formato inesperado de respuesta del backend");
   }
   const chatId = messages.length > 0 ? messages[0].chatId : null;
-
   return { id: chatId, messages };
 }

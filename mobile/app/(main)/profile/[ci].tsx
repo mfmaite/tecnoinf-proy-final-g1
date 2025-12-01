@@ -86,31 +86,25 @@ export default function ViewProfileScreen() {
   //   - y el usuario logueado es distinto
   // ────────────────────────────────
   const canMessage =
-    user && user.ci !== profile.ci && profile.role === "PROFESOR" &&   user.ci !== profile.ci; 
-//  && user.role === "PROFESOR" && // solo los profesores pueden iniciar chats
+  user &&
+  user.ci !== profile.ci &&
+  profile.role === "PROFESOR";
 
-  // ────────────────────────────────
-  // 📨 Iniciar o abrir chat con el usuario
-  // ────────────────────────────────
   const handleStartChat = async () => {
-  try {
-    const chat = await getOrCreateChatWith(profile.ci);
-    if (!chat?.id) {
-      Alert.alert("Error", "No se pudo obtener o crear el chat.");
-      return;
-    }
+    try {
+      const chat = await getOrCreateChatWith(profile.ci);
+      if (!chat?.id) {
+        Alert.alert("Error", "No se pudo obtener o crear el chat.");
+        return;
+      }
 
-    router.push({
-      pathname: "/(main)/chats/[partnerCi]",
-      params: {
-        partnerCi: profile.ci,
-        chatId: String(chat.id),
-      },
-    });
-  } catch (err) {
-    console.error("[handleStartChat] Error:", err);
-    Alert.alert("Error", "No se pudo iniciar el chat con este usuario.");
-  }
+      router.push({
+        pathname: "/chats/[partnerCi]",
+        params: { partnerCi: profile.ci, chatId: String(chat.id) },
+      });
+    } catch {
+      Alert.alert("Error", "No se pudo iniciar el chat.");
+    }
   };
 
 

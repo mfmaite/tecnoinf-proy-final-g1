@@ -99,7 +99,7 @@ export default function ViewProfileScreen() {
       }
 
       router.push({
-        pathname: "/chats/[partnerCi]",
+        pathname: "/(main)/chats/[partnerCi]",
         params: { partnerCi: profile.ci, chatId: String(chat.id) },
       });
     } catch {

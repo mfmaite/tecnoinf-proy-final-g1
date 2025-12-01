@@ -1,16 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { getChats } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 
-export default function ChatsListScreen() {
-  type Chat = {
-    id: number;
-    participant1Ci: string;
-    participant2Ci: string;
-  };
+type UserParticipant = {
+  ci: string;
+  name: string;
+  pictureUrl?: string | null;
+};
 
+type Chat = {
+  id: number;
+  participant1: UserParticipant;
+  participant2: UserParticipant;
+};
+
+export default function ChatsListScreen() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -51,21 +64,49 @@ export default function ChatsListScreen() {
         data={chats}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const otherCi =
-            item.participant1Ci === user?.ci ? item.participant2Ci : item.participant1Ci;
+          const other =
+            item.participant1.ci === user?.ci
+              ? item.participant2
+              : item.participant1;
 
           return (
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: "/chats/[partnerCi]",
-                  params: { partnerCi: otherCi, chatId: item.id },
+                  pathname: "/(main)/chats/[partnerCi]",
+                  params: {
+                    partnerCi: other.ci,
+                    chatId: String(item.id),
+                    partnerName: other.name, // 🔥 enviamos el nombre
+                  },
                 })
               }
-              style={{ paddingVertical: 12, borderBottomWidth: 1, borderColor: "#eee" }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderColor: "#eee",
+              }}
             >
+              {/* FOTO */}
+              <Image
+                source={{
+                  uri:
+                    other.pictureUrl ??
+                    "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                }}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  marginRight: 10,
+                }}
+              />
+
+              {/* NOMBRE */}
               <Text style={{ fontSize: 16, fontWeight: "500" }}>
-                Chat con {otherCi}
+                Chat con {other.name}
               </Text>
             </TouchableOpacity>
           );

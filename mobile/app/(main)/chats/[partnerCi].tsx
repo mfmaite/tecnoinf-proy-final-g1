@@ -10,21 +10,40 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import { getChatMessages, sendMessage, getOrCreateChatWith } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 
 export default function ChatScreen() {
-  const { partnerCi, chatId } =
-    useLocalSearchParams<{ partnerCi?: string; chatId?: string }>();
+  const { partnerCi, chatId, partnerName } =
+    useLocalSearchParams<{ partnerCi?: string; chatId?: string; partnerName?: string }>();
 
+  const navigation = useNavigation();
+  const navigationRef = useRef(navigation);
   const { user } = useAuth();
+
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const isAtBottomRef = useRef(true);
+  const [showNewMessagesButton, setShowNewMessagesButton] = useState(false);
 
+  // Mantener navegación en ref para evitar warning de dependencias
+  useEffect(() => {
+    navigationRef.current = navigation;
+  }, [navigation]);
+
+  // Setear título dinámico
+  useEffect(() => {
+    if (partnerName) {
+      navigationRef.current.setOptions({ title: `Chat con ${partnerName}` });
+    }
+  }, [partnerName]);
+
+  // Cargar mensajes
   const load = useCallback(async () => {
     if (!partnerCi) return;
 
@@ -43,7 +62,9 @@ export default function ChatScreen() {
       }
 
       setMessages(
-        [...data].sort((a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime())
+        [...data].sort(
+          (a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime()
+        )
       );
     } catch (err) {
       console.error("Error cargando mensajes", err);
@@ -59,6 +80,19 @@ export default function ChatScreen() {
     return () => clearInterval(interval);
   }, [load]);
 
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (isAtBottomRef.current) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+    } else {
+      setShowNewMessagesButton(true);
+    }
+  }, [ messages]);
+
+  // Enviar mensaje
   const handleSend = async () => {
     if (!text.trim() || isSending || !partnerCi) return;
 
@@ -68,12 +102,29 @@ export default function ChatScreen() {
 
       setMessages((prev) => [...prev, msg]);
       setText("");
-      flatListRef.current?.scrollToEnd({ animated: true });
-    } catch (err) {
+
+      // Scroll al último mensaje enviado
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+    } catch {
       Alert.alert("Error", "No se pudo enviar el mensaje.");
     } finally {
       setIsSending(false);
     }
+  };
+  
+
+  const handleScroll = (event: any) => {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    
+    const isBottom =
+      contentOffset.y + layoutMeasurement.height >= contentSize.height - 20; // margen tolerancia
+
+    setIsAtBottom(isBottom);
+    isAtBottomRef.current = isBottom;
+    if (isBottom) setShowNewMessagesButton(false);
+
   };
 
   if (loading)
@@ -91,6 +142,8 @@ export default function ChatScreen() {
       <FlatList
         ref={flatListRef}
         data={messages}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => {
           const mine = item.sendByUserCi === user?.ci;
@@ -114,6 +167,27 @@ export default function ChatScreen() {
         }}
         contentContainerStyle={{ padding: 16 }}
       />
+      {showNewMessagesButton && (
+      <TouchableOpacity
+          onPress={() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+            setShowNewMessagesButton(false);
+            setIsAtBottom(true);
+          }}
+          style={{
+            position: "absolute",
+            bottom: 70,
+            right: 20,
+            backgroundColor: "#4f46e5",
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 20,
+            elevation: 3,
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "600" }}>↓ Nuevos mensajes</Text>
+        </TouchableOpacity>
+      )}
 
       <View
         style={{

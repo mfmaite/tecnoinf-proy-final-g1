@@ -21,6 +21,9 @@ export default function HomeScreen() {
   const handleCourses = () => {
     router.push("/(courses)/coursesList");
   };
+  const goToChats = () => {
+    router.push("/chats/");
+  };
 
   return (
     <View style={styles.container}>
@@ -39,6 +42,10 @@ export default function HomeScreen() {
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChangePassword}>
           <Text style={styles.buttonText}> Cambiar contraseña </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.buttonPrimary} onPress={goToChats}>
+          <Text style={styles.buttonText}> Chats </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogout}>

@@ -9,12 +9,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
 import { changePassword } from "@/services/userService";
 
 export default function ChangePasswordScreen() {
-  const { updateUser } = useAuth();
   const router = useRouter();
 
   const [currentPassword, setCurrentPassword] = useState("");

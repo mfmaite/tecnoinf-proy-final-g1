@@ -9,6 +9,10 @@ import type { EvaluationSubmission } from '@/types/evaluation-submission';
 import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { quizController } from '@/controllers/quizzControler';
 import type { QuizSubmission } from '@/types/quiz-submission';
+import Modal from '@/components/modal/modal';
+import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
+import { Button } from '@/components/button/button';
+import { evaluationController } from '@/controllers/evaluationController';
 
 type Params = { params: { courseId: string; type: 'simpleContent' | 'evaluation' | 'quiz'; contentId: string } };
 
@@ -23,6 +27,12 @@ export default function SubmissionsPage({ params }: Params) {
   >([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [gradeModalOpen, setGradeModalOpen] = useState<boolean>(false);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
+  const [selectedStudentCi, setSelectedStudentCi] = useState<string | null>(null);
+  const [gradeValue, setGradeValue] = useState<string>('');
+  const [gradeSubmitting, setGradeSubmitting] = useState<boolean>(false);
+  const [gradeError, setGradeError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -130,9 +140,18 @@ export default function SubmissionsPage({ params }: Params) {
             </div>
             {user?.role === 'PROFESOR' && s.note == null && (
               <div>
-                <Link href={`/courses/${params.courseId}/contents/${params.type}/${params.contentId}/submissions/${s.id}/grade`} className="px-3 py-2 rounded-md border bg-secondary-color-70 text-white hover:bg-secondary-color-80">
+                <button
+                  className="px-3 py-2 rounded-md border bg-secondary-color-70 text-white hover:bg-secondary-color-80"
+                  onClick={() => {
+                    setSelectedSubmissionId(s.id);
+                    setSelectedStudentCi(s.author?.ci || null);
+                    setGradeValue('');
+                    setGradeError(null);
+                    setGradeModalOpen(true);
+                  }}
+                >
                   Agregar nota
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -172,6 +191,65 @@ export default function SubmissionsPage({ params }: Params) {
           </div>
         ))}
       </div>
+      <Modal
+        isOpen={gradeModalOpen}
+        onClose={() => {
+          if (!gradeSubmitting) {
+            setGradeModalOpen(false);
+            setSelectedSubmissionId(null);
+            setSelectedStudentCi(null);
+            setGradeValue('');
+            setGradeError(null);
+          }
+        }}
+        title="Calificar entrega"
+        description="Ingrese una nota entre 1 y 12."
+        footer={(
+          <Button
+            onClick={async () => {
+              if (!accessToken || !selectedStudentCi || selectedSubmissionId == null) return;
+              const val = Number(gradeValue);
+              if (!Number.isInteger(val) || val < 1 || val > 12) {
+                setGradeError('La nota debe ser un número entero entre 1 y 12');
+                return;
+              }
+              setGradeSubmitting(true);
+              setGradeError(null);
+              const resp = await evaluationController.gradeSubmission(
+                params.contentId,
+                selectedStudentCi,
+                val,
+                accessToken
+              );
+              setGradeSubmitting(false);
+              if (resp.success) {
+                setSubmissions(prev => prev.map(item => item.id === selectedSubmissionId ? { ...item, note: val } : item));
+                setGradeModalOpen(false);
+                setSelectedSubmissionId(null);
+                setSelectedStudentCi(null);
+                setGradeValue('');
+              } else {
+                setGradeError(resp.message || 'No se pudo calificar la entrega');
+              }
+            }}
+            disabled={gradeSubmitting || !accessToken}
+          >
+            {gradeSubmitting ? 'Guardando...' : 'Guardar'}
+          </Button>
+        )}
+      >
+        <div className="flex flex-col gap-4">
+          <TextField
+            name="grade"
+            label="Nota"
+            type="number"
+            value={gradeValue}
+            onChange={(e) => setGradeValue(e.target.value)}
+            helperText={gradeError || undefined}
+            status={gradeError ? TextFieldStatus.error : TextFieldStatus.default}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

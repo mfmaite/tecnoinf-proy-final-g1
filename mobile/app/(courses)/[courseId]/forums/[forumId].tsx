@@ -15,6 +15,7 @@ import {
   Image,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import {
   getForumPosts,
   createForumPost,
@@ -24,6 +25,23 @@ import { colors } from "../../../../styles/colors";
 import { styles as globalStyles } from "../../../../styles/styles";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { getCourseById } from "../../../../services/courses";
+type ForumParams = {
+  courseId: string;
+  forumId: string;
+  forumType?: string;
+};
+
+export const screenOptions = ({
+  route,
+}: {
+  route: { params?: ForumParams };
+}): NativeStackNavigationOptions => ({
+  title:
+    route.params?.forumType === "ANNOUNCEMENTS"
+      ? "Foro de Anuncios"
+      : "Foro de Consultas",
+  headerShown: true,
+});
 
 export default function ForumView() {
   const { courseId, forumId } = useLocalSearchParams<{
@@ -62,19 +80,6 @@ export default function ForumView() {
     };
     fetch();
   }, [courseId, forumId]);
-
-  // ────────────────────────────────
-  // 🧭 Título dinámico en header
-  // ────────────────────────────────
-  useLayoutEffect(() => {
-    if (forumType)
-      (router as any).setParams?.({
-        title:
-          forumType === "ANNOUNCEMENTS"
-            ? "Foro de Anuncios"
-            : "Foro de Consultas",
-      });
-  }, [forumType, router]);
 
   useFocusEffect(
     useCallback(() => {
@@ -141,11 +146,6 @@ export default function ForumView() {
 
   return (
     <ScrollView style={globalStyles.container}>
-      <Text style={globalStyles.title}>
-        {forumType === "ANNOUNCEMENTS"
-          ? "Foro de Anuncios"
-          : "Foro de Consultas"}
-      </Text>
 
       {/* 📝 Campo para crear post */}
       {canPost && (

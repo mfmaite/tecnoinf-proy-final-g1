@@ -18,6 +18,10 @@ interface Course {
   name?: string;
   createdDate?: string;
 }
+export const screenOptions = {
+  title: "Cursos",
+  headerShown: true,
+};
 
 function formatDate(date?: string | null) {
   if (!date) return "-";

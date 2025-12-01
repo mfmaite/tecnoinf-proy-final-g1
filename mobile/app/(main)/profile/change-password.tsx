@@ -65,8 +65,6 @@ export default function ChangePasswordScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Cambiar contraseña</Text>
-
         <TextInput
           style={styles.input}
           placeholder="Contraseña actual"

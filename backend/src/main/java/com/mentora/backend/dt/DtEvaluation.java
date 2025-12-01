@@ -20,7 +20,7 @@ public class DtEvaluation {
         this.content = content;
         this.fileName = fileName;
         this.fileUrl = fileUrl;
-        this.createdDate = LocalDateTime.now();
+        this.createdDate = createdDate;
         this.type = "evaluation";
         this.dueDate = dueDate;
     }

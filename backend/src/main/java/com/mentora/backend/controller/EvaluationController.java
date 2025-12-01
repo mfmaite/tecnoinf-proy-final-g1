@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
-import com.mentora.backend.requests.UpdateEvaluationRequest;
+import com.mentora.backend.requests.EditEvaluationRequest;
 
 import java.io.IOException;
 import org.springframework.http.MediaType;
@@ -115,7 +115,7 @@ public class EvaluationController {
   @PutMapping(value = "/{evaluationId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<DtApiResponse<DtEvaluation>> updateEvaluation(
     @PathVariable Long evaluationId,
-    @ModelAttribute UpdateEvaluationRequest req)
+    @ModelAttribute EditEvaluationRequest req)
   {
     try {
         DtEvaluation updated = evaluationService.updateEvaluation(evaluationId, req);

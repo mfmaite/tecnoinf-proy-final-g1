@@ -6,15 +6,19 @@ import { formatDate } from '@/helpers/utils';
 import Link from 'next/link';
 
 const PostCard = ({ post, courseId, forumId }: { post: ForumPost, courseId: string, forumId: string }) => {
-  const getTitleFromMessage = (message: string): string => {
-    const firstLine = message.split('\n')[0]?.trim() ?? '';
-    if (firstLine.length <= 100) return firstLine || 'Ver post';
-    return firstLine.slice(0, 100) + '…';
+  const getPreview = (message: string): { text: string; truncated: boolean } => {
+    const trimmed = message.trim();
+    if (trimmed.length <= 100) {
+      return { text: trimmed, truncated: false };
+    }
+    return { text: trimmed.slice(0, 100), truncated: true };
   };
+  const preview = getPreview(post.message);
 
   return (
-    <div className="p-4 flex items-start gap-4 bg-white rounded-lg border border-gray-200">
+    <Link href={`/courses/${courseId}/forums/${forumId}/posts/${post.id}`} className="p-4 flex items-start gap-4 bg-white rounded-lg border border-gray-200">
       <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl ?? undefined} size="lg" />
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
           <div className="truncate">
@@ -23,14 +27,19 @@ const PostCard = ({ post, courseId, forumId }: { post: ForumPost, courseId: stri
           </div>
         </div>
 
-        <Link
-          href={`/courses/${courseId}/forums/${forumId}/posts/${post.id}`}
-          className="block mt-2 text-base font-medium text-text-neutral-50 hover:text-secondary-color-70"
-        >
-          {getTitleFromMessage(post.message)}
-        </Link>
+        <div className="mt-2 text-sm text-text-neutral-50">
+          {preview.text}
+          {preview.truncated && (
+            <>
+              ...{' '}
+              <span className="text-primary-color-60 hover:underline">
+                Ver más
+              </span>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
 

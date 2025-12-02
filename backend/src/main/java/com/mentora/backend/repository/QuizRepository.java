@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findByCourse_IdOrderByCreatedDateAsc(String courseId);
+    Quiz findByIdAndCourse_Id(Long id, String courseId);
 }

@@ -2,11 +2,7 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.*;
 import com.mentora.backend.model.*;
-import com.mentora.backend.repository.CourseRepository;
-import com.mentora.backend.repository.ForumRepository;
-import com.mentora.backend.repository.QuizRepository;
-import com.mentora.backend.repository.EvaluationRepository;
-import com.mentora.backend.repository.SimpleContentRepository;
+import com.mentora.backend.repository.*;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
 
@@ -18,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -50,15 +45,16 @@ public class CourseService {
     private final QuizService quizService;
 
     public CourseService(
-        CourseRepository courseRepository,
-        UserCourseService userCourseService,
-        SimpleContentRepository simpleContentRepository,
-        FileStorageService fileStorageService,
-        ForumRepository forumRepository,
-        QuizRepository quizRepository,
-        EvaluationRepository evaluationRepository,
-        EvaluationService evaluationService,
-        QuizService quizService
+            CourseRepository courseRepository,
+            UserCourseService userCourseService,
+            SimpleContentRepository simpleContentRepository,
+            FileStorageService fileStorageService,
+            ForumRepository forumRepository,
+            QuizRepository quizRepository,
+            EvaluationRepository evaluationRepository,
+            EvaluationService evaluationService,
+            QuizService quizService,
+            UserRepository userRepository
     ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
@@ -81,10 +77,13 @@ public class CourseService {
         return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
-    @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
+        }
+
+        if (Objects.equals(req.getId(), "")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
         }
 
         Course c = new Course(
@@ -124,15 +123,21 @@ public class CourseService {
         List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(evaluationService::getDtEvaluation)
                 .toList();
+        List<DtQuiz> quizzes = quizRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
+                .map(quizService::getDtQuiz)
+                .toList();
 
         List<Object> allContents = new ArrayList<>();
         allContents.addAll(contents);
         allContents.addAll(evaluations);
+        allContents.addAll(quizzes);
         allContents.sort(Comparator.comparing(o -> {
             if (o instanceof DtSimpleContent) {
                 return ((DtSimpleContent) o).getCreatedDate();
             } else if (o instanceof DtEvaluation) {
                 return ((DtEvaluation) o).getCreatedDate();
+            } else if (o instanceof DtQuiz) {
+                return ((DtQuiz) o).getCreatedDate();
             }
             return LocalDateTime.MIN;
         }));
@@ -163,12 +168,16 @@ public class CourseService {
                 if (e == null) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
                 }
+
                 // Retornar evaluación con submissions según el rol del usuario (profesor: todas; estudiante: solo la suya)
                 return evaluationService.getEvaluation(e.getId(), userCi);
             }
             case "quiz": {
-                // No implementado aún
-                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Quiz no implementado");
+                Quiz q = quizRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (q == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                return quizService.getQuiz(q);
             }
             default:
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido inválido");
@@ -226,7 +235,7 @@ public class CourseService {
 
         quiz.setTitle(req.getTitle());
         quiz.setCourse(course);
-        quiz.setExpirationDate(req.getDueDate());
+        quiz.setDueDate(req.getDueDate());
 
         List<QuizQuestion> questions = req.getQuestions().stream().map(q -> {
             QuizQuestion qq = new QuizQuestion();
@@ -376,6 +385,8 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + " (" + id + "): Error inesperado al crear el curso");
                 }
             }
+
+
         }
 
         return new BulkCreateCoursesResponse(createdCourses, errors);
@@ -524,5 +535,39 @@ public class CourseService {
         }
 
         return deleted;
+    }
+
+    public void deleteContent(String type, Long id) {
+        switch (type.toLowerCase()) {
+
+            case "evaluation" -> {
+                Evaluation ev = evaluationRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Evaluation no encontrada"));
+
+                fileStorageService.delete(ev.getFileUrl());
+                evaluationRepository.delete(ev);
+            }
+
+            case "quiz" -> {
+                Quiz quiz = quizRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+
+                quizRepository.delete(quiz);
+            }
+
+            case "simple" -> {
+                SimpleContent sc = simpleContentRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Contenido simple no encontrado"));
+
+                fileStorageService.delete(sc.getFileUrl());
+                simpleContentRepository.delete(sc);
+            }
+
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Tipo inválido");
+        }
     }
 }

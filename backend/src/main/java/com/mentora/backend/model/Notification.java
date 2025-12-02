@@ -1,6 +1,7 @@
 package com.mentora.backend.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -23,6 +24,9 @@ public class Notification {
     @Column(nullable = false)
     private Boolean isRead = false;
 
+    @Column(nullable = false)
+    private LocalDateTime createdDate = LocalDateTime.now();
+
     // === Constructores ===
     public Notification() {}
 
@@ -31,6 +35,7 @@ public class Notification {
         this.message = message;
         this.link = link;
         this.isRead = false;
+        this.createdDate = LocalDateTime.now();
     }
 
     // === Getters y Setters ===

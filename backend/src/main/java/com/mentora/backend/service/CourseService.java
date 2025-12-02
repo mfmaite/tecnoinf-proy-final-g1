@@ -90,25 +90,25 @@ public class CourseService {
                 LocalDateTime.now()
         );
 
-        Course saved = courseRepository.save(c);
+        courseRepository.save(c);
 
         // Crear foros automaticamente al crear el curso
         Forum announcementsForum = new Forum(
                 ForumType.ANNOUNCEMENTS,
-                saved
+                c
         );
         forumRepository.save(announcementsForum);
 
         Forum consultsForum = new Forum(
                 ForumType.CONSULTS,
-                saved
+                c
         );
         forumRepository.save(consultsForum);
 
         // Asignar profesores al curso
         userCourseService.addUsersToCourse(req.getId(), req.getProfessorsCis());
 
-        return getDtCourse(saved);
+        return getDtCourse(c);
     }
 
     public GetCourseResponse getCourseAndContents(String courseId) {

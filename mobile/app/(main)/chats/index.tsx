@@ -5,35 +5,38 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getChats } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 
+type UserParticipant = {
+  ci: string;
+  name: string;
+  pictureUrl?: string | null;
+};
+
+type Chat = {
+  id: number;
+  participant1: UserParticipant;
+  participant2: UserParticipant;
+};
+
 export default function ChatsListScreen() {
-  type Chat = {
-    id: number;
-    participant1Ci: string;
-    participant2Ci: string;
-  };
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { user } = useAuth();
 
   useEffect(() => {
-    loadChats();
+    load();
   }, []);
 
-  const loadChats = async () => {
+  const load = async () => {
     try {
       const data = await getChats();
-      // Solo mostramos los que fueron iniciados por un profesor (participant1Ci ≠ alumno actual)
-      const filtered = data.filter(
-        (chat: Chat) => chat.participant1Ci !== user?.ci
-      );
-
-      setChats(filtered);
+      setChats(data);
     } catch (err) {
       console.error("Error cargando chats", err);
     } finally {
@@ -41,50 +44,69 @@ export default function ChatsListScreen() {
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#4f46e5" />
       </View>
     );
-  }
 
-  if (chats.length === 0) {
+  if (chats.length === 0)
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontSize: 16, color: "#666" }}>
-          No tienes mensajes aún.
-        </Text>
+        <Text style={{ color: "#666" }}>No tienes chats aún.</Text>
       </View>
     );
-  }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white", padding: 16 }}>
+    <View style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
       <FlatList
         data={chats}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const professorCi = item.participant1Ci;
+          const other =
+            item.participant1.ci === user?.ci
+              ? item.participant2
+              : item.participant1;
+
           return (
             <TouchableOpacity
               onPress={() =>
                 router.push({
                   pathname: "/(main)/chats/[partnerCi]",
                   params: {
-                    partnerCi: professorCi,
-                    chatId: item.id,
+                    partnerCi: other.ci,
+                    chatId: String(item.id),
+                    partnerName: other.name,
                   },
                 })
               }
               style={{
+                flexDirection: "row",
+                alignItems: "center",
                 paddingVertical: 12,
                 borderBottomWidth: 1,
                 borderColor: "#eee",
               }}
             >
+              {/* FOTO */}
+              <Image
+                source={{
+                  uri:
+                    other.pictureUrl ??
+                    "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                }}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  marginRight: 10,
+                }}
+              />
+
+              {/* NOMBRE */}
               <Text style={{ fontSize: 16, fontWeight: "500" }}>
-                Chat con profesor {professorCi}
+                Chat con {other.name}
               </Text>
             </TouchableOpacity>
           );

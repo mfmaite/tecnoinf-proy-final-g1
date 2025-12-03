@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,55 +8,126 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { getChatMessages, sendMessage } from "../../../services/chat";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import { getChatMessages, sendMessage, getOrCreateChatWith } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 
 export default function ChatScreen() {
-  const { partnerCi, chatId } = useLocalSearchParams<{ partnerCi: string; chatId: string }>();
+  const { partnerCi, chatId, partnerName } =
+    useLocalSearchParams<{ partnerCi?: string; chatId?: string; partnerName?: string }>();
+
+  const navigation = useNavigation();
+  const navigationRef = useRef(navigation);
   const { user } = useAuth();
+
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const isAtBottomRef = useRef(true);
+  const [showNewMessagesButton, setShowNewMessagesButton] = useState(false);
 
-  const loadMessages = async () => {
+  useEffect(() => {
+    navigationRef.current = navigation;
+  }, [navigation]);
+
+  useEffect(() => {
+    if (partnerName) {
+      navigationRef.current.setOptions({ title: `Chat con ${partnerName}` });
+    }
+  }, [partnerName]);
+
+  const load = useCallback(async () => {
+    if (!partnerCi) return;
+
     try {
-      const data = await getChatMessages(Number(chatId));
-      setMessages(data);
+      let data: any[] = [];
+
+      if (chatId && !isNaN(Number(chatId))) {
+        data = await getChatMessages(Number(chatId));
+      } else {
+        const chat = await getOrCreateChatWith(partnerCi);
+        data = chat.messages ?? [];
+
+        if (data.length === 0) {
+          await sendMessage(partnerCi, "Hola! 😊");
+        }
+      }
+
+      setMessages(
+        [...data].sort(
+          (a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime()
+        )
+      );
     } catch (err) {
       console.error("Error cargando mensajes", err);
+      Alert.alert("Error", "No se pudieron cargar los mensajes.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [chatId, partnerCi]);
 
   useEffect(() => {
-    loadMessages();
-    const interval = setInterval(loadMessages, 5000); // refresh cada 5s
+    load();
+    const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [load]);
 
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (isAtBottomRef.current) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+    } else {
+      setShowNewMessagesButton(true);
+    }
+  }, [ messages]);
+
+  // Enviar mensaje
   const handleSend = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() || isSending || !partnerCi) return;
+
     try {
-      const newMsg = await sendMessage(partnerCi, text.trim());
-      setMessages((prev) => [...prev, newMsg]);
+      setIsSending(true);
+      const msg = await sendMessage(partnerCi, text.trim());
+
+      setMessages((prev) => [...prev, msg]);
       setText("");
-      flatListRef.current?.scrollToEnd({ animated: true });
-    } catch (err) {
-      console.error("Error enviando mensaje", err);
+
+      // Scroll al último mensaje enviado
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+    } catch {
+      Alert.alert("Error", "No se pudo enviar el mensaje.");
+    } finally {
+      setIsSending(false);
     }
   };
 
-  if (loading) {
+
+  const handleScroll = (event: any) => {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+
+    const isBottom =
+      contentOffset.y + layoutMeasurement.height >= contentSize.height - 20; // margen tolerancia
+
+    isAtBottomRef.current = isBottom;
+    if (isBottom) setShowNewMessagesButton(false);
+
+  };
+
+  if (loading)
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#4f46e5" />
       </View>
     );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -66,37 +137,24 @@ export default function ChatScreen() {
       <FlatList
         ref={flatListRef}
         data={messages}
-        keyExtractor={(item) => item.id.toString()}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => {
-          const isMine = item.sendByUserCi === user?.ci;
-          if (!user) {
-            return (
-              <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                <Text>No se encontró el usuario autenticado.</Text>
-              </View>
-            );
-          } else
+          const mine = item.sendByUserCi === user?.ci;
           return (
             <View
               style={{
-                alignSelf: isMine ? "flex-end" : "flex-start",
-                backgroundColor: isMine ? "#4f46e5" : "#e5e7eb",
+                alignSelf: mine ? "flex-end" : "flex-start",
+                backgroundColor: mine ? "#4f46e5" : "#e5e7eb",
                 padding: 10,
                 borderRadius: 12,
                 marginVertical: 4,
                 maxWidth: "80%",
               }}
             >
-              <Text style={{ color: isMine ? "white" : "black" }}>
-                {item.message}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 10,
-                  color: isMine ? "#ddd" : "#666",
-                  marginTop: 4,
-                }}
-              >
+              <Text style={{ color: mine ? "white" : "black" }}>{item.message}</Text>
+              <Text style={{ fontSize: 10, color: mine ? "#ddd" : "#666", marginTop: 4 }}>
                 {new Date(item.dateSent).toLocaleTimeString()}
               </Text>
             </View>
@@ -104,14 +162,34 @@ export default function ChatScreen() {
         }}
         contentContainerStyle={{ padding: 16 }}
       />
+      {showNewMessagesButton && (
+      <TouchableOpacity
+          onPress={() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+            setShowNewMessagesButton(false);
+          }}
+          style={{
+            position: "absolute",
+            bottom: 70,
+            right: 20,
+            backgroundColor: "#4f46e5",
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 20,
+            elevation: 3,
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "600" }}>↓ Nuevos mensajes</Text>
+        </TouchableOpacity>
+      )}
 
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
-          padding: 10,
           borderTopWidth: 1,
           borderColor: "#ddd",
+          padding: 10,
         }}
       >
         <TextInput
@@ -127,8 +205,11 @@ export default function ChatScreen() {
           onChangeText={setText}
           placeholder="Escribe un mensaje..."
         />
-        <TouchableOpacity onPress={handleSend}>
-          <Text style={{ color: "#4f46e5", fontWeight: "bold" }}>Enviar</Text>
+
+        <TouchableOpacity disabled={isSending} onPress={handleSend}>
+          <Text style={{ color: "#4f46e5", fontWeight: "bold" }}>
+            {isSending ? "Enviando..." : "Enviar"}
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

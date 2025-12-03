@@ -28,17 +28,17 @@ function ParticipantsTable({ courseId }: Props) {
   const [gradeValue, setGradeValue] = useState<string>('');
   const router = useRouter();
 
-  useEffect(() => {
-    const getParticipants = async () => {
-    const res = await courseController.getParticipants(courseId, accessToken!)
+  const getParticipants = async () => {
+  const res = await courseController.getParticipants(courseId, accessToken!)
 
-      if (!res.success || !res.data) {
-        setError(res.message ?? 'Error desconocido')
-      } else {
-        setData(res.data)
-      }
+    if (!res.success || !res.data) {
+      setError(res.message ?? 'Error desconocido')
+    } else {
+      setData(res.data)
     }
+  }
 
+  useEffect(() => {
     getParticipants();
   }, [accessToken, courseId])
 
@@ -128,7 +128,7 @@ function ParticipantsTable({ courseId }: Props) {
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.role}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-gray-700 flex items-center">
                   <button
                     type="button"
                     onClick={() => onOpenChat(u.ci)}
@@ -137,8 +137,15 @@ function ParticipantsTable({ courseId }: Props) {
                   >
                     <SendIcon className="w-6 h-6" />
                   </button>
-                  {user?.role === 'PROFESOR' && u.role === 'ESTUDIANTE' && (
-                    <button
+                  {user?.role === 'ESTUDIANTE' && u.ci === user?.ci && (
+                    <FinalGradeComponent finalGrade={u.finalGrade} />
+                  )}
+
+                  {(user?.role === 'PROFESOR' && u.role === 'ESTUDIANTE') && (
+                    u.finalGrade ? (
+                      <FinalGradeComponent finalGrade={u.finalGrade} />
+                    ) : (
+                      <button
                       type="button"
                       onClick={() => {
                         setSelectedCi(u.ci);
@@ -153,7 +160,8 @@ function ParticipantsTable({ courseId }: Props) {
                     >
                       Calificar
                     </button>
-                  )}
+                    ))
+                  }
                 </td>
               </tr>
             ))}
@@ -189,6 +197,7 @@ function ParticipantsTable({ courseId }: Props) {
               setGradeSubmitting(false);
               if (res.success) {
                 setGradeSuccess('Calificación publicada correctamente');
+                getParticipants();
                 setTimeout(() => {
                   setGradeOpen(false);
                   setGradeSuccess(null);
@@ -220,6 +229,14 @@ function ParticipantsTable({ courseId }: Props) {
         </div>
       </Modal>
     </div>
+  )
+}
+
+const FinalGradeComponent = ({ finalGrade }: { finalGrade: number }) => {
+  return (
+    <span className={`text-gray-700 font-bold ml-3 ${finalGrade < 6 ? 'text-red-800' : 'text-secondary-color-60'}`}>
+      Nota: {finalGrade}
+    </span>
   )
 }
 

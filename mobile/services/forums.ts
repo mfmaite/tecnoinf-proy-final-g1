@@ -16,7 +16,6 @@ export interface NewPostPayload {
   message: string;
 }
 
-// Respuesta genérica del backend
 interface ApiResponse<T> {
   success: boolean;
   status?: number;
@@ -24,12 +23,21 @@ interface ApiResponse<T> {
   data: T;
 }
 
+interface ForumPostsResponse {
+  forum: {
+    id: string;
+    type: string;
+    courseId: string;
+  };
+  posts: ForumPost[];
+}
+
 // ──────────────────────────────
 // GET /forum/:forumId
 // ──────────────────────────────
 export async function getForumPosts(forumId: string): Promise<ForumPost[]> {
   try {
-    const { data } = await api.get<ApiResponse<any>>(
+    const { data } = await api.get<ApiResponse<ForumPostsResponse>>(
       `/forum/${encodeURIComponent(forumId)}`
     );
 
@@ -37,8 +45,12 @@ export async function getForumPosts(forumId: string): Promise<ForumPost[]> {
       throw new Error(data.message || "Error al obtener posts del foro.");
     }
 
-    // El backend a veces devuelve posts en data.posts o directamente en data
-    const posts: ForumPost[] = data.data?.posts || data.data || [];
+    const posts = data.data.posts;
+
+    if (!Array.isArray(posts)) {
+      throw new Error("Formato inesperado: 'posts' no es un array.");
+    }
+
     return posts;
   } catch (error: any) {
     console.error("[getForumPosts] Error:", error);
@@ -71,52 +83,6 @@ export async function createForumPost(
     console.error("[createForumPost] Error:", error);
     throw new Error(
       error.response?.data?.message || "No se pudo publicar el mensaje."
-    );
-  }
-}
-
-// ──────────────────────────────
-// PUT /post/:postId
-// ──────────────────────────────
-export async function updateForumPost(
-  postId: number,
-  payload: NewPostPayload
-): Promise<ForumPost> {
-  try {
-    const { data } = await api.put<ApiResponse<ForumPost>>(
-      `/post/${encodeURIComponent(postId)}`,
-      payload
-    );
-
-    if (!data.success) {
-      throw new Error(data.message || "Error al editar post.");
-    }
-
-    return data.data;
-  } catch (error: any) {
-    console.error("[updateForumPost] Error:", error);
-    throw new Error(
-      error.response?.data?.message || "No se pudo editar el post."
-    );
-  }
-}
-
-// ──────────────────────────────
-// DELETE /post/:postId
-// ──────────────────────────────
-export async function deleteForumPost(postId: number): Promise<void> {
-  try {
-    const { data } = await api.delete<ApiResponse<unknown>>(
-      `/post/${encodeURIComponent(postId)}`
-    );
-
-    if (!data.success) {
-      throw new Error(data.message || "Error al eliminar post.");
-    }
-  } catch (error: any) {
-    console.error("[deleteForumPost] Error:", error);
-    throw new Error(
-      error.response?.data?.message || "No se pudo eliminar el post."
     );
   }
 }

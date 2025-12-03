@@ -2,13 +2,11 @@ package com.mentora.backend.service;
 
 import com.mentora.backend.dt.*;
 import com.mentora.backend.model.*;
-import com.mentora.backend.repository.CourseRepository;
-import com.mentora.backend.repository.ForumRepository;
-import com.mentora.backend.repository.QuizRepository;
-import com.mentora.backend.repository.EvaluationRepository;
-import com.mentora.backend.repository.SimpleContentRepository;
+import com.mentora.backend.repository.*;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
+
+import java.io.ByteArrayInputStream;
 import java.util.*;
 
 import com.mentora.backend.requests.CreateQuizRequest;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -48,15 +45,16 @@ public class CourseService {
     private final QuizService quizService;
 
     public CourseService(
-        CourseRepository courseRepository,
-        UserCourseService userCourseService,
-        SimpleContentRepository simpleContentRepository,
-        FileStorageService fileStorageService,
-        ForumRepository forumRepository,
-        QuizRepository quizRepository,
-        EvaluationRepository evaluationRepository,
-        EvaluationService evaluationService,
-        QuizService quizService
+            CourseRepository courseRepository,
+            UserCourseService userCourseService,
+            SimpleContentRepository simpleContentRepository,
+            FileStorageService fileStorageService,
+            ForumRepository forumRepository,
+            QuizRepository quizRepository,
+            EvaluationRepository evaluationRepository,
+            EvaluationService evaluationService,
+            QuizService quizService,
+            UserRepository userRepository
     ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
@@ -79,10 +77,13 @@ public class CourseService {
         return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
-    @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
+        }
+
+        if (Objects.equals(req.getId(), "")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
         }
 
         Course c = new Course(
@@ -384,6 +385,8 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + " (" + id + "): Error inesperado al crear el curso");
                 }
             }
+
+
         }
 
         return new BulkCreateCoursesResponse(createdCourses, errors);
@@ -437,4 +440,134 @@ public class CourseService {
         return getDtSimpleContent(saved);
     }
 
+    public void deleteCourse(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Curso no encontrado"
+                ));
+
+        try {
+            courseRepository.delete(course);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al eliminar el curso"
+            );
+        }
+    }
+
+    public List<String> deleteCoursesFromCsv(byte[] fileBytes) {
+        if (fileBytes == null || fileBytes.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+        }
+
+        List<String> idsToDelete = new ArrayList<>();
+        List<String> deleted = new ArrayList<>();
+
+        try (
+                InputStream is = new ByteArrayInputStream(fileBytes);
+                CSVReader reader = new CSVReaderBuilder(
+                        new InputStreamReader(is, StandardCharsets.UTF_8)
+                ).build()
+        ) {
+            List<String[]> rows = reader.readAll();
+
+            if (rows == null || rows.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+            }
+
+            int lineNumber = 0;
+            for (String[] row : rows) {
+                lineNumber++;
+
+                if (row == null || row.length == 0) {
+                    continue;
+                }
+
+                String value = row[0] != null ? row[0].trim() : "";
+
+                // Ignorar encabezado
+                if (lineNumber == 1 && value.equalsIgnoreCase("identificador de curso")) {
+                    continue;
+                }
+
+                if (value.isEmpty()) {
+                    continue;
+                }
+
+                idsToDelete.add(value);
+            }
+
+        } catch (IOException | com.opencsv.exceptions.CsvException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Error al procesar el archivo CSV"
+            );
+        }
+
+        if (idsToDelete.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El archivo CSV no contiene cursos válidos"
+            );
+        }
+
+        // Validar todo antes de borrar (operación atómica)
+        for (String id : idsToDelete) {
+            if (!courseRepository.existsById(id)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Curso no encontrado: " + id
+                );
+            }
+        }
+
+        try {
+            for (String id : idsToDelete) {
+                courseRepository.deleteById(id);
+                deleted.add(id);
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al eliminar los cursos"
+            );
+        }
+
+        return deleted;
+    }
+
+    public void deleteContent(String type, Long id) {
+        switch (type.toLowerCase()) {
+
+            case "evaluation" -> {
+                Evaluation ev = evaluationRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Evaluation no encontrada"));
+
+                fileStorageService.delete(ev.getFileUrl());
+                evaluationRepository.delete(ev);
+            }
+
+            case "quiz" -> {
+                Quiz quiz = quizRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+
+                quizRepository.delete(quiz);
+            }
+
+            case "simple" -> {
+                SimpleContent sc = simpleContentRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Contenido simple no encontrado"));
+
+                fileStorageService.delete(sc.getFileUrl());
+                simpleContentRepository.delete(sc);
+            }
+
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Tipo inválido");
+        }
+    }
 }

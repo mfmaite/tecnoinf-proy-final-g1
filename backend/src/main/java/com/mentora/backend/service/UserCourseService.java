@@ -50,30 +50,51 @@ public class UserCourseService {
 
     public String addUsersToCourse(String courseId, String[] usersCis) {
         List<String> errorUsers = new ArrayList<>();
+        List<String> repeatedUsers = new ArrayList<>();
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
 
         for (String userCi : usersCis) {
-        User user = userRepository.findById(userCi).orElse(null);
-        if (user == null) {
-            errorUsers.add(userCi + " no existe");
-            continue;
+            User user = userRepository.findById(userCi).orElse(null);
+
+            if (user == null) {
+                errorUsers.add(userCi + " no existe");
+                continue;
+            }
+
+            // Ya estaba matriculado
+            if (userCourseRepository.existsByCourseAndUser(course, user)) {
+                repeatedUsers.add(userCi);
+                continue;
+            }
+
+            // Matricular
+            UserCourse uc = new UserCourse(course, user, null);
+            userCourseRepository.save(uc);
         }
 
-        if (userCourseRepository.existsByCourseAndUser(course, user)) {
-            errorUsers.add(userCi + " ya estaba matriculado");
-            continue;
+        boolean anyEnrolled = repeatedUsers.size() < usersCis.length;
+
+        if (!anyEnrolled && errorUsers.isEmpty()) {
+            return "Todos los usuarios enviados ya estaban matriculados: " + String.join(", ", repeatedUsers);
         }
 
-        UserCourse uc = new UserCourse(course, user, null);
-        userCourseRepository.save(uc);
-        };
+        StringBuilder msg = new StringBuilder("Usuarios procesados. ");
+
+        if (anyEnrolled) {
+            msg.append("Usuarios matriculados correctamente. ");
+        }
+
+        if (!repeatedUsers.isEmpty()) {
+            msg.append("Algunos usuarios ya estaban matriculados: ").append(String.join(", ", repeatedUsers)).append(". ");
+        }
 
         if (!errorUsers.isEmpty()) {
-            return "Algunos usuarios no se pudieron matricular: " + String.join(", ", errorUsers);
+            msg.append("Errores: ").append(String.join(", ", errorUsers));
         }
-        return "Usuarios matriculados correctamente";
+
+        return msg.toString().trim();
     }
 
     public BulkMatricularUsuariosResponse addUsersToCourseFromCsv(String courseId, InputStream csvInputStream) throws IOException, CsvException {
@@ -96,7 +117,8 @@ public class UserCourseService {
             int lineNumber = 0;
             for (String[] row : rows) {
                 if (row == null) { continue; }
-                //ignora la primera linea si es el header
+
+                // Ignora header
                 if (lineNumber == 1 && row.length > 0 && row[0] != null && row[0].trim().equalsIgnoreCase("ci")) {
                     continue;
                 }
@@ -149,19 +171,31 @@ public class UserCourseService {
 
         for (String userCi : usersCis) {
             User user = userRepository.findById(userCi).orElse(null);
+
             if (user == null) {
                 errorUsers.add(userCi + " no existe");
                 continue;
             }
 
-            UserCourse userCourse = userCourseRepository.findByCourseAndUser(course, user)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no matriculado en el curso"));
+            if (user.getRole() == Role.PROFESOR) {
+                errorUsers.add(userCi + " no puede ser desmatriculado porque tiene rol PROFESOR");
+                continue;
+            }
+
+            UserCourse userCourse = userCourseRepository
+                    .findByCourseAndUser(course, user)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Usuario " + userCi + " no está matriculado en el curso"
+                    ));
+
             userCourseRepository.delete(userCourse);
         }
 
         if (!errorUsers.isEmpty()) {
             return "Algunos usuarios no se pudieron desmatricular: " + String.join(", ", errorUsers);
         }
+
         return "Usuarios desmatriculados correctamente";
     }
 
@@ -185,6 +219,20 @@ public class UserCourseService {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    public void validateProfessorAccess(Course course, String userId) {
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
+        if (!userCourseRepository.existsByCourseAndUser(course, user)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "No pertenecés a este curso");
+        }
+
+        if (user.getRole() != Role.PROFESOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Solo profesores pueden borrar contenido");
+        }
+    }
 }

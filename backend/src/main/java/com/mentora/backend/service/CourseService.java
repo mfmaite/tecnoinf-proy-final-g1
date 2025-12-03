@@ -5,6 +5,8 @@ import com.mentora.backend.model.*;
 import com.mentora.backend.repository.*;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
+
+import java.io.ByteArrayInputStream;
 import java.util.*;
 
 import com.mentora.backend.requests.CreateQuizRequest;
@@ -436,6 +438,103 @@ public class CourseService {
 
         SimpleContent saved = simpleContentRepository.save(sc);
         return getDtSimpleContent(saved);
+    }
+
+    public void deleteCourse(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Curso no encontrado"
+                ));
+
+        try {
+            courseRepository.delete(course);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al eliminar el curso"
+            );
+        }
+    }
+
+    public List<String> deleteCoursesFromCsv(byte[] fileBytes) {
+        if (fileBytes == null || fileBytes.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+        }
+
+        List<String> idsToDelete = new ArrayList<>();
+        List<String> deleted = new ArrayList<>();
+
+        try (
+                InputStream is = new ByteArrayInputStream(fileBytes);
+                CSVReader reader = new CSVReaderBuilder(
+                        new InputStreamReader(is, StandardCharsets.UTF_8)
+                ).build()
+        ) {
+            List<String[]> rows = reader.readAll();
+
+            if (rows == null || rows.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+            }
+
+            int lineNumber = 0;
+            for (String[] row : rows) {
+                lineNumber++;
+
+                if (row == null || row.length == 0) {
+                    continue;
+                }
+
+                String value = row[0] != null ? row[0].trim() : "";
+
+                // Ignorar encabezado
+                if (lineNumber == 1 && value.equalsIgnoreCase("identificador de curso")) {
+                    continue;
+                }
+
+                if (value.isEmpty()) {
+                    continue;
+                }
+
+                idsToDelete.add(value);
+            }
+
+        } catch (IOException | com.opencsv.exceptions.CsvException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Error al procesar el archivo CSV"
+            );
+        }
+
+        if (idsToDelete.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El archivo CSV no contiene cursos válidos"
+            );
+        }
+
+        // Validar todo antes de borrar (operación atómica)
+        for (String id : idsToDelete) {
+            if (!courseRepository.existsById(id)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Curso no encontrado: " + id
+                );
+            }
+        }
+
+        try {
+            for (String id : idsToDelete) {
+                courseRepository.deleteById(id);
+                deleted.add(id);
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al eliminar los cursos"
+            );
+        }
+
+        return deleted;
     }
 
     public void deleteContent(String type, Long id) {

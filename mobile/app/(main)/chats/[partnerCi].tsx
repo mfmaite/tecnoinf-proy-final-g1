@@ -27,23 +27,19 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
   const isAtBottomRef = useRef(true);
   const [showNewMessagesButton, setShowNewMessagesButton] = useState(false);
 
-  // Mantener navegación en ref para evitar warning de dependencias
   useEffect(() => {
     navigationRef.current = navigation;
   }, [navigation]);
 
-  // Setear título dinámico
   useEffect(() => {
     if (partnerName) {
       navigationRef.current.setOptions({ title: `Chat con ${partnerName}` });
     }
   }, [partnerName]);
 
-  // Cargar mensajes
   const load = useCallback(async () => {
     if (!partnerCi) return;
 
@@ -113,15 +109,14 @@ export default function ChatScreen() {
       setIsSending(false);
     }
   };
-  
+
 
   const handleScroll = (event: any) => {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    
+
     const isBottom =
       contentOffset.y + layoutMeasurement.height >= contentSize.height - 20; // margen tolerancia
 
-    setIsAtBottom(isBottom);
     isAtBottomRef.current = isBottom;
     if (isBottom) setShowNewMessagesButton(false);
 
@@ -172,7 +167,6 @@ export default function ChatScreen() {
           onPress={() => {
             flatListRef.current?.scrollToEnd({ animated: true });
             setShowNewMessagesButton(false);
-            setIsAtBottom(true);
           }}
           style={{
             position: "absolute",

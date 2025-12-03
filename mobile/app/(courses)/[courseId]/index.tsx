@@ -9,6 +9,8 @@ import {
   Linking,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+
+import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -16,6 +18,21 @@ import * as Sharing from "expo-sharing";
 import { colors } from "../../../styles/colors";
 import { styles } from "../../../styles/styles";
 import { getCourseById, CourseData, Content } from "../../../services/courses";
+
+
+  type CourseParams = {
+    courseId: string;
+    courseName?: string;
+  };
+
+  export const screenOptions = ({
+    route,
+  }: {
+    route: { params?: CourseParams };
+  }): NativeStackNavigationOptions => ({
+    title: route.params?.courseName ?? "Detalle del curso",
+    headerShown: true,
+  });
 
 export default function CourseView() {
   const router = useRouter();
@@ -226,6 +243,7 @@ export default function CourseView() {
                 params: {
                   courseId: String(courseData.id),
                   forumId: String(forum.id),
+                  forumType: forum.type,
                 },
               })
             }

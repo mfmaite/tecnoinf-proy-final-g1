@@ -77,7 +77,7 @@ export default function ChatsListScreen() {
                   params: {
                     partnerCi: other.ci,
                     chatId: String(item.id),
-                    partnerName: other.name, // 🔥 enviamos el nombre
+                    partnerName: other.name,
                   },
                 })
               }

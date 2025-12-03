@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
@@ -38,6 +38,10 @@ export default function HomeScreen() {
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToProfilePage}>
           <Text style={styles.buttonText}> Ir a perfil</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
+           <Text style={styles.buttonText}> Ir a actividad reciente</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChangePassword}>

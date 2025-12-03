@@ -167,8 +167,8 @@ export const styles = StyleSheet.create({
   cellDate: { flex: 2, textAlign: "center" },
   header: { backgroundColor: colors.primary[20], padding: 16, borderRadius: 8, marginBottom: 16 },
   headerTitle: { fontSize: 24, fontWeight: "700", color: colors.secondary[60], marginBottom: 16 },
-    contentCard: {
-    backgroundColor: colors.primary[20],
+  contentCard: {
+    backgroundColor: colors.primary[10],
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,

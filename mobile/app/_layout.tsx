@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   return (
@@ -85,9 +86,11 @@ function AppNavigator() {
   // Mientras verificamos la sesión, mostramos un indicador de carga
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 

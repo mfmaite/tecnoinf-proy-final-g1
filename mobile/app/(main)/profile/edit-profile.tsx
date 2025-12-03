@@ -139,7 +139,6 @@ export default function EditProfileScreen() {
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Editar Perfil</Text>
 
       {/* 🖼️ Avatar */}
       <TouchableOpacity onPress={pickImage}>

@@ -293,7 +293,7 @@ public class UserService {
         resetToken.setExpiryDate(expiry);
         passwordResetTokenRepository.save(resetToken);
 
-        String link = "https://tu-frontend.com/reset-password?token=" + token;
+        String link = "https://tecnoinf-proy-final-g1-production.up.railway.app?token=" + token;
 
         String subject = "Recuperación de contraseña";
         String body = "Haz clic en el siguiente enlace para restablecer tu contraseña (válido por 2 horas): " + link;

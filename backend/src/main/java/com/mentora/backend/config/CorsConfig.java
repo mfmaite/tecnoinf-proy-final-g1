@@ -1,5 +1,6 @@
 package com.mentora.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -9,13 +10,28 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 public class CorsConfig {
 
+	@Value("${cors.allowed-origins:http://localhost:3000}")
+	private String allowedOriginsProperty;
+
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // Permitir solicitudes desde el frontend
-        config.addAllowedOrigin("http://localhost:3000");
+		// Orígenes permitidos (configurable por propiedad/env var, soporta múltiples separados por coma)
+		if (allowedOriginsProperty != null) {
+			for (String origin : allowedOriginsProperty.split(",")) {
+				String trimmed = origin.trim();
+				if (!trimmed.isEmpty()) {
+					// Si se necesita wildcard (e.g. https://*.example.com) usar addAllowedOriginPattern
+					if (trimmed.contains("*")) {
+						config.addAllowedOriginPattern(trimmed);
+					} else {
+						config.addAllowedOrigin(trimmed);
+					}
+				}
+			}
+		}
 
         // Permitir credenciales
         config.setAllowCredentials(true);

@@ -5,7 +5,6 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primary[10],
-    // justifyContent: "center", NO USAR
     paddingTop: 10,
     paddingHorizontal: 20,
   },
@@ -179,16 +178,6 @@ export const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  input: {
-      width: "100%",
-      borderWidth: 1,
-      borderColor: colors.surfaceLight[40],
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 12,
-      fontSize: 16,
-      backgroundColor: colors.surfaceLight[20],
-    },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
   contentText: { fontSize: 14, marginBottom: 4 },
   contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
@@ -254,4 +243,28 @@ export const styles = StyleSheet.create({
   errorText: {
     color: "red",
   },
+  activityCardItem: {
+  backgroundColor: "#fff",
+  borderRadius: 12,
+  padding: 12,
+  marginVertical: 6,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 2,
+},
+activityDescription: {
+  fontSize: 15,
+  fontWeight: "500",
+  color: "#333",
+},
+activityDate: {
+  fontSize: 12,
+  color: "#666",
+  marginTop: 4,
+},
+safeArea: {
+  flex: 1,
+  backgroundColor: colors.surfaceLight[20],
+},
 });

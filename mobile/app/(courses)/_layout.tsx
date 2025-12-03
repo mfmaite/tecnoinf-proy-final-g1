@@ -1,37 +1,34 @@
 import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { screenOptions as listOptions } from "./coursesList";
-import { styles } from "../../styles/styles";
 import { colors } from "../../styles/colors";
-
+import { styles } from "../../styles/styles";
 
 export default function CoursesLayout() {
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
-      <Stack 
-              screenOptions={{
-                headerShown: false,
-                headerTitleStyle: styles.headerTitle,
-                headerTitleAlign: "center",
-                headerTintColor: colors.secondary[60],
-                headerStyle: { backgroundColor: colors.primary[10] },
-            }}>
-        {/* 📚 Lista de cursos */}
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          headerTitleStyle: styles.headerTitle,
+          headerTitleAlign: "center",
+          headerTintColor: colors.secondary[60],
+          headerStyle: { backgroundColor: colors.primary[10] },
+        }}>
+
         <Stack.Screen
           name="coursesList"
           options={listOptions}
         />
 
-        {/* 🎓 Vista de un curso */}
         <Stack.Screen
           name="[courseId]/index"
           options={{
-            headerShown: true, 
+            headerShown: true,
             title: "Detalle del curso",
           }}
         />
 
-        {/* 👥 Participantes */}
         <Stack.Screen
           name="participants"
           options={{
@@ -40,7 +37,6 @@ export default function CoursesLayout() {
           }}
         />
 
-        {/* 💬 Foro */}
         <Stack.Screen
           name="[courseId]/forums/[forumId]"
           options={({ route }: { route: any }) => ({
@@ -51,7 +47,7 @@ export default function CoursesLayout() {
                 : "Foro de Consultas",
           })}
         />
-        {/* 🧵 Post individual */}
+
         <Stack.Screen
           name="[courseId]/forums/[forumId]/[postId]"
           options={{

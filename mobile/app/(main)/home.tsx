@@ -37,6 +37,10 @@ export default function HomeScreen() {
           <Text style={styles.buttonText}> Ir a perfil</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
+           <Text style={styles.buttonText}> Ir a actividad reciente</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChangePassword}>
           <Text style={styles.buttonText}> Cambiar contraseña </Text>
         </TouchableOpacity>

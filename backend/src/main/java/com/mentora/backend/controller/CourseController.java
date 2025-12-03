@@ -649,4 +649,78 @@ public class CourseController {
             ));
         }
     }
+
+    @Operation(
+            summary = "Eliminar curso",
+            description = "Elimina un curso de forma permanente. Solo administradores.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Curso eliminado correctamente")
+    @ApiResponse(responseCode = "404", description = "Curso no encontrado")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @DeleteMapping("/{courseId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<Void>> deleteCourse(@PathVariable String courseId) {
+        try {
+            courseService.deleteCourse(courseId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Curso eliminado correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Eliminar cursos por CSV",
+            description = "Elimina cursos de forma masiva mediante un archivo CSV. Requiere rol ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Cursos eliminados correctamente")
+    @ApiResponse(responseCode = "400", description = "CSV inválido o cursos inexistentes")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error interno")
+    @PostMapping(value = "/delete-batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<List<String>>> deleteCoursesByCsv(
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+            List<String> deleted = courseService.deleteCoursesFromCsv(file.getBytes());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Cursos eliminados correctamente",
+                    deleted
+            ));
+
+        } catch (ResponseStatusException e) {
+
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+
+        } catch (IOException e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo archivo",
+                    null
+            ));
+        }
+    }
 }

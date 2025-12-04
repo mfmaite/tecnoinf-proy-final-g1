@@ -11,10 +11,11 @@ public class DtEvaluation {
     private LocalDateTime createdDate;
     private String type;
     private LocalDateTime dueDate;
+    private String courseId;
 
     public DtEvaluation() {}
 
-    public DtEvaluation(Long id, String title, String content, String fileName, String fileUrl, LocalDateTime createdDate, LocalDateTime dueDate) {
+    public DtEvaluation(Long id, String title, String content, String fileName, String fileUrl, LocalDateTime createdDate, LocalDateTime dueDate, String courseId) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -23,6 +24,7 @@ public class DtEvaluation {
         this.createdDate = createdDate;
         this.type = "evaluation";
         this.dueDate = dueDate;
+        this.courseId = courseId;
     }
 
     public Long getId() { return id; }
@@ -48,4 +50,7 @@ public class DtEvaluation {
 
     public LocalDateTime getDueDate() { return dueDate; }
     public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+    public String getCourseId() { return courseId; }
+    public void setCourseId(String courseId) { this.courseId = courseId; }
 }

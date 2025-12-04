@@ -3,6 +3,7 @@ import { ApiResponse } from '@/types/api-response';
 import { UserSignUpData, UserResponse } from '@/types/user';
 import { ChangePasswordRequest } from '@/types/user';
 import { UserActivity } from '@/types/activity';
+import { PendingEvaluationsAndQuizzes } from '@/types/pending';
 
 type UserFilter = "todos" | "profesores" | "estudiantes" | "administradores";
 
@@ -129,6 +130,29 @@ class UserController {
         success: false,
         status: (error as any).status ?? 500,
         message: 'Error al obtener actividades del usuario',
+        data: undefined,
+      };
+    }
+  }
+
+  async getPending(
+    accessToken: string
+  ): Promise<ApiResponse<PendingEvaluationsAndQuizzes>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.USERS}/pending`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al obtener pendientes del usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al obtener pendientes del usuario',
         data: undefined,
       };
     }

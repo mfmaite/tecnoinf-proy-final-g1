@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +49,44 @@ public class FileStorageService {
             originalFilename,
             "gs://" + gcsConfig.getBucketName() + "/" + gcsFileName,
             file.getSize()
+        );
+    }
+
+    public DtFileResource store(Path path) throws IOException {
+        if (path == null || !Files.exists(path) || !Files.isRegularFile(path)) {
+            throw new IllegalArgumentException("Archivo inválido");
+        }
+        String originalFilename = path.getFileName().toString();
+        String contentType = Files.probeContentType(path);
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "application/octet-stream";
+        }
+        try (InputStream is = Files.newInputStream(path)) {
+            return store(originalFilename, is, contentType);
+        }
+    }
+
+    public DtFileResource store(String originalFilename, InputStream inputStream, String contentType) throws IOException {
+        if (inputStream == null) {
+            throw new IllegalArgumentException("Stream nulo");
+        }
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String gcsFileName = UUID.randomUUID() + extension;
+
+        BlobInfo blobInfo = BlobInfo.newBuilder(gcsConfig.getBucketName(), gcsFileName)
+                .setContentType(contentType != null && !contentType.isBlank() ? contentType : "application/octet-stream")
+                .build();
+
+        byte[] bytes = inputStream.readAllBytes();
+        storage.create(blobInfo, bytes);
+
+        return new DtFileResource(
+            originalFilename,
+            "gs://" + gcsConfig.getBucketName() + "/" + gcsFileName,
+            (long) bytes.length
         );
     }
 

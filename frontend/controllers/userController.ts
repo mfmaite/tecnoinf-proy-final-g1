@@ -1,7 +1,7 @@
 import { API_ENDPOINTS } from '../config/api';
 import { ApiResponse } from '@/types/api-response';
-import { UserSignUpData, UserResponse } from '@/types/user';
-import { ChangePasswordRequest } from '@/types/user';
+import { UserResponse } from '@/types/user';
+import { ChangePasswordRequest, CreateUserRequest } from '@/types/user';
 import { UserActivity } from '@/types/activity';
 import { PendingEvaluationsAndQuizzes } from '@/types/pending';
 
@@ -9,15 +9,23 @@ type UserFilter = "todos" | "profesores" | "estudiantes" | "administradores";
 
 type UserOrder = "name_asc" | "name_desc" | "ci_asc" | "ci_desc";
 class UserController {
-  async createUser(userData: UserSignUpData, accessToken: string): Promise<ApiResponse<UserResponse>> {
+  async createUser(userData: CreateUserRequest, accessToken: string, file?: File): Promise<ApiResponse<UserResponse>> {
     try {
+      const form = new FormData();
+      form.append('ci', userData.ci);
+      form.append('name', userData.name);
+      form.append('email', userData.email);
+      form.append('password', userData.password);
+      form.append('role', userData.role);
+      if (userData.description) form.append('description', userData.description);
+      if (file) form.append('profilePicture', file, file.name);
+
       const response = await fetch(API_ENDPOINTS.USERS, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(userData),
+        body: form,
       });
 
       const { success, status, message, data } = await response.json();

@@ -1,32 +1,48 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import { Button } from '@/components/button/button';
-import { UserSignUpData } from '@/types/user';
+import { CreateUserRequest } from '@/types/user';
 import { SelectField } from '@/components/select-field/select-field';
 import { userController } from '@/controllers/userController';
 
-const initialFormData: UserSignUpData = {
+const initialFormData: CreateUserRequest = {
   ci: '',
   name: '',
   email: '',
   password: '',
-  description: '',
-  pictureUrl: '',
   role: 'ESTUDIANTE',
 }
+
+const MAX_FILE_BYTES = 250 * 1024 * 1024;
+const ACCEPT_EXTENSIONS = ['.txt', '.doc', '.docx', '.odt', '.pdf', '.jpg', '.jpeg', '.png', '.mp4', '.mov', '.avi', '.mp3', '.wav'];
 
 const CreateUserForm = () => {
   const router = useRouter();
   const { accessToken } = useAuth();
-  const [formData, setFormData] = useState<UserSignUpData>(initialFormData);
+  const [formData, setFormData] = useState<CreateUserRequest>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const fileError = useMemo(() => {
+    if (!file) return null;
+    if (file.size > MAX_FILE_BYTES) return 'El archivo excede 250MB';
+    const lower = file.name.toLowerCase();
+    const ok = ACCEPT_EXTENSIONS.some(ext => lower.endsWith(ext));
+    if (!ok) return 'Tipo de archivo no permitido';
+    return null;
+  }, [file]);
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -72,11 +88,12 @@ const CreateUserForm = () => {
     setIsLoading(true);
 
     try {
-      const result = await userController.createUser(formData, accessToken!);
+      const result = await userController.createUser(formData, accessToken!, file ?? undefined);
 
       if (result.success) {
         setSuccess(result.message);
         setFormData(initialFormData);
+        setFile(null);
       } else {
         setError(result.message);
       }
@@ -120,7 +137,7 @@ const CreateUserForm = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TextField
-              label="Cédula"
+              label="Cédula*"
               name="ci"
               type="text"
               placeholder="Ingresa la cédula"
@@ -132,7 +149,7 @@ const CreateUserForm = () => {
             />
 
             <TextField
-              label="Nombre Completo"
+              label="Nombre Completo*"
               name="name"
               type="text"
               placeholder="Ingresa el nombre completo"
@@ -145,7 +162,7 @@ const CreateUserForm = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TextField
-              label="Email"
+              label="Email*"
               name="email"
               type="email"
               placeholder="Ingresa el email"
@@ -157,7 +174,7 @@ const CreateUserForm = () => {
             />
 
             <SelectField
-              label="Rol"
+              label="Rol*"
               name="role"
               value={formData.role}
               onChange={handleChange}
@@ -168,7 +185,7 @@ const CreateUserForm = () => {
 
           <div className="relative">
             <TextField
-              label="Contraseña"
+              label="Contraseña*"
               name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Ingresa la contraseña"
@@ -206,7 +223,7 @@ const CreateUserForm = () => {
           </div>
 
           <TextField
-            label="Descripción (Opcional)"
+            label="Descripción"
             name="description"
             type="text"
             placeholder="Ingresa una descripción del usuario"
@@ -216,16 +233,17 @@ const CreateUserForm = () => {
             status={TextFieldStatus.default}
           />
 
-          <TextField
-            label="URL de Imagen (Opcional)"
-            name="pictureUrl"
-            type="url"
-            placeholder="https://ejemplo.com/imagen.jpg"
-            value={formData.pictureUrl}
-            onChange={handleChange}
-            disabled={isLoading}
-            status={TextFieldStatus.default}
+<div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Archivo</label>
+          <input
+            type="file"
+            accept={ACCEPT_EXTENSIONS.join(',')}
+            onChange={onFileChange}
+            className="block w-full text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-secondary-color-50 file:px-4 file:py-2 file:text-white hover:file:bg-secondary-color-60 cursor-pointer"
           />
+          <p className="text-xs text-gray-500">Tipos permitidos: {ACCEPT_EXTENSIONS.join(', ')}. Máx 250MB.</p>
+          {fileError ? <p className="text-xs text-red-600">{fileError}</p> : null}
+        </div>
 
           <div className="flex gap-4 pt-4">
             <Button

@@ -35,8 +35,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import com.opencsv.exceptions.CsvException;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/courses")
+@Tag(name = "Cursos", description = "Gestiona los cursos")
 public class CourseController {
 
     private final CourseService courseService;

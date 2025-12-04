@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtCourseParticipant;
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtEvaluation;
@@ -464,9 +465,9 @@ public class CourseController {
     @ApiResponse(responseCode = "200", description = "Participantes obtenidos correctamente")
     @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
     @GetMapping(value = "/{courseId}/participants")
-    public ResponseEntity<DtApiResponse<List<DtUser>>> getParticipants(@PathVariable String courseId) {
+    public ResponseEntity<DtApiResponse<List<DtCourseParticipant>>> getParticipants(@PathVariable String courseId) {
         try {
-            List<DtUser> participants = courseService.getParticipants(courseId);
+            List<DtCourseParticipant> participants = courseService.getParticipantsWithGrade(courseId);
 
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,

@@ -27,6 +27,7 @@ export interface UserResponse {
   description?: string;
   pictureUrl?: string;
   role: 'ADMIN' | 'PROFESOR' | 'ESTUDIANTE';
+  finalGrade?: number;
 }
 
 export interface ChangePasswordRequest {

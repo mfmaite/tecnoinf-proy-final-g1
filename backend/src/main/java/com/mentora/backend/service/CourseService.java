@@ -297,8 +297,8 @@ public class CourseService {
         return userCourseService.deleteUsersFromCourse(courseId, participantIds);
     }
 
-    public List<DtUser> getParticipants(String courseId) {
-        return userCourseService.getParticipantsFromCourse(courseId);
+    public List<DtCourseParticipant> getParticipantsWithGrade(String courseId) {
+        return userCourseService.getParticipantsFromCourseWithGrade(courseId);
     }
 
     public List<DtUser> getNonParticipants(String courseId) {

@@ -36,6 +36,57 @@ class CourseController {
     }
   }
 
+  async calculateFinalGrades(courseId: string, accessToken: string): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/final-grades`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      });
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al calificar curso:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al calificar curso',
+        data: undefined,
+      };
+    }
+  }
+
+  async publishFinalGrade(
+    courseId: string,
+    studentCi: string,
+    grade: number,
+    accessToken: string
+  ): Promise<ApiResponse<void>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/final-grades`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ studentCi, grade }),
+      });
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al publicar calificación final:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al publicar calificación final',
+        data: undefined as any,
+      };
+    }
+  }
+
   async createCourse(courseData: CourseFormData, accessToken: string): Promise<ApiResponse<Course>> {
     try {
       const response = await fetch(API_ENDPOINTS.COURSES, {

@@ -1,6 +1,7 @@
 package com.mentora.backend.service;
 
 import com.mentora.backend.dt.DtCourse;
+import com.mentora.backend.dt.DtCourseParticipant;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.model.Course;
 import com.mentora.backend.model.Role;
@@ -206,6 +207,19 @@ public class UserCourseService {
         return userCourseRepository.findAllByCourse(course).stream()
             .map(userCourse -> userService.getUserDto(userCourse.getUser()))
             .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+
+    public List<DtCourseParticipant> getParticipantsFromCourseWithGrade(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        return userCourseRepository.findAllByCourse(course).stream()
+                .map(userCourse -> new com.mentora.backend.dt.DtCourseParticipant(
+                        userService.getUserDto(userCourse.getUser()),
+                        userCourse.getFinalGrade()
+                ))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public List<DtUser> getNonParticipantsFromCourse(String courseId) {

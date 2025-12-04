@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class DtUser {
-
     @NotBlank(message = "La cédula es requerida")
     private String ci;
 

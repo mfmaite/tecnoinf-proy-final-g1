@@ -3,6 +3,7 @@ package com.mentora.backend.service;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.requests.CreateUserRequest;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.User;
@@ -59,28 +60,37 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public DtUser createUser(DtUser dto) {
-        if (dto.getRole() == null)
+    public DtUser createUser(CreateUserRequest req) throws IOException {
+        if (req.getRole() == null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El rol es requerido");
 
-        if (findByCI(dto.getCi()) != null)
+        if (findByCI(req.getCi()) != null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con esa CI");
 
-        if (findByEmail(dto.getEmail()) != null)
+        if (findByEmail(req.getEmail()) != null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese email");
 
-        if (!isValidPassword(dto.getPassword()))
+        if (!isValidPassword(req.getPassword()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña no cumple los requisitos");
 
+        String pictureUrl = null;
+        String pictureFileName = null;
+
+        if (req.getProfilePicture() != null && !req.getProfilePicture().isEmpty()) {
+            DtFileResource fr = fileStorageService.store(req.getProfilePicture());
+            pictureFileName = fr.getFilename();
+            pictureUrl = fr.getStoragePath();
+        }
+
         User user = new User(
-                dto.getCi(),
-                dto.getName(),
-                dto.getEmail(),
-                passwordEncoder.encode(dto.getPassword()),
-                dto.getDescription(),
-                null,
-                null,
-                dto.getRole()
+                req.getCi(),
+                req.getName(),
+                req.getEmail(),
+                passwordEncoder.encode(req.getPassword()),
+                req.getDescription(),
+                pictureUrl,
+                pictureFileName,
+                req.getRole()
         );
 
         userRepository.save(user);

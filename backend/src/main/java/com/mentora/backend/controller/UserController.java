@@ -1,6 +1,7 @@
 package com.mentora.backend.controller;
 
 import com.mentora.backend.requests.ChangePasswordRequest;
+import com.mentora.backend.requests.CreateUserRequest;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.responses.BulkCreateUsersResponse;
@@ -42,7 +43,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear un usuario",
                description = "Crea un usuario con nombre, email y password. Solo administradores.",
@@ -52,9 +52,10 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene permisos de administrador")
     @ApiResponse(responseCode = "409", description = "Usuario ya existe o rol inválido")
-    public ResponseEntity<DtApiResponse<DtUser>> createUser(@Valid @RequestBody DtUser dtUser) {
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DtApiResponse<DtUser>> createUser(@Valid @ModelAttribute CreateUserRequest createUserRequest) {
         try {
-            DtUser createdUser = userService.createUser(dtUser);
+            DtUser createdUser = userService.createUser(createUserRequest);
 
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,

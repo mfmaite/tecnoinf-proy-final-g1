@@ -34,3 +34,13 @@ export interface ChangePasswordRequest {
   newPassword: string;
   confirmPassword: string;
 }
+
+export type CreateUserRequest = {
+  ci: string;
+  name: string;
+  email: string;
+  password: string;
+  description?: string;
+  profilePicture?: File;
+  role: 'ESTUDIANTE' | 'PROFESOR' | 'ADMIN';
+}

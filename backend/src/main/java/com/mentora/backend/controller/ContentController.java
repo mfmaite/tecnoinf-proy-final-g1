@@ -23,8 +23,11 @@ import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/contents")
+@Tag(name = "Contenidos", description = "Gestiona los contenidos de los cursos")
 public class ContentController {
 
     private final CourseService courseService;

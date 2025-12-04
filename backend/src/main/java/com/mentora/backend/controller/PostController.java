@@ -19,8 +19,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/post")
+@Tag(name = "Posts", description = "Gestiona los posts de los foros")
 public class PostController {
 
     private final PostService postService;

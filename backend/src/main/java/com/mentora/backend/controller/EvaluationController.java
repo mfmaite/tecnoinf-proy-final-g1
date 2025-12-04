@@ -20,8 +20,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import com.mentora.backend.dt.DtEvaluationSubmission;
 import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/evaluations")
+@Tag(name = "Evaluaciones", description = "Gestiona las evaluaciones")
 public class EvaluationController {
   private final EvaluationService evaluationService;
 

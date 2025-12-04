@@ -30,8 +30,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Usuarios", description = "Gestiona los usuarios")
 public class UserController {
 
     private final UserService userService;

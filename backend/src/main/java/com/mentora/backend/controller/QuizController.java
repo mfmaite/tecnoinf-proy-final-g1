@@ -15,9 +15,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.mentora.backend.responses.DtApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/quizzes")
+@Tag(name = "Quizzes", description = "Gestiona los quizzes de los cursos")
 public class QuizController {
 
   private final QuizService quizService;

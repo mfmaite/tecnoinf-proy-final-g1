@@ -16,8 +16,11 @@ import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.responses.GetForumResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/forum")
+@Tag(name = "Foro", description = "Gestiona los foros de los cursos")
 public class ForumController {
 
     private final ForumService forumService;

@@ -241,6 +241,39 @@ class UserController {
       };
     }
   }
+
+  async updateCurrentUser(
+    params: { name?: string; email?: string; description?: string },
+    accessToken: string,
+    pictureFile?: File | null
+  ): Promise<ApiResponse<UserResponse>> {
+    try {
+      const form = new FormData();
+      if (params.name !== undefined) form.append('name', params.name);
+      if (params.email !== undefined) form.append('email', params.email);
+      if (params.description !== undefined) form.append('description', params.description);
+      if (pictureFile) form.append('picture', pictureFile, pictureFile.name);
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: form,
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al actualizar el usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al actualizar el usuario',
+        data: undefined,
+      };
+    }
+  }
 }
 
 export const userController = new UserController();

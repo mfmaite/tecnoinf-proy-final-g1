@@ -9,10 +9,14 @@ import { ChangePasswordModal } from './components/change-password-modal';
 import { ProfileHeader } from './components/profile-header';
 import { ProfileInfo } from './components/profile-info';
 import { ActivitySection } from './components/activity-section';
+import { EditProfileModal } from './components/edit-profile-modal';
+import { UserResponse } from '@/types/user';
 
 const ProfilePage = () => {
   const { user, accessToken } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [profile, setProfile] = useState<UserResponse | undefined>(user ?? undefined);
 
   return (
     <div className="min-h-screen">
@@ -23,13 +27,13 @@ const ProfilePage = () => {
             onOpenChangePassword={() => setIsOpen(true)}
             showChangePassword
             rightActions={
-              <Button variant="outline" color="secondary" disabled>
+              <Button variant="outline" color="secondary" onClick={() => setIsEditOpen(true)}>
                 Editar
               </Button>
             }
           />
 
-          <ProfileInfo user={user ?? undefined} />
+          <ProfileInfo user={profile ?? user ?? undefined} />
 
           <ActivitySection accessToken={accessToken} />
 
@@ -43,6 +47,15 @@ const ProfilePage = () => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         accessToken={accessToken || ''}
+      />
+      <EditProfileModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        accessToken={accessToken || ''}
+        initialUser={profile ?? user ?? undefined}
+        onSaved={(updated) => {
+          setProfile(updated);
+        }}
       />
     </div>
   );

@@ -223,6 +223,13 @@ public class UserService {
         if (u == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
 
+        if (request.getEmail() != null) {
+            User existentMail = userRepository.findByEmail(request.getEmail()).orElse(null);
+            if (existentMail != null && !existentMail.getCi().equals(ci)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "El email ya está en uso");
+            }
+        }
+
         if (request.getName() != null)
             u.setName(request.getName());
         if (request.getEmail() != null)

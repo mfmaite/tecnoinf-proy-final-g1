@@ -4,6 +4,7 @@ import { UserResponse } from '@/types/user';
 import { ChangePasswordRequest, CreateUserRequest } from '@/types/user';
 import { UserActivity } from '@/types/activity';
 import { PendingEvaluationsAndQuizzes } from '@/types/pending';
+import { BulkCreateUsersResponse } from '@/types/bulk-create-users-response';
 
 type UserFilter = "todos" | "profesores" | "estudiantes" | "administradores";
 
@@ -271,6 +272,35 @@ class UserController {
         status: (error as any).status ?? 500,
         message: 'Error al actualizar el usuario',
         data: undefined,
+      };
+    }
+  }
+
+  async uploadUsersCsv(
+    file: File,
+    accessToken: string
+  ): Promise<ApiResponse<BulkCreateUsersResponse>> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}/csv`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al crear usuarios desde CSV:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al crear usuarios desde CSV',
+        data: undefined as any,
       };
     }
   }

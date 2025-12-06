@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { TextField } from '@/components/text-field/text-field';
-import { Button } from '@/components/button/button';
 
 type Props = {
   query: string;

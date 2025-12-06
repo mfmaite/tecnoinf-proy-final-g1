@@ -135,7 +135,7 @@ public class UserService {
                 String apellido = row[2] != null ? row[2].trim() : "";
                 String email    = row[3] != null ? row[3].trim() : "";
                 String pass     = row[4] != null ? row[4].trim() : "";
-                String rol      = row[5] != null ? row[5].trim() : "";
+                String rol      = row[5] != null ? row[5].trim().toLowerCase() : "";
 
                 if (!ci.matches("^\\d+$")) {
                     errors.add("Fila " + line + ": CI inválido");
@@ -153,7 +153,7 @@ public class UserService {
                     errors.add("Fila " + line + ": Contraseña inválida");
                     continue;
                 }
-                if (!rol.equals("Estudiante") && !rol.equals("Profesor") && !rol.equals("Administrador")) {
+                if (!rol.equals("estudiante") && !rol.equals("profesor") && !rol.equals("administrador")) {
                     errors.add("Fila " + line + ": Rol inválido");
                     continue;
                 }

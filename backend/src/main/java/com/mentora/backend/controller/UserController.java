@@ -155,7 +155,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
                     false,
                     400,
-                    "Ningún curso se creó. Revise los errores",
+                    "Ningún usuario se creó. Revise los errores",
                     response
             ));
 

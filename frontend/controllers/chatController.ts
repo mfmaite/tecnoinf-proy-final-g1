@@ -14,13 +14,13 @@ class ChatController {
         cache: 'no-store',
       });
 
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al cargar chats:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cargar chats',
         data: undefined,
       };
@@ -37,13 +37,13 @@ class ChatController {
         cache: 'no-store',
       });
 
-      const { success, code, message, data } = await response.json();
-      return { success, code, message, data };
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
     } catch (error) {
       console.error('Error al cargar mensajes:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al cargar mensajes',
         data: undefined,
       };
@@ -61,13 +61,13 @@ class ChatController {
         body: JSON.stringify({ recipientCi, message }),
       });
 
-      const { success, code, data, message: msg } = await response.json();
-      return { success, code, data, message: msg };
+      const { success, status, data, message: msg } = await response.json();
+      return { success, status, data, message: msg };
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       return {
         success: false,
-        code: (error as any).code ?? 500,
+        status: (error as any).status ?? 500,
         message: 'Error al enviar mensaje',
         data: undefined,
       };

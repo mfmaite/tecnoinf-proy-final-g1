@@ -8,16 +8,16 @@ import { ChevronDown } from '@/public/assets/icons/chevron-down';
 interface DropdownItem {
   href: string;
   label: string;
-  adminOnly?: boolean;
+  userRole: string[];
 }
 
 interface DropdownProps {
   label: string;
   items: DropdownItem[];
-  userRole?: string;
+  loggedUserRole?: string;
 }
 
-export function Dropdown({ label, items, userRole }: DropdownProps) {
+export function Dropdown({ label, items, loggedUserRole }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ export function Dropdown({ label, items, userRole }: DropdownProps) {
   }, []);
 
   const filteredItems = items.filter(item =>
-    !item.adminOnly || userRole === 'ADMIN'
+    !item.userRole || item.userRole.includes(loggedUserRole || '')
   );
 
   if (filteredItems.length === 0) {

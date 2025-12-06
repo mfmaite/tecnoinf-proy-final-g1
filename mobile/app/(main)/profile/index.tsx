@@ -21,7 +21,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Mi Perfil</Text>
 
       {user?.pictureUrl ? (
         <Image source={{ uri: user.pictureUrl }} style={localStyles.avatar} />

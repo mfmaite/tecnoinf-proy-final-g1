@@ -7,16 +7,18 @@ public class DtEvaluationSubmission {
     private Integer note;
     private DtUser author;
     private DtEvaluation evaluation;
+    private String solution;
 
     public DtEvaluationSubmission() {}
 
-    public DtEvaluationSubmission(Long id, String fileName, String fileUrl, Integer note, DtUser author, DtEvaluation evaluation) {
+    public DtEvaluationSubmission(Long id, String fileName, String fileUrl, Integer note, DtUser author, DtEvaluation evaluation, String solution) {
         this.id = id;
         this.fileName = fileName;
         this.fileUrl = fileUrl;
         this.note = note;
         this.author = author;
         this.evaluation = evaluation;
+        this.solution = solution;
     }
 
     public Long getId() { return id; }
@@ -25,6 +27,7 @@ public class DtEvaluationSubmission {
     public Integer getNote() { return note; }
     public DtUser getAuthor() { return author; }
     public DtEvaluation getEvaluation() { return evaluation; }
+    public String getSolution() { return solution; }
 
     public void setId(Long id) { this.id = id; }
     public void setFileName(String fileName) { this.fileName = fileName; }
@@ -32,4 +35,5 @@ public class DtEvaluationSubmission {
     public void setNote(Integer note) { this.note = note; }
     public void setAuthor(DtUser author) { this.author = author; }
     public void setEvaluation(DtEvaluation evaluation) { this.evaluation = evaluation; }
+    public void setSolution(String solution) { this.solution = solution; }
 }

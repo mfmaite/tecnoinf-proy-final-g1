@@ -85,8 +85,11 @@ const UserProfilePicture: React.FC<UserProfilePictureProps> = ({
 
   const sizeClass = sizeClasses[size];
 
+<<<<<<< HEAD
   //console.log(pictureUrl);
 
+=======
+>>>>>>> main
   return (
     <div className={`${sizeClass} ${className}`}>
       {pictureUrl ? (

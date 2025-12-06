@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { TextField } from '@/components/text-field/text-field';
-import { Button } from '@/components/button/button';
 
 type Props = {
   query: string;
@@ -18,7 +17,7 @@ export const SelectionToolbar = ({
   onCsvChange,
 }: Props) => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex gap-3">
       <TextField
         name="search"
         placeholder="Buscar por nombre, email o documento"
@@ -26,14 +25,21 @@ export const SelectionToolbar = ({
         onChange={(e) => onQueryChange(e.target.value)}
       />
       {showCsv && (
-        <div className="flex items-center gap-3 bg-surface-light-10 border border-surface-light-50 rounded-md p-2">
-          <input
-            type="file"
-            accept=".csv"
-            className="text-sm text-text-neutral-50"
-            onChange={(e) => onCsvChange?.(e.target.files?.[0] ?? null)}
-          />
-        </div>
+         <div>
+         <input
+           type="file"
+           accept=".csv,text/csv"
+           onChange={(e) => onCsvChange?.(e.target.files?.[0] ?? null)}
+           className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-color-80 file:text-white hover:file:bg-primary-color-90"
+         />
+         <a
+           href="/assets/spreadsheets-examples/matriculacion-estudiante.csv"
+           download
+           className="inline-block mt-1 text-primary-color-80 hover:underline text-sm"
+         >
+           Descargar CSV de ejemplo
+         </a>
+       </div>
       )}
     </div>
   );

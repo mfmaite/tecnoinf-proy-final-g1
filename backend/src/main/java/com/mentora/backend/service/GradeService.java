@@ -64,7 +64,7 @@ public class GradeService {
         notificationService.createNotification(
             user.getCi(),
             "Su calificación final del curso " + course.getName() + " ha sido publicada: " + grade,
-            "/courses/" + course.getId() + "/grades"
+            "/courses/" + course.getId()
         );
 
         emailService.sendEmail(user.getEmail(),
@@ -122,7 +122,7 @@ public class GradeService {
             notificationService.createNotification(
                 user.getCi(),
                 "Su calificación final del curso " + course.getName() + " ha sido publicada: " + g.getGrade(),
-                "/courses/" + course.getId() + "/grades"
+                "/courses/" + course.getId()
             );
         }
     }

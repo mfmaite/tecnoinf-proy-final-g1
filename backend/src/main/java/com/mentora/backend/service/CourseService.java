@@ -1,22 +1,19 @@
 package com.mentora.backend.service;
 
-import com.mentora.backend.dt.DtCourse;
-import com.mentora.backend.dt.DtUser;
-import com.mentora.backend.dt.DtForum;
-import com.mentora.backend.dt.DtEvaluation;
+import com.mentora.backend.dt.*;
 import com.mentora.backend.model.*;
-import com.mentora.backend.repository.CourseRepository;
-import com.mentora.backend.repository.ForumRepository;
-import com.mentora.backend.repository.EvaluationRepository;
-import com.mentora.backend.repository.SimpleContentRepository;
+import com.mentora.backend.repository.*;
 import com.mentora.backend.requests.CreateCourseRequest;
 import com.mentora.backend.requests.CreateEvaluationRequest;
+
+import java.io.ByteArrayInputStream;
 import java.util.*;
+
+import com.mentora.backend.requests.CreateQuizRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -42,25 +39,32 @@ public class CourseService {
     private final SimpleContentRepository simpleContentRepository;
     private final FileStorageService fileStorageService;
     private final ForumRepository  forumRepository;
+    private final QuizRepository quizRepository;
     private final EvaluationRepository evaluationRepository;
     private final EvaluationService evaluationService;
+    private final QuizService quizService;
 
     public CourseService(
-        CourseRepository courseRepository,
-        UserCourseService userCourseService,
-        SimpleContentRepository simpleContentRepository,
-        FileStorageService fileStorageService,
-        ForumRepository forumRepository,
-        EvaluationRepository evaluationRepository,
-        EvaluationService evaluationService
+            CourseRepository courseRepository,
+            UserCourseService userCourseService,
+            SimpleContentRepository simpleContentRepository,
+            FileStorageService fileStorageService,
+            ForumRepository forumRepository,
+            QuizRepository quizRepository,
+            EvaluationRepository evaluationRepository,
+            EvaluationService evaluationService,
+            QuizService quizService,
+            UserRepository userRepository
     ) {
         this.courseRepository = courseRepository;
         this.userCourseService = userCourseService;
         this.simpleContentRepository = simpleContentRepository;
         this.fileStorageService = fileStorageService;
         this.forumRepository = forumRepository;
+        this.quizRepository = quizRepository;
         this.evaluationRepository = evaluationRepository;
         this.evaluationService = evaluationService;
+        this.quizService = quizService;
     }
 
     public List<DtCourse> getCoursesForUser(String ci, Role role) {
@@ -73,10 +77,13 @@ public class CourseService {
         return new ArrayList<>(userCourseService.getCoursesForUser(ci));
     }
 
-    @Transactional
     public DtCourse createCourse(CreateCourseRequest req) {
         if (courseRepository.existsById(req.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un curso con ese ID");
+        }
+
+        if (Objects.equals(req.getId(), "")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ID del curso obligatorio");
         }
 
         Course c = new Course(
@@ -116,15 +123,21 @@ public class CourseService {
         List<DtEvaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
                 .map(evaluationService::getDtEvaluation)
                 .toList();
+        List<DtQuiz> quizzes = quizRepository.findByCourse_IdOrderByCreatedDateAsc(course.getId()).stream()
+                .map(quizService::getDtQuiz)
+                .toList();
 
         List<Object> allContents = new ArrayList<>();
         allContents.addAll(contents);
         allContents.addAll(evaluations);
+        allContents.addAll(quizzes);
         allContents.sort(Comparator.comparing(o -> {
             if (o instanceof DtSimpleContent) {
                 return ((DtSimpleContent) o).getCreatedDate();
             } else if (o instanceof DtEvaluation) {
                 return ((DtEvaluation) o).getCreatedDate();
+            } else if (o instanceof DtQuiz) {
+                return ((DtQuiz) o).getCreatedDate();
             }
             return LocalDateTime.MIN;
         }));
@@ -138,7 +151,7 @@ public class CourseService {
         return new GetCourseResponse(getDtCourse(course), allContents, dtForums);
     }
 
-    public Object getContentByTypeAndId(String courseId, String type, Long contentId) {
+    public Object getContentByTypeAndId(String courseId, String type, Long contentId, String userCi) {
         if (type == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido obligatorio");
         }
@@ -155,11 +168,16 @@ public class CourseService {
                 if (e == null) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
                 }
-                return evaluationService.getDtEvaluation(e);
+
+                // Retornar evaluación con submissions según el rol del usuario (profesor: todas; estudiante: solo la suya)
+                return evaluationService.getEvaluation(e.getId(), userCi);
             }
             case "quiz": {
-                // No implementado aún
-                throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Quiz no implementado");
+                Quiz q = quizRepository.findByIdAndCourse_Id(contentId, courseId);
+                if (q == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contenido no encontrado");
+                }
+                return quizService.getQuiz(q);
             }
             default:
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de contenido inválido");
@@ -192,6 +210,58 @@ public class CourseService {
         SimpleContent saved = simpleContentRepository.save(newSimpleContent);
 
         return getDtSimpleContent(saved);
+    }
+
+    public DtQuiz createQuiz(String courseId, CreateQuizRequest req) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso no encontrado"));
+
+        if (req.getQuestions() == null || req.getQuestions().isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe haber al menos una pregunta");
+
+        for (CreateQuizRequest.QuestionDTO q : req.getQuestions()) {
+            if (q.getAnswers() == null || q.getAnswers().size() < 2)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada pregunta debe tener al menos dos respuestas");
+
+            boolean hasCorrect = q.getAnswers()
+                    .stream()
+                    .anyMatch(CreateQuizRequest.AnswerDTO::isCorrect);
+
+            if (!hasCorrect)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada pregunta debe tener una respuesta correcta");
+        }
+
+        Quiz quiz = new Quiz();
+
+        quiz.setTitle(req.getTitle());
+        quiz.setCourse(course);
+        quiz.setDueDate(req.getDueDate());
+
+        List<QuizQuestion> questions = req.getQuestions().stream().map(q -> {
+            QuizQuestion qq = new QuizQuestion();
+            qq.setQuestionText(q.getQuestion());
+            qq.setQuiz(quiz);
+
+            List<QuizAnswer> answers = q.getAnswers().stream().map(a -> {
+                QuizAnswer qa = new QuizAnswer();
+                qa.setAnswerText(a.getText());
+                qa.setCorrect(a.isCorrect());
+                qa.setQuestion(qq);
+                return qa;
+            }).toList();
+
+            qq.setAnswers(answers);
+            return qq;
+        }).toList();
+
+        // Aclaracion: no hace falta hacer quizQuestionRepository.save()
+        //porque se maneja por cascade en el quizRepository.save()
+
+        quiz.setQuestions(questions);
+
+        Quiz saved = quizRepository.save(quiz);
+
+        return quizService.getDtQuiz(saved);
     }
 
     private DtCourse getDtCourse(Course c) {
@@ -227,8 +297,8 @@ public class CourseService {
         return userCourseService.deleteUsersFromCourse(courseId, participantIds);
     }
 
-    public List<DtUser> getParticipants(String courseId) {
-        return userCourseService.getParticipantsFromCourse(courseId);
+    public List<DtCourseParticipant> getParticipantsWithGrade(String courseId) {
+        return userCourseService.getParticipantsFromCourseWithGrade(courseId);
     }
 
     public List<DtUser> getNonParticipants(String courseId) {
@@ -315,6 +385,8 @@ public class CourseService {
                     errors.add("Fila " + lineNumber + " (" + id + "): Error inesperado al crear el curso");
                 }
             }
+
+
         }
 
         return new BulkCreateCoursesResponse(createdCourses, errors);
@@ -368,4 +440,134 @@ public class CourseService {
         return getDtSimpleContent(saved);
     }
 
+    public void deleteCourse(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Curso no encontrado"
+                ));
+
+        try {
+            courseRepository.delete(course);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al eliminar el curso"
+            );
+        }
+    }
+
+    public List<String> deleteCoursesFromCsv(byte[] fileBytes) {
+        if (fileBytes == null || fileBytes.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+        }
+
+        List<String> idsToDelete = new ArrayList<>();
+        List<String> deleted = new ArrayList<>();
+
+        try (
+                InputStream is = new ByteArrayInputStream(fileBytes);
+                CSVReader reader = new CSVReaderBuilder(
+                        new InputStreamReader(is, StandardCharsets.UTF_8)
+                ).build()
+        ) {
+            List<String[]> rows = reader.readAll();
+
+            if (rows == null || rows.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo CSV vacío");
+            }
+
+            int lineNumber = 0;
+            for (String[] row : rows) {
+                lineNumber++;
+
+                if (row == null || row.length == 0) {
+                    continue;
+                }
+
+                String value = row[0] != null ? row[0].trim() : "";
+
+                // Ignorar encabezado
+                if (lineNumber == 1 && value.equalsIgnoreCase("identificador de curso")) {
+                    continue;
+                }
+
+                if (value.isEmpty()) {
+                    continue;
+                }
+
+                idsToDelete.add(value);
+            }
+
+        } catch (IOException | com.opencsv.exceptions.CsvException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Error al procesar el archivo CSV"
+            );
+        }
+
+        if (idsToDelete.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El archivo CSV no contiene cursos válidos"
+            );
+        }
+
+        // Validar todo antes de borrar (operación atómica)
+        for (String id : idsToDelete) {
+            if (!courseRepository.existsById(id)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Curso no encontrado: " + id
+                );
+            }
+        }
+
+        try {
+            for (String id : idsToDelete) {
+                courseRepository.deleteById(id);
+                deleted.add(id);
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al eliminar los cursos"
+            );
+        }
+
+        return deleted;
+    }
+
+    public void deleteContent(String type, Long id) {
+        switch (type.toLowerCase()) {
+
+            case "evaluation" -> {
+                Evaluation ev = evaluationRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Evaluation no encontrada"));
+
+                fileStorageService.delete(ev.getFileUrl());
+                evaluationRepository.delete(ev);
+            }
+
+            case "quiz" -> {
+                Quiz quiz = quizRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Quiz no encontrado"));
+
+                quizRepository.delete(quiz);
+            }
+
+            case "simple" -> {
+                SimpleContent sc = simpleContentRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Contenido simple no encontrado"));
+
+                fileStorageService.delete(sc.getFileUrl());
+                simpleContentRepository.delete(sc);
+            }
+
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Tipo inválido");
+        }
+    }
 }

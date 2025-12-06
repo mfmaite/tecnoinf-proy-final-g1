@@ -77,15 +77,19 @@ public class ForumService {
         // Envia mail de nueva publicación a todos los estudiantes
         for (DtUser studentDto : studentsDto) {
             emailService.sendEmail(studentDto.getEmail(),
-                "Nuevo anuncio en " + forum.getCourse().getName(),
+                "Nuevo post en el foro de "
+                + (forum.getType() == ForumType.ANNOUNCEMENTS ? "anuncios" : "consultas")
+                + " de " + forum.getCourse().getName(),
                 message
             );
 
-            String link = "/forum/" + forum.getId() + "/post/" + post.getId();
+            String link = "/courses/" + forum.getCourse().getId() + "/forums/" + forum.getId() + "/posts/" + post.getId();
 
             notificationService.createNotification(
                 studentDto.getCi(),
-                "Nuevo anuncio en " + forum.getCourse().getName(),
+                "Nuevo post en el foro de "
+                + (forum.getType() == ForumType.ANNOUNCEMENTS ? "anuncios" : "consultas")
+                + " de " + forum.getCourse().getName(),
                 link
             );
         }

@@ -18,6 +18,10 @@ interface Course {
   name?: string;
   createdDate?: string;
 }
+export const screenOptions = {
+  title: "Cursos",
+  headerShown: true,
+};
 
 function formatDate(date?: string | null) {
   if (!date) return "-";
@@ -46,14 +50,45 @@ export default function CoursesList() {
     fetchCourses();
   }, []);
 
-  useEffect(() => {
-    if (courses.length > 0) {
-      filterAndSort();
+  const filterAndSort = React.useCallback(() => {
+    if (courses.length === 0) {
+      setFilteredCourses([]);
+      return;
     }
+    let filtered = courses.filter(
+      (c) =>
+        c.name?.toLowerCase().includes(search.toLowerCase()) ||
+        c.id?.toString().includes(search)
+    );
+    
+
+    switch (sortOrder) {
+      case "name-asc":
+        filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        break;
+      case "name-desc":
+        filtered.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+        break;
+      case "fecha-asc":
+        filtered.sort((a, b) =>
+          (a.createdDate || "").localeCompare(b.createdDate || "")
+        );
+        break;
+      case "fecha-desc":
+        filtered.sort((a, b) =>
+          (b.createdDate || "").localeCompare(a.createdDate || "")
+        );
+        break;
+    }
+
+    setFilteredCourses(filtered);
   }, [courses, search, sortOrder]);
 
+  useEffect(() => {
+      filterAndSort();
+  }, [filterAndSort]);
 
- const fetchCourses = async () => {
+   const fetchCourses = async () => {
   try {
     const response = await api.get("/courses");
     const data = response.data.data || [];
@@ -65,31 +100,6 @@ export default function CoursesList() {
     setLoading(false);
   }
 };
-
-  const filterAndSort = () => {
-    let filtered = courses.filter(
-      (c) =>
-        c.name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.id?.toString().includes(search)
-    );
-
-    switch (sortOrder) {
-      case "name-asc":
-        filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-        break;
-      case "name-desc":
-        filtered.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-        break;
-      case "fecha-asc":
-        filtered.sort((a, b) => (a.createdDate || "").localeCompare(b.createdDate || ""));
-        break;
-      case "fecha-desc":
-        filtered.sort((a, b) => (b.createdDate || "").localeCompare(a.createdDate || ""));
-        break;
-    }
-
-    setFilteredCourses(filtered);
-  };
 
   const renderCourse = ({ item }: { item: Course }) => (
     <View style={styles.row}>

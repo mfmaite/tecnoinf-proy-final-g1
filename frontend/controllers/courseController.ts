@@ -5,6 +5,7 @@ import { CourseViewData } from '@/types/content';
 import { Course } from '@/types/course';
 import { BulkCreateCoursesResponse } from '@/types/bulk-create-courses-response';
 import { UserResponse } from '@/types/user';
+import { BulkMatricularUsuariosResponse } from '@/types/bulk-matricular-usuarios-response';
 
 class CourseController {
   async getCourseById(courseId: string, accessToken: string): Promise<ApiResponse<CourseViewData>> {
@@ -241,6 +242,35 @@ class CourseController {
     } catch (error) {
       console.error('Error al agregar participantes:', error);
       return { success: false, status: (error as any).status ?? 500, message: 'Error al agregar participantes', data: undefined };
+    }
+  }
+
+  async addParticipantsCsv(
+    courseId: string,
+    file: File,
+    accessToken: string
+  ): Promise<ApiResponse<BulkMatricularUsuariosResponse>> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_ENDPOINTS.COURSES}/${courseId}/participants/csv`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al agregar participantes desde CSV:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al agregar participantes desde CSV',
+        data: undefined as any,
+      };
     }
   }
 

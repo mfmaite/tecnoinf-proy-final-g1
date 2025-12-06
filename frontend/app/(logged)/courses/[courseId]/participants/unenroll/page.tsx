@@ -107,7 +107,7 @@ export default function UnenrollStudentsPage({ params }: Params) {
         <div className="rounded border border-green-200 bg-green-50 text-green-700 px-3 py-2 text-sm">{success}</div>
       )}
 
-      <UserTableSelectable users={filtered} selected={selected} onToggle={toggle} />
+      <UserTableSelectable users={filtered} selected={selected} onToggle={toggle} isDesmatricular />
     </div>
   );
 }

@@ -190,7 +190,7 @@ const CreateUserForm = () => {
                     ? 'border-b-2 border-primary-color-80 text-primary-color-80'
                     : 'border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
                 }`}
-                onClick={() => { setMode('csv'); setError(''); setSuccess(''); }}
+                onClick={() => { setMode('csv'); setError(''); setSuccess(''); setBulkCreatedCount(null); setBulkErrors(null); }}
                 disabled={isLoading}
               >
                 CSV

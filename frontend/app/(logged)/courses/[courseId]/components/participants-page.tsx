@@ -9,6 +9,9 @@ import { ChevronDown } from '@/public/assets/icons/chevron-down';
 import { UserResponse } from '@/types/user';
 import { SendIcon } from '@/public/assets/icons/send-icon';
 import { chatController } from '@/controllers/chatController';
+import Modal from '@/components/modal/modal';
+import { Button } from '@/components/button/button';
+import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 
 type Props = { courseId: string }
 
@@ -16,19 +19,26 @@ function ParticipantsTable({ courseId }: Props) {
   const { accessToken, user } = useAuth();
   const [data, setData] = useState<UserResponse[]>([]);
   const [error, setError] = useState<string | null>(null)
+  const [gradeOpen, setGradeOpen] = useState<boolean>(false);
+  const [gradeSubmitting, setGradeSubmitting] = useState<boolean>(false);
+  const [gradeError, setGradeError] = useState<string | null>(null);
+  const [gradeSuccess, setGradeSuccess] = useState<string | null>(null);
+  const [selectedCi, setSelectedCi] = useState<string>('');
+  const [selectedName, setSelectedName] = useState<string>('');
+  const [gradeValue, setGradeValue] = useState<string>('');
   const router = useRouter();
 
-  useEffect(() => {
-    const getParticipants = async () => {
-    const res = await courseController.getParticipants(courseId, accessToken!)
+  const getParticipants = async () => {
+  const res = await courseController.getParticipants(courseId, accessToken!)
 
-      if (!res.success || !res.data) {
-        setError(res.message ?? 'Error desconocido')
-      } else {
-        setData(res.data)
-      }
+    if (!res.success || !res.data) {
+      setError(res.message ?? 'Error desconocido')
+    } else {
+      setData(res.data)
     }
+  }
 
+  useEffect(() => {
     getParticipants();
   }, [accessToken, courseId])
 
@@ -79,7 +89,6 @@ function ParticipantsTable({ courseId }: Props) {
             Participantes
           </h1>
         </div>
-
         {user?.role === 'PROFESOR' && (
           <div className='flex items-center gap-3'>
             <Link
@@ -114,10 +123,12 @@ function ParticipantsTable({ courseId }: Props) {
             {data.map((u: any) => (
               <tr key={u.ci}>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.ci}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">{u.name}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  <Link href={`/profile/${u.ci}`} className="text-secondary-color-70 hover:text-secondary-color-50 underline">{u.name}</Link>
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{u.role}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-gray-700 flex items-center">
                   <button
                     type="button"
                     onClick={() => onOpenChat(u.ci)}
@@ -126,13 +137,106 @@ function ParticipantsTable({ courseId }: Props) {
                   >
                     <SendIcon className="w-6 h-6" />
                   </button>
+                  {user?.role === 'ESTUDIANTE' && u.ci === user?.ci && (
+                    <FinalGradeComponent finalGrade={u.finalGrade} />
+                  )}
+
+                  {(user?.role === 'PROFESOR' && u.role === 'ESTUDIANTE') && (
+                    u.finalGrade ? (
+                      <FinalGradeComponent finalGrade={u.finalGrade} />
+                    ) : (
+                      <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCi(u.ci);
+                        setSelectedName(u.name);
+                        setGradeValue('');
+                        setGradeError(null);
+                        setGradeSuccess(null);
+                        setGradeOpen(true);
+                      }}
+                      className="ml-3 px-3 py-1.5 rounded-md border bg-secondary-color-70 text-white hover:bg-secondary-color-80"
+                      title="Publicar calificación final"
+                    >
+                      Calificar
+                    </button>
+                    ))
+                  }
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <Modal
+        isOpen={gradeOpen}
+        onClose={() => {
+          if (!gradeSubmitting) {
+            setGradeOpen(false);
+            setGradeError(null);
+            setGradeSuccess(null);
+            setGradeValue('');
+          }
+        }}
+        title="Publicar calificación final"
+        description={selectedName ? `Estudiante: ${selectedName} (${selectedCi})` : undefined}
+        footer={(
+          <Button
+            onClick={async () => {
+              if (!accessToken || !selectedCi) return;
+              const val = Number(gradeValue);
+              if (!Number.isInteger(val) || val < 1 || val > 12) {
+                setGradeError('La nota debe ser un número entero entre 1 y 12');
+                return;
+              }
+              setGradeSubmitting(true);
+              setGradeError(null);
+              setGradeSuccess(null);
+              const res = await courseController.publishFinalGrade(courseId, selectedCi, val, accessToken);
+              setGradeSubmitting(false);
+              if (res.success) {
+                setGradeSuccess('Calificación publicada correctamente');
+                getParticipants();
+                setTimeout(() => {
+                  setGradeOpen(false);
+                  setGradeSuccess(null);
+                  setGradeValue('');
+                }, 1000);
+              } else {
+                setGradeError(res.message || 'No se pudo publicar la calificación');
+              }
+            }}
+            disabled={gradeSubmitting || !accessToken}
+          >
+            {gradeSubmitting ? 'Publicando...' : 'Publicar'}
+          </Button>
+        )}
+      >
+        <div className="flex flex-col gap-4">
+          <TextField
+            name="final-grade"
+            label="Nota (1-12)"
+            type="number"
+            value={gradeValue}
+            onChange={(e) => setGradeValue(e.target.value)}
+            helperText={gradeError || undefined}
+            status={gradeError ? TextFieldStatus.error : TextFieldStatus.default}
+          />
+          {(gradeSuccess) && (
+            <div className="text-accent-success-40">{gradeSuccess}</div>
+          )}
+        </div>
+      </Modal>
     </div>
+  )
+}
+
+const FinalGradeComponent = ({ finalGrade }: { finalGrade: number }) => {
+  return (
+    <span className={`text-gray-700 font-bold ml-3 ${finalGrade < 6 ? 'text-red-800' : 'text-secondary-color-60'}`}>
+      Nota: {finalGrade}
+    </span>
   )
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -10,7 +10,7 @@ import { TextField, TextFieldStatus } from '@/components/text-field/text-field';
 import MentoraLogo from '@/public/assets/icons/mentora-logo.svg';
 import { userController } from '@/controllers/userController';
 
-const ResetPasswordPage = () => {
+const ResetPasswordContent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
 
@@ -173,6 +173,20 @@ const ResetPasswordPage = () => {
       </div>
     </div>
   )
+}
+
+const ResetPasswordPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="w-full min-h-screen flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-surface-light-10 rounded-2xl shadow-lg p-8 border-4 border-surface-dark-70">
+          <div className="text-center text-secondary-color-70">Cargando…</div>
+        </div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
+  );
 }
 
 export default ResetPasswordPage;

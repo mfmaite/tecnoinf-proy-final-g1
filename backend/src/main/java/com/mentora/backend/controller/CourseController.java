@@ -1,19 +1,22 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtCourseParticipant;
 import com.mentora.backend.dt.DtFinalGrade;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.dt.DtEvaluation;
+import com.mentora.backend.requests.*;
 import com.mentora.backend.dt.DtQuiz;
 import com.mentora.backend.requests.CreateCourseRequest;
+import com.mentora.backend.requests.CreateEvaluationRequest;
 import com.mentora.backend.dt.DtCourse;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.requests.CreateQuizRequest;
 import com.mentora.backend.service.CourseService;
 import com.mentora.backend.dt.DtSimpleContent;
-import com.mentora.backend.requests.CreateSimpleContentRequest;
-import com.mentora.backend.requests.ParticipantsRequest;
 import com.mentora.backend.responses.*;
 import com.mentora.backend.service.GradeService;
 import com.mentora.backend.service.UserCourseService;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,19 +33,24 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import com.mentora.backend.responses.GetCourseResponse;
+
 import com.opencsv.exceptions.CsvException;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/courses")
+@Tag(name = "Cursos", description = "Gestiona los cursos")
 public class CourseController {
 
     private final CourseService courseService;
     private final GradeService gradeService;
     private final UserCourseService userCourseService;
 
-    public CourseController(CourseService courseService,
-                            GradeService gradeService,
-                            UserCourseService userCourseService) {
+    public CourseController(
+        CourseService courseService,
+        GradeService gradeService,
+        UserCourseService userCourseService
+    ) {
         this.courseService = courseService;
         this.gradeService = gradeService;
         this.userCourseService = userCourseService;
@@ -216,7 +224,7 @@ public class CourseController {
             DtApiResponse<DtSimpleContent> response = new DtApiResponse<>(
                 true,
                 200,
-                "Simple content created successfully",
+                "Contenido cimple creado correctamente",
                 created
             );
 
@@ -270,44 +278,83 @@ public class CourseController {
         }
     }
 
-    @Operation(summary = "Agregar participantes a un curso",
+    @Operation(
+            summary = "Agregar participantes a un curso",
             description = "Agrega participantes a un curso. Solo profesores",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Participantes agregados correctamente")
-    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
-    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @ApiResponse(responseCode = "500", description = "Error al agregar participantes")
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Solicitud procesada. Puede contener éxitos parciales o mensajes de repetidos/roles no permitidos."),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios"),
+            @ApiResponse(responseCode = "404", description = "Curso no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error inesperado del servidor")
+    })
     @PostMapping(value = "/{courseId}/participants")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<DtApiResponse<String>> addParticipants(@PathVariable String courseId, @RequestBody ParticipantsRequest req) {
+    public ResponseEntity<DtApiResponse<String>> addParticipants(
+            @PathVariable String courseId,
+            @RequestBody ParticipantsRequest req) {
+
         try {
             String result = courseService.addParticipants(courseId, req.getParticipantIds());
 
-            return ResponseEntity.ok(new DtApiResponse<>(
-                true,
-                200,
-                "Participantes agregados correctamente",
-                result
-            ));
+            return ResponseEntity.ok(
+                    new DtApiResponse<>(
+                            true,
+                            200,
+                            "Solicitud procesada correctamente",
+                            result
+                    )
+            );
+
         } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
-                false,
-                e.getStatusCode().value(),
-                e.getReason(),
-                null
-            ));
+            return ResponseEntity.status(e.getStatusCode()).body(
+                    new DtApiResponse<>(
+                            false,
+                            e.getStatusCode().value(),
+                            e.getReason(),
+                            null
+                    )
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new DtApiResponse<>(
+                            false,
+                            500,
+                            "Error inesperado del servidor",
+                            null
+                    )
+            );
         }
     }
 
     @Operation(
-        summary = "Agregar participantes a un curso desde CSV",
-        description = "Recibe un archivo CSV con una columna de CIs. Requiere rol PROFESOR.",
-        security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Participantes agregados correctamente")
-    @ApiResponse(responseCode = "207", description = "Algunos participantes no pudieron agregarse")
-    @ApiResponse(responseCode = "400", description = "CSV inválido")
-    @ApiResponse(responseCode = "403", description = "Sin permisos")
-    @ApiResponse(responseCode = "500", description = "Error interno")
+            summary = "Agregar participantes a un curso desde CSV",
+            description = "Recibe un archivo CSV con una columna de CIs. Requiere rol PROFESOR.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Todos los participantes fueron agregados correctamente"
+            ),
+            @ApiResponse(
+                    responseCode = "207",
+                    description = "Algunos participantes se agregaron, pero otros presentaron errores"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = """
+                    El CSV es inválido, ocurrió un error al leer el archivo,
+                    o ningún participante pudo ser agregado.
+                    """
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "El usuario no tiene permisos para realizar esta acción"
+            )
+    })
     @PostMapping(value = "/{courseId}/participants/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('PROFESOR')")
     public ResponseEntity<DtApiResponse<BulkMatricularUsuariosResponse>> addParticipantsCsv(
@@ -358,31 +405,59 @@ public class CourseController {
         }
     }
 
-    @Operation(summary = "Eliminar participantes de un curso",
+    @Operation(
+            summary = "Eliminar participantes de un curso",
             description = "Elimina participantes de un curso. Solo profesores",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Participantes eliminados correctamente")
-    @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
-    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
-    @ApiResponse(responseCode = "500", description = "Error al eliminar participantes")
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Solicitud procesada. Puede incluir errores parciales (usuarios inexistentes o roles no permitidos)."
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "No tiene permisos necesarios"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Curso no encontrado o usuario no matriculado en el curso"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Error inesperado del servidor"
+            )
+    })
     @DeleteMapping(value = "/{courseId}/participants")
     @PreAuthorize("hasRole('PROFESOR')")
-    public ResponseEntity<DtApiResponse<String>> deleteParticipants(@PathVariable String courseId, @RequestBody ParticipantsRequest req) {
+    public ResponseEntity<DtApiResponse<String>> deleteParticipants(
+            @PathVariable String courseId,
+            @RequestBody ParticipantsRequest req) {
+
         try {
             String result = courseService.deleteParticipants(courseId, req.getParticipantIds());
 
             return ResponseEntity.ok(new DtApiResponse<>(
-                true,
-                200,
-                "Participantes eliminados correctamente",
-                result
+                    true,
+                    200,
+                    "Solicitud procesada correctamente",
+                    result
             ));
+
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
-                false,
-                e.getStatusCode().value(),
-                e.getReason(),
-                null
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DtApiResponse<>(
+                    false,
+                    500,
+                    "Error inesperado del servidor",
+                    null
             ));
         }
     }
@@ -393,9 +468,9 @@ public class CourseController {
     @ApiResponse(responseCode = "200", description = "Participantes obtenidos correctamente")
     @ApiResponse(responseCode = "400", description = "ID del curso obligatorio")
     @GetMapping(value = "/{courseId}/participants")
-    public ResponseEntity<DtApiResponse<List<DtUser>>> getParticipants(@PathVariable String courseId) {
+    public ResponseEntity<DtApiResponse<List<DtCourseParticipant>>> getParticipants(@PathVariable String courseId) {
         try {
-            List<DtUser> participants = courseService.getParticipants(courseId);
+            List<DtCourseParticipant> participants = courseService.getParticipantsWithGrade(courseId);
 
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,
@@ -502,6 +577,49 @@ public class CourseController {
         }
     }
 
+    @Operation(summary = "Crear evaluación",
+        description = "Crea una evaluación para un curso. Solo profesores",
+        security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Evaluación creada correctamente")
+    @ApiResponse(responseCode = "400", description = "Contenido simple requiere texto o archivo")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error al crear evaluación")
+    @PostMapping(value = "/{courseId}/contents/evaluation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('PROFESOR')")
+    public ResponseEntity<DtApiResponse<DtEvaluation>> createEvaluation(
+        @PathVariable String courseId,
+        @ModelAttribute CreateEvaluationRequest req,
+        Authentication authentication
+    ) {
+        try {
+            DtEvaluation created = courseService.createEvaluation(courseId, req);
+
+            DtApiResponse<DtEvaluation> response = new DtApiResponse<>(
+                true,
+                200,
+                "Evaluación creada correctamente",
+                created
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                false,
+                e.getStatusCode().value(),
+                e.getReason(),
+                null
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DtApiResponse<>(
+                false,
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                e.getMessage(),
+                null
+            ));
+        }
+    }
+
     @Operation(
             summary = "Crear quiz",
             description = "Crea un quiz para un curso. Solo profesores",
@@ -530,6 +648,80 @@ public class CourseController {
                     false,
                     e.getStatusCode().value(),
                     e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Eliminar curso",
+            description = "Elimina un curso de forma permanente. Solo administradores.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Curso eliminado correctamente")
+    @ApiResponse(responseCode = "404", description = "Curso no encontrado")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @DeleteMapping("/{courseId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<Void>> deleteCourse(@PathVariable String courseId) {
+        try {
+            courseService.deleteCourse(courseId);
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Curso eliminado correctamente",
+                    null
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Eliminar cursos por CSV",
+            description = "Elimina cursos de forma masiva mediante un archivo CSV. Requiere rol ADMIN.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Cursos eliminados correctamente")
+    @ApiResponse(responseCode = "400", description = "CSV inválido o cursos inexistentes")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @ApiResponse(responseCode = "500", description = "Error interno")
+    @PostMapping(value = "/delete-batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DtApiResponse<List<String>>> deleteCoursesByCsv(
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+            List<String> deleted = courseService.deleteCoursesFromCsv(file.getBytes());
+
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    200,
+                    "Cursos eliminados correctamente",
+                    deleted
+            ));
+
+        } catch (ResponseStatusException e) {
+
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+
+        } catch (IOException e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
+                    false,
+                    400,
+                    "Error leyendo archivo",
                     null
             ));
         }

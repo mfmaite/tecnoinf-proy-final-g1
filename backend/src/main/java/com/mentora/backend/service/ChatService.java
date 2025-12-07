@@ -56,7 +56,7 @@ public class ChatService {
 
         notificationService.createNotification(recipient.getCi(),
                 "Nuevo mensaje de " + sender.getName(),
-                "/chat/" + chat.getId());
+                "/chats/" + chat.getId());
 
         emailService.sendEmail(recipient.getEmail(),
                 "Nuevo mensaje de " + sender.getName(),

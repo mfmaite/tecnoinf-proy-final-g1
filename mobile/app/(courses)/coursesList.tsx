@@ -145,6 +145,7 @@ export default function CoursesList() {
         <Text style={styles.sortLabelBox}>Ordenar por:</Text>
         <View style={styles.pickerWrapper}>
           <Picker
+            testID="sortPicker"
             selectedValue={sortOrder}
             onValueChange={(value) => setSortOrder(value as any)}
             mode="dropdown"

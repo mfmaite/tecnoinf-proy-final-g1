@@ -76,22 +76,20 @@ describe("CoursesList", () => {
       data: { data: mockCourses },
     });
 
-    const { getByText, getByDisplayValue } = render(<CoursesList />);
+    const { getByTestId, getByText } = render(<CoursesList />);
 
     await waitFor(() => {});
 
-    const picker = getByDisplayValue("Nombre (A-Z)");
+    const picker = getByTestId("sortPicker");
 
     fireEvent(picker, "onValueChange", "name-desc");
 
-    // Orden Z-A → Biología, Algebra
-    const first = getByText("Biología");
-    const second = getByText("Algebra");
-
-    expect(first).toBeTruthy();
-    expect(second).toBeTruthy();
+    // orden esperado: Biología, Algebra
+    expect(getByText("Biología")).toBeTruthy();
+    expect(getByText("Algebra")).toBeTruthy();
   });
-/*
+
+
   // ------------------------------------------------------------------
   test("navega a pantalla Ver curso al presionar botón", async () => {
     (api.get as jest.Mock).mockResolvedValueOnce({
@@ -106,5 +104,5 @@ describe("CoursesList", () => {
     fireEvent.press(botones[0]); // presiona curso con id "1"
 
     expect(mockPush).toHaveBeenCalledWith("/(courses)/1");
-  });*/
+  });
 });

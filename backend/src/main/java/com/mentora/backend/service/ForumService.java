@@ -74,9 +74,9 @@ public class ForumService {
                 .filter(u -> u.getRole() == Role.ESTUDIANTE)
                 .toList();
 
-        // Envia mail de nueva publicación a todos los estudiantes
+        // Envia mail de nueva publicación a todos los estudiantes (asincrónico)
         for (DtUser studentDto : studentsDto) {
-            emailService.sendEmail(studentDto.getEmail(),
+            emailService.sendEmailAsync(studentDto.getEmail(),
                 "Nuevo post en el foro de "
                 + (forum.getType() == ForumType.ANNOUNCEMENTS ? "anuncios" : "consultas")
                 + " de " + forum.getCourse().getName(),

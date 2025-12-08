@@ -14,8 +14,7 @@ export default ({ config }) => ({
     package: "com.mentora.mobile",
 
     // 🔐 INYECTAMOS EL GOOGLE SERVICES DESDE SECRET, NO DESDE ARCHIVO LOCAL
-    googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_JSON,
-
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -51,7 +50,6 @@ export default ({ config }) => ({
     output: "static"
   },
 
-  // 🔑 ESTA ES LA MANERA CORRECTA DE EXPONER LA URL
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL,
     eas: { projectId: "6042f746-5d76-4884-bb96-d5c6febf9e72" }

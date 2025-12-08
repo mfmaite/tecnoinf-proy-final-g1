@@ -12,6 +12,7 @@ import {
   markNotificationAsRead,
 } from "../../services/notifications";
 import { useRouter } from "expo-router";
+import { transformWebLinkToMobile } from "../utils/linkMapper";
 
 interface Notification {
   id: string;
@@ -26,17 +27,17 @@ export default function NotificationsPage() {
   const router = useRouter();
 
   const loadNotifications = async () => {
-  try {
-    setLoading(true);
-    const data = await getNotifications();
-    setNotifications(data || []);
-  } catch (e) {
-    console.log("Error cargando notificaciones:", e);
-    setNotifications([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const data = await getNotifications();
+      setNotifications(data || []);
+    } catch (e) {
+      console.log("Error cargando notificaciones:", e);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadNotifications();
@@ -54,7 +55,8 @@ export default function NotificationsPage() {
       }
 
       if (notification.link) {
-        router.push({ pathname: notification.link as any });
+        const mobileLink = transformWebLinkToMobile(notification.link);
+        router.push({ pathname: mobileLink as any });
       }
     } catch (e) {
       console.log("Error updating notification:", e);

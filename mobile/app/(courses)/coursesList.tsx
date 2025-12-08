@@ -60,7 +60,7 @@ export default function CoursesList() {
         c.name?.toLowerCase().includes(search.toLowerCase()) ||
         c.id?.toString().includes(search)
     );
-    
+
 
     switch (sortOrder) {
       case "name-asc":
@@ -156,23 +156,7 @@ export default function CoursesList() {
           </Picker>
         </View>
       </View>
-      {/* Selector de filtro (combo) */}
-      <View style={styles.sortContainerBox}>
-        <Text style={styles.sortLabelBox}>Filtrar por:</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={sortOrder}
-            onValueChange={(value) => setSortOrder(value as any)}
-            mode="dropdown"
-          >
-            <Picker.Item label="Todos" value="todo" />
-            <Picker.Item label="Finalizado" value="fin" />
-            <Picker.Item label="En curso" value="nofin" />
-          </Picker>
-        </View>
-      </View>
 
-      {/* Cabecera de columnas */}
       <View style={styles.headerRow}>
         <Text style={[styles.headerCell, { flex: 1 }]}>ID</Text>
         <Text style={[styles.headerCell, { flex: 2 }]}>Nombre</Text>
@@ -180,7 +164,6 @@ export default function CoursesList() {
         <Text style={[styles.headerCell, { flex: 1 }]}>Acción</Text>
       </View>
 
-      {/* Lista de cursos */}
       <FlatList
         data={filteredCourses}
         keyExtractor={(item, index) => item.id?.toString() ?? index.toString()}

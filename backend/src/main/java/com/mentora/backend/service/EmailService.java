@@ -1,5 +1,6 @@
 package com.mentora.backend.service;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.util.Properties;
 import java.util.Objects;
@@ -52,6 +53,11 @@ public class EmailService {
       return;
     }
     sendViaSmtp(recipient, subject, body);
+  }
+
+  @Async("taskExecutor")
+  public void sendEmailAsync(String recipient, String subject, String body) {
+    sendEmail(recipient, subject, body);
   }
 
   private void sendViaSmtp(String recipient, String subject, String body) {

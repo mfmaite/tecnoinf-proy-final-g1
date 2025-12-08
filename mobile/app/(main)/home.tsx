@@ -1,22 +1,13 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
-import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
 import * as Notifications from "expo-notifications";
 import { api } from "../../services/api";
 
 export default function HomeScreen() {
-  const { logout } = useAuth();
   const router = useRouter();
   const logo = require("../../assets/images/mentora-logo-small.png");
-  const handleLogout = async () => {
-    await logout();
-    router.replace("/(auth)/login");
-  };
-  const goToChangePassword = () => {
-    router.push("/(main)/profile/change-password");
-  };
   const goToProfilePage = () => {
     router.push("/(main)/profile/");
   };
@@ -70,15 +61,21 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChangePassword}>
           <Text style={styles.buttonText}> Cambiar contraseña </Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={handleCourses}>
+          <Text style={styles.buttonText}>Listado de Cursos</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChats}>
           <Text style={styles.buttonText}> Chats </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogout}>
-          <Text style={styles.buttonText}> Cerrar Sesión </Text>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={goToProfilePage}>
+          <Text style={styles.buttonText}>Mi Perfil</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
+           <Text style={styles.buttonText}>Mi actividad reciente</Text>
+        </TouchableOpacity>
       </View>
     </View>
 

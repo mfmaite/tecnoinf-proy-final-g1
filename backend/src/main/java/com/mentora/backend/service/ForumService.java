@@ -22,6 +22,7 @@ public class ForumService {
     private final NotificationService notificationService;
     private final UserCourseService userCourseService;
     private final ActivityRepository activityRepository;
+    private final FileStorageService fileStorageService;
 
     public ForumService(
         PostRepository postRepository,
@@ -30,7 +31,8 @@ public class ForumService {
         EmailService emailService,
         NotificationService notificationService,
         UserCourseService userCourseService,
-        ActivityRepository activityRepository
+        ActivityRepository activityRepository,
+        FileStorageService fileStorageService
     ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
@@ -39,6 +41,7 @@ public class ForumService {
         this.notificationService = notificationService;
         this.userCourseService = userCourseService;
         this.activityRepository = activityRepository;
+        this.fileStorageService = fileStorageService;
     }
 
 
@@ -106,11 +109,13 @@ public class ForumService {
     }
 
     private DtPost getDtPost(Post post) {
+        String raw = post.getAuthor().getPictureUrl();
+        String signed = (raw != null && raw.startsWith("gs://")) ? fileStorageService.generateSignedUrl(raw) : raw;
         DtPost dto = new DtPost(
             post.getId(),
             post.getAuthor().getCi(),
             post.getAuthor().getName(),
-            post.getAuthor().getPictureUrl(),
+            signed,
             post.getMessage(),
             post.getCreatedDate()
         );

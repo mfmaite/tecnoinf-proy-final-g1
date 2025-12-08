@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Alert,
   ActivityIndicator,
@@ -15,7 +14,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { colors } from "../../../styles/colors";
 import { styles as globalStyles } from "../../../styles/styles";
 import { updateUserProfile } from "../../../services/userService";
-import { Ionicons } from "@expo/vector-icons";
+import { UserProfilePicture } from "@/components/user-profile-picture/user-profile-picture";
 
 export default function EditProfileScreen() {
   const { user, updateUser } = useAuth();
@@ -26,7 +25,6 @@ export default function EditProfileScreen() {
   const [description, setDescription] = useState(user?.description || "");
   const [pictureUrl, setPictureUrl] = useState(user?.pictureUrl || "");
   const [newImage, setNewImage] = useState(false);
-  const [removeImage, setRemoveImage] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
@@ -62,26 +60,6 @@ export default function EditProfileScreen() {
 
     setPictureUrl(uri);
     setNewImage(true);
-    setRemoveImage(false);
-  };
-
-  const removeProfilePicture = () => {
-    Alert.alert(
-      "Quitar foto",
-      "¿Querés eliminar tu foto de perfil?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sí, eliminar",
-          style: "destructive",
-          onPress: () => {
-            setPictureUrl("");
-            setNewImage(false);
-            setRemoveImage(true);
-          },
-        },
-      ]
-    );
   };
 
   const handleSave = async () => {
@@ -95,7 +73,6 @@ export default function EditProfileScreen() {
 
       let picture: any = undefined;
 
-      // Si hay nueva imagen
       if (newImage && pictureUrl) {
         const filename = pictureUrl.split("/").pop() || "avatar.jpg";
         const match = /\.(\w+)$/.exec(filename);
@@ -108,11 +85,6 @@ export default function EditProfileScreen() {
         };
       }
 
-      // Si quitó la imagen
-      if (removeImage) {
-        picture = null;
-      }
-
       const updatedUser = await updateUserProfile({
         name,
         email,
@@ -120,7 +92,11 @@ export default function EditProfileScreen() {
         picture,
       });
 
-      await updateUser(updatedUser);
+      await updateUser({
+        ...updatedUser,
+        description: updatedUser.description ?? undefined,
+        pictureUrl: updatedUser.pictureUrl ?? undefined,
+      });
 
       Alert.alert("Éxito", "Tu perfil ha sido actualizado.");
       router.back();
@@ -132,38 +108,16 @@ export default function EditProfileScreen() {
     }
   };
 
-  const goToChangePassword = () => {
-    router.push("/(main)/profile/change-password");
-  };
-
-
   return (
     <View style={globalStyles.container}>
 
-      {/* 🖼️ Avatar */}
       <TouchableOpacity onPress={pickImage}>
-        {pictureUrl ? (
-          <Image source={{ uri: pictureUrl }} style={localStyles.avatar} />
-        ) : (
-          <View style={[localStyles.avatar, localStyles.avatarPlaceholder]}>
-            <Ionicons
-              name="person-circle-outline"
-              size={80}
-              color={colors.textNeutral[20]}
-            />
-          </View>
-        )}
+        <View style={{ alignItems: "center" }}>
+          <UserProfilePicture name={user?.name || "?"} pictureUrl={pictureUrl ?? undefined} size="3xl" />
+        </View>
         <Text style={localStyles.changePhotoText}>Cambiar foto</Text>
       </TouchableOpacity>
 
-      {/* 🗑️ Quitar foto */}
-      {pictureUrl ? (
-        <TouchableOpacity onPress={removeProfilePicture}>
-          <Text style={localStyles.removePhotoText}>Quitar foto</Text>
-        </TouchableOpacity>
-      ) : null}
-
-      {/* 🧾 Formulario */}
       <View style={localStyles.form}>
         <Text style={localStyles.label}>Nombre</Text>
         <TextInput
@@ -193,7 +147,6 @@ export default function EditProfileScreen() {
         />
       </View>
 
-      {/* 🔘 Guardar cambios */}
       <TouchableOpacity
         style={[globalStyles.buttonPrimary, loading && { opacity: 0.6 }]}
         onPress={handleSave}
@@ -204,14 +157,6 @@ export default function EditProfileScreen() {
         ) : (
           <Text style={globalStyles.buttonText}>Guardar cambios</Text>
         )}
-      </TouchableOpacity>
-
-      {/* 🔐 Cambiar contraseña */}
-      <TouchableOpacity
-        style={globalStyles.buttonSecondary}
-        onPress={goToChangePassword}
-      >
-        <Text style={globalStyles.buttonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
     </View>
   );
@@ -233,7 +178,7 @@ const localStyles = StyleSheet.create({
   changePhotoText: {
     color: colors.primary[60],
     textAlign: "center",
-    marginBottom: 4,
+    marginBottom: 16,
     fontWeight: "600",
   },
   removePhotoText: {

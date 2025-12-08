@@ -161,7 +161,7 @@ export default function PostDetail() {
       <View style={[globalStyles.contentCard, localStyles.mainPost]}>
         <View style={[localStyles.replyHeader, { justifyContent: "space-between" }]}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl ?? undefined} size="sm" />
+            <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl} size="sm" />
             <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>{post.authorName}</Text>
           </View>
           {(String(post.authorCi) === userCi || isProfessor) && (
@@ -236,7 +236,7 @@ export default function PostDetail() {
             >
               <View style={[localStyles.replyHeader, { justifyContent: "space-between" }]}>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <UserProfilePicture name={r.authorName} pictureUrl={r.authorPictureUrl ?? undefined} size="sm" />
+                  <UserProfilePicture name={r.authorName} pictureUrl={r.authorPictureUrl} size="sm" />
                   <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>{r.authorName}</Text>
                 </View>
                 {(isAuthor || isProfessor) && (

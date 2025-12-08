@@ -8,9 +8,6 @@ import { api } from "../../services/api";
 export default function HomeScreen() {
   const router = useRouter();
   const logo = require("../../assets/images/mentora-logo-small.png");
-  const goToProfilePage = () => {
-    router.push("/(main)/profile/");
-  };
   // Registra el token FCM del dispositivo
   const registerPushToken = async () => {
     try {
@@ -29,11 +26,18 @@ export default function HomeScreen() {
   useEffect(() => {
     registerPushToken();
   }, []);
+
+  const goToProfilePage = () => {
+    router.push("/(main)/profile/");
+  };
   const handleCourses = () => {
     router.push("/(courses)/coursesList");
   };
   const goToChats = () => {
     router.push("/chats/");
+  };
+  const goToChangePassword = () => {
+    router.push("/(main)/profile/change-password");
   };
 
   return (
@@ -47,22 +51,16 @@ export default function HomeScreen() {
           <Text style={styles.buttonText}> Listado de Cursos </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buttonPrimary} onPress={goToProfilePage}>
-          <Text style={styles.buttonText}> Ir a perfil</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/notifications");}}>
           <Text style={styles.buttonText}>Notificaciones</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
            <Text style={styles.buttonText}> Ir a actividad reciente</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChangePassword}>
           <Text style={styles.buttonText}> Cambiar contraseña </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonPrimary} onPress={handleCourses}>
-          <Text style={styles.buttonText}>Listado de Cursos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToChats}>
@@ -71,10 +69,6 @@ export default function HomeScreen() {
 
         <TouchableOpacity style={styles.buttonPrimary} onPress={goToProfilePage}>
           <Text style={styles.buttonText}>Mi Perfil</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
-           <Text style={styles.buttonText}>Mi actividad reciente</Text>
         </TouchableOpacity>
       </View>
     </View>

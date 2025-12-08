@@ -29,6 +29,36 @@ class EvaluationController {
       };
     }
   }
+
+  async gradeSubmission(
+    evaluationId: string | number,
+    studentCi: string,
+    grade: number,
+    accessToken: string
+  ): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.EVALUATIONS}/${evaluationId}/grade`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ grade, studentCi }),
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al calificar evaluación:', error);
+      return {
+        success: false,
+        status: (error as any)?.status ?? 500,
+        message: 'Error al calificar evaluación',
+        data: undefined,
+      };
+    }
+  }
 }
 
 export const evaluationController = new EvaluationController();

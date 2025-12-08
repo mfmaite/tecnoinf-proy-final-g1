@@ -8,6 +8,7 @@ import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { ActivityIndicator, View } from "react-native";
 import { api } from "../services/api";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // 🔔 Configuración global
 Notifications.setNotificationHandler({
@@ -19,6 +20,7 @@ Notifications.setNotificationHandler({
     shouldShowList: true,    // iOS: aparece en Notification Center
   }),
 });
+
 
 export default function RootLayout() {
   return (
@@ -79,9 +81,11 @@ function AppNavigator() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
-      </View>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 

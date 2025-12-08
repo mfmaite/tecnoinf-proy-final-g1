@@ -3,6 +3,7 @@ package com.mentora.backend.service;
 import com.mentora.backend.dt.DtFileResource;
 import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.dt.DtUser;
+import com.mentora.backend.requests.CreateUserRequest;
 import com.mentora.backend.model.Role;
 import com.mentora.backend.model.Activity;
 import com.mentora.backend.model.User;
@@ -59,28 +60,37 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public DtUser createUser(DtUser dto) {
-        if (dto.getRole() == null)
+    public DtUser createUser(CreateUserRequest req) throws IOException {
+        if (req.getRole() == null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El rol es requerido");
 
-        if (findByCI(dto.getCi()) != null)
+        if (findByCI(req.getCi()) != null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con esa CI");
 
-        if (findByEmail(dto.getEmail()) != null)
+        if (findByEmail(req.getEmail()) != null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese email");
 
-        if (!isValidPassword(dto.getPassword()))
+        if (!isValidPassword(req.getPassword()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña no cumple los requisitos");
 
+        String pictureUrl = null;
+        String pictureFileName = null;
+
+        if (req.getProfilePicture() != null && !req.getProfilePicture().isEmpty()) {
+            DtFileResource fr = fileStorageService.store(req.getProfilePicture());
+            pictureFileName = fr.getFilename();
+            pictureUrl = fr.getStoragePath();
+        }
+
         User user = new User(
-                dto.getCi(),
-                dto.getName(),
-                dto.getEmail(),
-                passwordEncoder.encode(dto.getPassword()),
-                dto.getDescription(),
-                null,
-                null,
-                dto.getRole()
+                req.getCi(),
+                req.getName(),
+                req.getEmail(),
+                passwordEncoder.encode(req.getPassword()),
+                req.getDescription(),
+                pictureUrl,
+                pictureFileName,
+                req.getRole()
         );
 
         userRepository.save(user);
@@ -125,7 +135,7 @@ public class UserService {
                 String apellido = row[2] != null ? row[2].trim() : "";
                 String email    = row[3] != null ? row[3].trim() : "";
                 String pass     = row[4] != null ? row[4].trim() : "";
-                String rol      = row[5] != null ? row[5].trim() : "";
+                String rol      = row[5] != null ? row[5].trim().toLowerCase() : "";
 
                 if (!ci.matches("^\\d+$")) {
                     errors.add("Fila " + line + ": CI inválido");
@@ -143,7 +153,7 @@ public class UserService {
                     errors.add("Fila " + line + ": Contraseña inválida");
                     continue;
                 }
-                if (!rol.equals("Estudiante") && !rol.equals("Profesor") && !rol.equals("Administrador")) {
+                if (!rol.equals("estudiante") && !rol.equals("profesor") && !rol.equals("administrador")) {
                     errors.add("Fila " + line + ": Rol inválido");
                     continue;
                 }
@@ -212,6 +222,13 @@ public class UserService {
 
         if (u == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+
+        if (request.getEmail() != null) {
+            User existentMail = userRepository.findByEmail(request.getEmail()).orElse(null);
+            if (existentMail != null && !existentMail.getCi().equals(ci)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "El email ya está en uso");
+            }
+        }
 
         if (request.getName() != null)
             u.setName(request.getName());
@@ -293,7 +310,7 @@ public class UserService {
         resetToken.setExpiryDate(expiry);
         passwordResetTokenRepository.save(resetToken);
 
-        String link = "https://tu-frontend.com/reset-password?token=" + token;
+        String link = "https://tecnoinf-proy-final-g1-production.up.railway.app/reset-password?token=" + token;
 
         String subject = "Recuperación de contraseña";
         String body = "Haz clic en el siguiente enlace para restablecer tu contraseña (válido por 2 horas): " + link;

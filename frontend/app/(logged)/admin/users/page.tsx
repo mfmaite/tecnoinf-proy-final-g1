@@ -205,7 +205,7 @@ const UsersListPage = () => {
                         </div>
                       </td>
                       <td>
-                        <Link href={`/users/${user.ci}`} className="text-primary-color-80 hover:text-primary-color-90 font-medium">
+                        <Link href={`/profile/${user.ci}`} className="text-primary-color-80 hover:text-primary-color-90 font-medium">
                           <ChevronDown className="w-4 h-4 -rotate-90" />
                         </Link>
                       </td>

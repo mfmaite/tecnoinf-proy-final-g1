@@ -1,22 +1,32 @@
 import { API_ENDPOINTS } from '../config/api';
 import { ApiResponse } from '@/types/api-response';
-import { UserSignUpData, UserResponse } from '@/types/user';
-import { ChangePasswordRequest } from '@/types/user';
+import { UserResponse } from '@/types/user';
+import { ChangePasswordRequest, CreateUserRequest } from '@/types/user';
 import { UserActivity } from '@/types/activity';
+import { PendingEvaluationsAndQuizzes } from '@/types/pending';
+import { BulkCreateUsersResponse } from '@/types/bulk-create-users-response';
 
 type UserFilter = "todos" | "profesores" | "estudiantes" | "administradores";
 
 type UserOrder = "name_asc" | "name_desc" | "ci_asc" | "ci_desc";
 class UserController {
-  async createUser(userData: UserSignUpData, accessToken: string): Promise<ApiResponse<UserResponse>> {
+  async createUser(userData: CreateUserRequest, accessToken: string, file?: File): Promise<ApiResponse<UserResponse>> {
     try {
+      const form = new FormData();
+      form.append('ci', userData.ci);
+      form.append('name', userData.name);
+      form.append('email', userData.email);
+      form.append('password', userData.password);
+      form.append('role', userData.role);
+      if (userData.description) form.append('description', userData.description);
+      if (file) form.append('profilePicture', file, file.name);
+
       const response = await fetch(API_ENDPOINTS.USERS, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(userData),
+        body: form,
       });
 
       const { success, status, message, data } = await response.json();
@@ -134,6 +144,29 @@ class UserController {
     }
   }
 
+  async getPending(
+    accessToken: string
+  ): Promise<ApiResponse<PendingEvaluationsAndQuizzes>> {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.USERS}/pending`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al obtener pendientes del usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al obtener pendientes del usuario',
+        data: undefined,
+      };
+    }
+  }
+
   async resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<ApiResponse<void>> {
     try {
       const response = await fetch(`${API_ENDPOINTS.RESET_PASSWORD}`, {
@@ -206,6 +239,68 @@ class UserController {
         status: (error as any).status ?? 500,
         message: 'Error al cambiar la contraseña',
         data: undefined,
+      };
+    }
+  }
+
+  async updateCurrentUser(
+    params: { name?: string; email?: string; description?: string },
+    accessToken: string,
+    pictureFile?: File | null
+  ): Promise<ApiResponse<UserResponse>> {
+    try {
+      const form = new FormData();
+      if (params.name !== undefined) form.append('name', params.name);
+      if (params.email !== undefined) form.append('email', params.email);
+      if (params.description !== undefined) form.append('description', params.description);
+      if (pictureFile) form.append('picture', pictureFile, pictureFile.name);
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: form,
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al actualizar el usuario:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al actualizar el usuario',
+        data: undefined,
+      };
+    }
+  }
+
+  async uploadUsersCsv(
+    file: File,
+    accessToken: string
+  ): Promise<ApiResponse<BulkCreateUsersResponse>> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}/csv`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const { success, status, message, data } = await response.json();
+      return { success, status, message, data };
+    } catch (error) {
+      console.error('Error al crear usuarios desde CSV:', error);
+      return {
+        success: false,
+        status: (error as any).status ?? 500,
+        message: 'Error al crear usuarios desde CSV',
+        data: undefined as any,
       };
     }
   }

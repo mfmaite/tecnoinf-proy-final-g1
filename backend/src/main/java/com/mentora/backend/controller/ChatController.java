@@ -18,9 +18,11 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/chats")
+@Tag(name = "Chats", description = "Gestiona los chats entre usuarios")
 public class ChatController {
 
     private final ChatService chatService;

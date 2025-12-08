@@ -1,14 +1,32 @@
 package com.mentora.backend.controller;
 
 import com.mentora.backend.requests.ChangePasswordRequest;
+import com.mentora.backend.requests.CreateUserRequest;
 import com.mentora.backend.dt.DtUser;
 import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.responses.BulkCreateUsersResponse;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
+import com.mentora.backend.service.DeviceTokenService;
+import com.mentora.backend.requests.RegisterDeviceTokenRequest;
 import com.opencsv.exceptions.CsvException;
 import com.mentora.backend.requests.ResetPasswordRequest;
 import com.mentora.backend.requests.UpdateUserRequest;
+import com.mentora.backend.responses.GetPendingItemsResponse;
+import com.mentora.backend.dt.DtEvaluation;
+import com.mentora.backend.dt.DtQuiz;
+import com.mentora.backend.model.User;
+import com.mentora.backend.model.UserCourse;
+import com.mentora.backend.model.Evaluation;
+import com.mentora.backend.model.Quiz;
+import com.mentora.backend.repository.UserRepository;
+import com.mentora.backend.repository.UserCourseRepository;
+import com.mentora.backend.repository.EvaluationRepository;
+import com.mentora.backend.repository.EvaluationSubmissionRepository;
+import com.mentora.backend.repository.QuizRepository;
+import com.mentora.backend.repository.QuizSubmissionRepository;
+import com.mentora.backend.service.EvaluationService;
+import com.mentora.backend.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,29 +46,87 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Usuarios", description = "Gestiona los usuarios")
 public class UserController {
 
     private final UserService userService;
-    public UserController(UserService userService) {
+    private final UserRepository userRepository;
+    private final UserCourseRepository userCourseRepository;
+    private final EvaluationRepository evaluationRepository;
+    private final EvaluationSubmissionRepository evaluationSubmissionRepository;
+    private final QuizRepository quizRepository;
+    private final QuizSubmissionRepository quizSubmissionRepository;
+    private final EvaluationService evaluationService;
+    private final QuizService quizService;
+    private final DeviceTokenService deviceTokenService;
+
+    public UserController(
+            UserService userService,
+            UserRepository userRepository,
+            UserCourseRepository userCourseRepository,
+            EvaluationRepository evaluationRepository,
+            EvaluationSubmissionRepository evaluationSubmissionRepository,
+            QuizRepository quizRepository,
+            QuizSubmissionRepository quizSubmissionRepository,
+            EvaluationService evaluationService,
+            QuizService quizService,
+            DeviceTokenService deviceTokenService
+    ) {
         this.userService = userService;
+        this.userRepository = userRepository;
+        this.userCourseRepository = userCourseRepository;
+        this.evaluationRepository = evaluationRepository;
+        this.evaluationSubmissionRepository = evaluationSubmissionRepository;
+        this.quizRepository = quizRepository;
+        this.quizSubmissionRepository = quizSubmissionRepository;
+        this.evaluationService = evaluationService;
+        this.quizService = quizService;
+        this.deviceTokenService = deviceTokenService;
     }
 
-    @PostMapping
+    @Operation(
+            summary = "Registrar token de dispositivo para notificaciones",
+            description = "Guarda o actualiza el token de notificaciones push del dispositivo actual",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Token guardado correctamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @PostMapping("/device-token")
+    public ResponseEntity<DtApiResponse<Object>> registerDeviceToken(@RequestBody @Valid RegisterDeviceTokenRequest request) {
+        try {
+            String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
+            deviceTokenService.upsertToken(userCi, request.getToken());
+            return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(), "Token de dispositivo registrado", null));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), "Error al registrar token", null));
+        }
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear un usuario",
                description = "Crea un usuario con nombre, email y password. Solo administradores.",
                security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario creado exitosamente")
+    @ApiResponse(responseCode = "400", description = "La contraseña no cumple los requisitos")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "403", description = "No tiene permisos de administrador")
     @ApiResponse(responseCode = "409", description = "Usuario ya existe o rol inválido")
-    public ResponseEntity<DtApiResponse<DtUser>> createUser(@Valid @RequestBody DtUser dtUser) {
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DtApiResponse<DtUser>> createUser(@Valid @ModelAttribute CreateUserRequest createUserRequest) {
         try {
-            DtUser createdUser = userService.createUser(dtUser);
+            DtUser createdUser = userService.createUser(createUserRequest);
 
             return ResponseEntity.ok(new DtApiResponse<>(
                 true,
@@ -106,7 +182,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new DtApiResponse<>(
                     false,
                     400,
-                    "Ningún curso se creó. Revise los errores",
+                    "Ningún usuario se creó. Revise los errores",
                     response
             ));
 
@@ -122,6 +198,76 @@ public class UserController {
                     false,
                     400,
                     "CSV inválido",
+                    null
+            ));
+        }
+    }
+
+    @Operation(
+            summary = "Listar evaluaciones y quizzes pendientes del usuario loggeado",
+            description = "Retorna evaluaciones y quizzes del usuario sin entrega, ordenados por curso. Incluye items sin fecha o con fecha futura.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Pendientes obtenidos correctamente")
+    @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+    @GetMapping("/pending")
+    public ResponseEntity<DtApiResponse<GetPendingItemsResponse>> getPendingForUser() {
+        try {
+            String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userRepository.findById(userCi)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+            List<UserCourse> enrollments = userCourseRepository.findAllByUser(user);
+            LocalDateTime now = LocalDateTime.now();
+
+            List<DtEvaluation> pendingEvaluations = new ArrayList<>();
+            List<DtQuiz> pendingQuizzes = new ArrayList<>();
+
+            for (UserCourse uc : enrollments) {
+                String courseId = uc.getCourse().getId();
+
+                // Evaluaciones pendientes
+                List<Evaluation> evaluations = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(courseId);
+                for (Evaluation ev : evaluations) {
+                    boolean notExpired = ev.getDueDate() == null || ev.getDueDate().isAfter(now);
+                    if (!notExpired) continue;
+                    boolean hasSubmission = !evaluationSubmissionRepository.findByEvaluationIdAndAuthorCi(ev.getId(), userCi).isEmpty();
+                    if (!hasSubmission) {
+                        pendingEvaluations.add(evaluationService.getDtEvaluation(ev));
+                    }
+                }
+
+                // Quizzes pendientes
+                List<Quiz> quizzes = quizRepository.findByCourse_IdOrderByCreatedDateAsc(courseId);
+                for (Quiz q : quizzes) {
+                    boolean notExpired = q.getDueDate() == null || q.getDueDate().isAfter(now);
+                    if (!notExpired) continue;
+                    boolean hasSubmission = !quizSubmissionRepository.findByQuizIdAndAuthorCi(q.getId(), userCi).isEmpty();
+                    if (!hasSubmission) {
+                        pendingQuizzes.add(quizService.getDtQuiz(q));
+                    }
+                }
+            }
+
+            GetPendingItemsResponse payload = new GetPendingItemsResponse(pendingEvaluations, pendingQuizzes);
+            return ResponseEntity.ok(new DtApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    "Pendientes obtenidos correctamente",
+                    payload
+            ));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+                    false,
+                    e.getStatusCode().value(),
+                    e.getReason(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DtApiResponse<>(
+                    false,
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    e.getMessage(),
                     null
             ));
         }

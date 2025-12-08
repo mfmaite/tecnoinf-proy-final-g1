@@ -2,92 +2,84 @@
 import React, { useEffect, useState } from "react";
 import { Slot, useRouter } from "expo-router";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { NotificationProvider, useNotification } from "../contexts/tuviejaentanga"
 import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
+import * as Notifications from "expo-notifications";
 import { ActivityIndicator, View } from "react-native";
-import { useNotificationListeners } from "../notifications/notificationListeners";
+import { api } from "../services/api";
+
+// 🔔 Configuración global
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,   // muestra alerta nativa
+    shouldPlaySound: true,   // suena al llegar
+    shouldSetBadge: true,    // modifica badge del ícono
+    shouldShowBanner: true,  // iOS: muestra banner arriba
+    shouldShowList: true,    // iOS: aparece en Notification Center
+  }),
+});
 
 export default function RootLayout() {
-  useNotificationListeners();
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <NotificationProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </NotificationProvider>
   );
 }
 
 function AppNavigator() {
-  const { token } = useAuth();
-
+  const { token } = useAuth(); // auth token backend
+  const { expoPushToken } = useNotification(); // token de Expo
   const router = useRouter();
 
-  // Estado para controlar si ya verificamos el token almacenado
   const [loading, setLoading] = useState(true);
-
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkToken = async () => {
-      try {
-        // Buscamos el token guardado en el almacenamiento seguro
-        const storedToken = await SecureStore.getItemAsync("token");
-
-        // Si existe, el usuario tiene sesión activa
-        setIsLoggedIn(!!storedToken);
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setIsLoggedIn(false);
-      } finally {
-        // Terminamos la carga
-        setLoading(false);
-      }
+      const storedToken = await SecureStore.getItemAsync("token");
+      setIsLoggedIn(!!storedToken);
+      setLoading(false);
     };
-
     checkToken();
   }, [token]);
 
-    // ✅ Deep Link handler global (para reset-password, etc.)
+  // 📲 Enviar token al backend si estamos logueados
   useEffect(() => {
-    const handleDeepLink = (event: Linking.EventType) => {
-      const url = event.url;
-      const { path, queryParams } = Linking.parse(url);
+    const savePushToken = async () => {
+      if (expoPushToken && isLoggedIn) {
+        try {
+          await api.post("/users/device-token", {
+            token: expoPushToken,
+          });
+          console.log("🔥 Token guardado en backend");
+        } catch (e) {
+          console.log("❌ Error guardando token en backend", e);
+        }
+      }
+    };
+    savePushToken();
+  }, [expoPushToken, isLoggedIn]);
+
+  // 🔗 Deep linking global (igual que antes)
+  useEffect(() => {
+    const subscription = Linking.addEventListener("url", (event) => {
+      const { path, queryParams } = Linking.parse(event.url);
 
       if (path === "reset-password" && queryParams?.token) {
         router.push(`/reset-password?token=${queryParams.token}`);
       }
-    };
-
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-
-    // En caso de que la app se abra directamente desde un deep link (no en ejecución)
-    const checkInitialUrl = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        handleDeepLink({ url: initialUrl } as Linking.EventType);
-      }
-    };
-    checkInitialUrl();
-
-    // Maneja si la app se abre directamente desde el link (cerrada)
-    // Linking.getInitialURL().then((url) => {
-    //   if (url) {
-    //     const { path, queryParams } = Linking.parse(url);
-    //     if (path === "reset-password" && queryParams?.token) {
-    //       router.push({
-    //         pathname: "/reset-password",
-    //         params: { token: queryParams.token },
-    //       });
-    //     }
-    //   }
-    // });
+    });
 
     return () => subscription.remove();
   }, [router]);
 
-  // Mientras verificamos la sesión, mostramos un indicador de carga
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
       </View>
     );

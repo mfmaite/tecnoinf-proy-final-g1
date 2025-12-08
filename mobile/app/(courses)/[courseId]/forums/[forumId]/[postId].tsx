@@ -20,6 +20,7 @@ import {
 import { useAuth } from "../../../../../contexts/AuthContext";
 import { colors } from "../../../../../styles/colors";
 import { styles as globalStyles } from "../../../../../styles/styles";
+import { UserProfilePicture } from "@/components/user-profile-picture/user-profile-picture";
 
 interface Post {
   id: number;
@@ -45,9 +46,6 @@ export default function PostDetail() {
   const userCi = user?.ci ? String(user.ci) : "";
   const isProfessor = user?.role === "PROFESOR" || user?.role === "ADMIN";
 
-  /*───────────────────────────────
-    🔁 Cargar post y respuestas
-  ───────────────────────────────*/
   const loadPost = useCallback(async () => {
     if (!postId) return;
     setLoading(true);
@@ -68,9 +66,6 @@ export default function PostDetail() {
     loadPost();
   }, [loadPost]);
 
-  /*───────────────────────────────
-    🗨️ Crear respuesta
-  ───────────────────────────────*/
   async function handleReply() {
     if (!replyText.trim()) return Alert.alert("Escribí una respuesta.");
 
@@ -95,9 +90,6 @@ export default function PostDetail() {
     }
   }
 
-  /*───────────────────────────────
-    ✏️ Editar post o respuesta
-  ───────────────────────────────*/
   async function handleEdit(id: number, message: string) {
     if (!message.trim()) return Alert.alert("Mensaje vacío.");
     try {
@@ -111,9 +103,6 @@ export default function PostDetail() {
     }
   }
 
-  /*───────────────────────────────
-    🗑️ Eliminar post o respuesta
-  ───────────────────────────────*/
   async function handleDelete(id: number) {
     Alert.alert("Confirmar", "¿Seguro que querés eliminar este mensaje?", [
       { text: "Cancelar", style: "cancel" },
@@ -145,9 +134,6 @@ export default function PostDetail() {
     ]);
   }
 
-  /*───────────────────────────────
-    ⏳ Estado de carga
-  ───────────────────────────────*/
   if (loading)
     return (
       <ActivityIndicator
@@ -160,21 +146,12 @@ export default function PostDetail() {
   if (!post)
     return <Text style={globalStyles.error}>No se encontró el post.</Text>;
 
-  /*───────────────────────────────
-    🎨 Render principal
-  ───────────────────────────────*/
   return (
     <ScrollView style={globalStyles.container}>
-      {/* 🟢 Post principal */}
       <View style={[globalStyles.contentCard, localStyles.mainPost]}>
         <View style={localStyles.replyHeader}>
-          {post.authorPictureUrl && (
-            <Image
-              source={{ uri: post.authorPictureUrl }}
-              style={localStyles.avatarLarge}
-            />
-          )}
-          <Text style={localStyles.replyAuthor}>{post.authorName}</Text>
+          <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl ?? undefined} size="sm" />
+          <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>{post.authorName}</Text>
         </View>
 
         {editingId === post.id ? (
@@ -229,7 +206,6 @@ export default function PostDetail() {
         )}
       </View>
 
-      {/* ✏️ Campo para responder — solo si no es foro de anuncios */}
       {forumType !== "ANNOUNCEMENTS" && (
         <View style={localStyles.replyBox}>
           <TextInput
@@ -248,7 +224,6 @@ export default function PostDetail() {
         </View>
       )}
 
-      {/* 💬 Lista de respuestas */}
       <Text style={[globalStyles.title, { marginTop: 16 }]}>Respuestas</Text>
       {responses.length ? (
         responses.map((r) => {
@@ -259,13 +234,8 @@ export default function PostDetail() {
               style={[globalStyles.contentCard, localStyles.replyCard]}
             >
               <View style={localStyles.replyHeader}>
-                {r.authorPictureUrl && (
-                  <Image
-                    source={{ uri: r.authorPictureUrl }}
-                    style={localStyles.avatarSmall}
-                  />
-                )}
-                <Text style={localStyles.replyAuthor}>{r.authorName}</Text>
+                <UserProfilePicture name={r.authorName} pictureUrl={r.authorPictureUrl ?? undefined} size="sm" />
+                <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>{r.authorName}</Text>
               </View>
 
               {editingId === r.id ? (

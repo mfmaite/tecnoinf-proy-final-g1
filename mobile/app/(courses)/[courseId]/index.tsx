@@ -14,7 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../../styles/colors";
 import { styles } from "../../../styles/styles";
 import { getCourseById, CourseData, Content } from "../../../services/courses";
-
+import { Ionicons } from "@expo/vector-icons";
 
   type CourseParams = {
     courseId: string;
@@ -47,7 +47,7 @@ export default function CourseView() {
       try {
         const data = await getCourseById(courseId);
         setCourseData(data.course);
-        setContents((data.contents || []).sort((a, b) => a.id - b.id));
+        setContents(data.contents || []);
       } catch (err: any) {
         console.error("[CourseView] Error al cargar curso:", err.response?.data || err);
          setError(err.message || "No se pudieron cargar los datos del curso.");
@@ -83,28 +83,66 @@ export default function CourseView() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >
-      <TouchableOpacity
-        style={styles.buttonPrimary}
-        onPress={() =>
-          router.push({
-            pathname: "/(courses)/participants",
-            params: { courseId: String(courseId) },
-          })
-        }
-        activeOpacity={0.8}
-      >
-        <Text style={styles.buttonText}>Ver Participantes</Text>
-      </TouchableOpacity>
-
       <View style={styles.header}>
-        <Text style={styles.subtitle}>
-          ID: {courseData.id}
-          {"\n"}
-          Creado:{" "}
-          {courseData.createdDate
-            ? new Date(courseData.createdDate).toLocaleDateString("es-ES")
-            : "—"}
-        </Text>
+        <View style={{ flexDirection: "column", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.subtitle}>
+            Creado: {courseData.createdDate ? new Date(courseData.createdDate).toLocaleDateString("es-ES") : "—"}
+          </Text>
+          <View style={styles.chipRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>ID: {courseData.id}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.linkPill}
+              onPress={() =>
+                router.push({
+                  pathname: "/(courses)/participants",
+                  params: { courseId: String(courseId) },
+                })
+              }
+              activeOpacity={0.85}
+            >
+              <Ionicons name="people-outline" size={16} color="#ffffff" />
+              <Text style={[styles.buttonText, { marginLeft: 6 }]}>Participantes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View style={{ marginBottom: 12 }}>
+        <Text style={[styles.subtitle, { marginBottom: 8 }]}>Foros</Text>
+        <View style={{ flexDirection: "row", columnGap: 8 }}>
+          <TouchableOpacity
+            style={styles.forumButton}
+            activeOpacity={0.85}
+            onPress={() => {
+              const forum = courseData.forums?.find((f) => f.type === "ANNOUNCEMENTS");
+              if (!forum) return;
+              router.push({
+                pathname: "/[courseId]/forums/[forumId]",
+                params: { courseId: String(courseData.id), forumId: String(forum.id), forumType: forum.type },
+              });
+            }}
+          >
+            <Ionicons name="megaphone-outline" size={18} color={colors.secondary[60]} />
+            <Text style={styles.forumButtonText}>Anuncios</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.forumButton}
+            activeOpacity={0.85}
+            onPress={() => {
+              const forum = courseData.forums?.find((f) => f.type === "CONSULTS");
+              if (!forum) return;
+              router.push({
+                pathname: "/[courseId]/forums/[forumId]",
+                params: { courseId: String(courseData.id), forumId: String(forum.id), forumType: forum.type },
+              });
+            }}
+          >
+            <Ionicons name="chatbubbles-outline" size={18} color={colors.secondary[60]} />
+            <Text style={styles.forumButtonText}>Consultas</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.title}>Contenidos</Text>
@@ -131,48 +169,21 @@ export default function CourseView() {
                   {item.type === "quiz" ? "Quiz" : item.type === "evaluation" ? "Evaluación" : "Contenido"}
                 </Text>
               </View>
-              {item?.dueDate ? (
-                <View style={[styles.chip, styles.chipMuted]}>
-                  <Text style={styles.chipMutedText}>
-                    Vence: {new Date(item.dueDate).toLocaleDateString("es-ES")}
-                  </Text>
-                </View>
-              ) : null}
+              {item?.dueDate ? (() => {
+                const overdue = new Date(item.dueDate) < new Date();
+                return (
+                  <View style={[styles.chip, overdue ? styles.chipDanger : styles.chipMuted]}>
+                    <Text style={overdue ? styles.chipDangerText : styles.chipMutedText}>
+                      Vence: {new Date(item.dueDate).toLocaleDateString("es-ES")}
+                    </Text>
+                  </View>
+                );
+              })() : null}
             </View>
           </TouchableOpacity>
         ))
       ) : (
         <Text style={styles.emptyText}>No hay contenidos disponibles.</Text>
-      )}
-
-      {/* 💬 Foros */}
-      <Text style={styles.title}>Foros</Text>
-      {courseData.forums?.length ? (
-        courseData.forums.map((forum) => (
-          <TouchableOpacity
-            key={forum.id}
-            style={[styles.contentCard, { marginBottom: 12 }]}
-            onPress={() =>
-              router.push({
-                pathname: "/[courseId]/forums/[forumId]",
-                params: {
-                  courseId: String(courseData.id),
-                  forumId: String(forum.id),
-                  forumType: forum.type,
-                },
-              })
-            }
-            activeOpacity={0.8}
-          >
-            <Text style={styles.subtitle}>
-              {forum.type === "ANNOUNCEMENTS"
-                ? "Foro de Anuncios"
-                : "Foro de Consultas"}
-            </Text>
-          </TouchableOpacity>
-        ))
-      ) : (
-        <Text style={styles.emptyText}>No hay foros disponibles.</Text>
       )}
     </ScrollView>
   );

@@ -205,6 +205,51 @@ export const styles = StyleSheet.create({
   chipMutedText: {
     color: "#374151",
   },
+  chipDanger: {
+    backgroundColor: "#fee2e2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  chipDangerText: {
+    color: "#b91c1c",
+    fontWeight: "700",
+  },
+  badge: {
+    backgroundColor: "#f3f4f6",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  badgeText: {
+    color: "#111827",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  linkPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.secondary[60],
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  forumButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  forumButtonText: {
+    color: colors.secondary[60],
+    fontWeight: "700",
+  },
   sortContainerBox: {
     width: "90%",
     marginBottom: 12,

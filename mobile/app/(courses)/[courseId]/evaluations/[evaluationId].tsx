@@ -43,11 +43,16 @@ export default function EvaluationDetail() {
             <View style={[styles.chip]}>
               <Text style={styles.chipText}>Evaluación</Text>
             </View>
-            <View style={[styles.chip, styles.chipMuted]}>
-              <Text style={styles.chipMutedText}>
-                Vence: {new Date(item.dueDate).toLocaleDateString("es-ES")}
-              </Text>
-            </View>
+            {(() => {
+              const overdue = new Date(item.dueDate!) < new Date();
+              return (
+                <View style={[styles.chip, overdue ? styles.chipDanger : styles.chipMuted]}>
+                  <Text style={overdue ? styles.chipDangerText : styles.chipMutedText}>
+                    Vence: {new Date(item.dueDate!).toLocaleDateString("es-ES")}
+                  </Text>
+                </View>
+              );
+            })()}
           </View>
         ) : null}
 

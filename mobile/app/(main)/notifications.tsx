@@ -12,7 +12,7 @@ import {
   markNotificationAsRead,
 } from "../../services/notifications";
 import { useRouter } from "expo-router";
-import { transformWebLinkToMobile } from "../utils/linkMapper";
+import { transformWebLinkToMobile } from "../../utils/linkMapper";
 
 interface Notification {
   id: string;

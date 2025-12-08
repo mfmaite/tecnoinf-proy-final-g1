@@ -10,6 +10,8 @@ import React, {
 } from "react";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "../notifications/registerForPushNotificationsAsync";
+import axios from "axios";
+import Constants from "expo-constants";
 
 interface NotificationContextType {
   expoPushToken: string | null;
@@ -41,34 +43,48 @@ export function NotificationProvider({ children }: Props) {
     useState<Notifications.Notification | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  // Tipado recomendado para la versión de expo-notifications que usás
-  const notificationListener = useRef<
-    ReturnType<typeof Notifications.addNotificationReceivedListener> | null
-  >(null);
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
 
-  const responseListener = useRef<
-    ReturnType<typeof Notifications.addNotificationResponseReceivedListener> | null
-  >(null);
+  const API_URL = Constants.expoConfig?.extra?.apiUrl ?? "";
+
+  async function sendTokenToBackend(token: string) {
+    try {
+      await axios.post(`${API_URL}/notifications/register-device`, { token });
+      console.log(" Token guardado en backend:", token);
+    } catch (err) {
+      console.warn(" Error enviando token al backend:", err);
+    }
+  }
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(
-      (token) => setExpoPushToken(token),
-      (err) => setError(err instanceof Error ? err : new Error(String(err)))
-    );
+    let isMounted = true;
+
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        if (isMounted && token) {
+          setExpoPushToken(token);
+          sendTokenToBackend(token);
+        }
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      });
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
-        console.log("🔔 Notificación recibida:", notification);
+        console.log(" Notificación recibida:", notification);
         setLastNotification(notification);
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
-        console.log("👆 Usuario tocó notificación:", data);
+        console.log(" Usuario tocó notificación:", data);
       });
 
     return () => {
+      isMounted = false;
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };

@@ -7,7 +7,8 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://backend-production-c1fc.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://backend-production-c1fc.up.railway.app",
+        "EXPO_GOOGLE_SERVICES_JSON": "@EXPO_GOOGLE_SERVICES_JSON"
       }
     },
     "production": {

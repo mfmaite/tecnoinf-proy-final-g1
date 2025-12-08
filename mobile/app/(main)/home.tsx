@@ -15,9 +15,6 @@ export default function HomeScreen() {
   const goToChats = () => {
     router.push("/chats/");
   };
-  const goToChangePassword = () => {
-    router.push("/(main)/profile/change-password");
-  };
 
   return (
     <View style={styles.container}>
@@ -42,9 +39,6 @@ export default function HomeScreen() {
           <Text style={styles.buttonText}>Notificaciones</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buttonPrimary} onPress={goToChangePassword}>
-          <Text style={styles.buttonText}> Cambiar contraseña </Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
            <Text style={styles.buttonText}>Mi actividad reciente</Text>
         </TouchableOpacity>

@@ -1,4 +1,3 @@
-// src/styles/colors.ts
 export const colors = {
   primary: {
     10: "#FFF6ED",

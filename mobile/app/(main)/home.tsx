@@ -35,6 +35,10 @@ export default function HomeScreen() {
           <Text style={styles.buttonText}>Mi Perfil</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/notifications");}}>
+          <Text style={styles.buttonText}>Notificaciones</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.buttonPrimary} onPress={() => {router.push("/(main)/recent-activity");}}>
            <Text style={styles.buttonText}>Mi actividad reciente</Text>
         </TouchableOpacity>

@@ -21,25 +21,30 @@ public class PostService {
     private final UserRepository userRepository;
     private final PostResponseRepository postResponseRepository;
     private final NotificationService notificationService;
+    private final FileStorageService fileStorageService;
 
     public PostService(
             PostRepository postRepository,
             UserRepository userRepository,
             PostResponseRepository postResponseRepository,
-            NotificationService notificationService
+            NotificationService notificationService,
+            FileStorageService fileStorageService
     ) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.postResponseRepository = postResponseRepository;
         this.notificationService = notificationService;
+        this.fileStorageService = fileStorageService;
     }
 
     private DtPost getDtPost(Post post) {
+        String raw = post.getAuthor().getPictureUrl();
+        String signed = (raw != null && raw.startsWith("gs://")) ? fileStorageService.generateSignedUrl(raw) : raw;
         return new DtPost(
             post.getId(),
             post.getAuthor().getCi(),
             post.getAuthor().getName(),
-            post.getAuthor().getPictureUrl(),
+            signed,
             post.getMessage(),
             post.getCreatedDate()
         );
@@ -152,6 +157,9 @@ public class PostService {
         dto.setCreatedDate(response.getCreatedDate());
         dto.setAuthorCi(response.getAuthor().getCi());
         dto.setAuthorName(response.getAuthor().getName());
+        String raw = response.getAuthor().getPictureUrl();
+        String signed = (raw != null && raw.startsWith("gs://")) ? fileStorageService.generateSignedUrl(raw) : raw;
+        dto.setAuthorPictureUrl(signed);
         dto.setPostId(response.getPost().getId());
         return dto;
     }

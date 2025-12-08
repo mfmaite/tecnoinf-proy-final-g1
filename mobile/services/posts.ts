@@ -124,3 +124,43 @@ export async function deletePost(postId: string): Promise<void> {
     );
   }
 }
+
+// ──────────────────────────────
+// PUT /post/:postId/response/:responseId
+// ──────────────────────────────
+export async function updateResponse(
+  postId: string,
+  responseId: string,
+  message: string
+): Promise<Post> {
+  try {
+    const { data } = await api.put<ApiResponse<Post>>(
+      `/post/${encodeURIComponent(postId)}/response/${encodeURIComponent(responseId)}`,
+      { message }
+    );
+    if (!data.success) {
+      throw new Error(data.message || "Error al editar la respuesta.");
+    }
+    return data.data;
+  } catch (error: any) {
+    console.error("[updateResponse] Error:", error);
+    throw new Error(error.response?.data?.message || "No se pudo editar la respuesta.");
+  }
+}
+
+// ──────────────────────────────
+// DELETE /post/:postId/response/:responseId
+// ──────────────────────────────
+export async function deleteResponse(postId: string, responseId: string): Promise<void> {
+  try {
+    const { data } = await api.delete<ApiResponse<unknown>>(
+      `/post/${encodeURIComponent(postId)}/response/${encodeURIComponent(responseId)}`
+    );
+    if (!data.success) {
+      throw new Error(data.message || "Error al eliminar la respuesta.");
+    }
+  } catch (error: any) {
+    console.error("[deleteResponse] Error:", error);
+    throw new Error(error.response?.data?.message || "No se pudo eliminar la respuesta.");
+  }
+}

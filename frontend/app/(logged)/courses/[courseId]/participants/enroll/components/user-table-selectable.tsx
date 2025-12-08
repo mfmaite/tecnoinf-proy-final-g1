@@ -7,9 +7,18 @@ type Props = {
   users: UserResponse[];
   selected: Record<string, boolean>;
   onToggle: (ci: string) => void;
+  isDesmatricular?: boolean;
 };
 
-export const UserTableSelectable = ({ users, selected, onToggle }: Props) => {
+export const UserTableSelectable = ({ users, selected, onToggle, isDesmatricular = false }: Props) => {
+  if (!users.length) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white py-4">
+        <div className="text-center text-gray-500">No hay estudiantes para {isDesmatricular ? 'desmatricular' : 'matricular'}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       <table className="min-w-full divide-y divide-gray-200">

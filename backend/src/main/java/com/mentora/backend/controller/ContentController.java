@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,8 +23,11 @@ import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/contents")
+@Tag(name = "Contenidos", description = "Gestiona los contenidos de los cursos")
 public class ContentController {
 
     private final CourseService courseService;
@@ -75,4 +79,38 @@ public class ContentController {
         );
       }
     }
+
+    @Operation(
+      summary = "Eliminar contenido temático",
+      description = "Elimina un contenido temático de un curso según su tipo e ID. Solo profesores",
+      security = @SecurityRequirement(name = "bearerAuth")
+      )
+      @ApiResponse(responseCode = "200", description = "Contenido eliminado correctamente")
+      @ApiResponse(responseCode = "400", description = "Parámetros inválidos")
+      @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+      @ApiResponse(responseCode = "404", description = "Contenido no encontrado")
+      @DeleteMapping("/{type}/{id}")
+      @PreAuthorize("hasRole('PROFESOR')")
+      public ResponseEntity<DtApiResponse<Void>> deleteContent(
+            @PathVariable String type,
+            @PathVariable Long id
+      ) {
+        try {
+          courseService.deleteContent(type, id);
+
+          return ResponseEntity.ok(new DtApiResponse<>(
+            true,
+            200,
+            "Contenido eliminado correctamente",
+            null
+          ));
+        } catch (ResponseStatusException e) {
+          return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(
+            false,
+            e.getStatusCode().value(),
+            e.getReason(),
+            null
+          ));
+        }
+      }
 }

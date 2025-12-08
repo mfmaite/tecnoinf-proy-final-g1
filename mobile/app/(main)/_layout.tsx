@@ -1,11 +1,51 @@
 import { Stack } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles/styles";
+import { colors } from "../../styles/colors";
 
 export default function MainLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="home" options={{ title: "Mentora"
-        , headerTitleStyle: styles.title, }} />
-    </Stack>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <Stack
+        screenOptions={{
+          headerTitleStyle: styles.headerTitle,
+          headerTitleAlign: "center",
+          headerTintColor: colors.secondary[60],
+          headerStyle: { backgroundColor: colors.primary[10] },
+        }}
+      >
+        <Stack.Screen
+          name="home"
+          options={{
+            headerShown: true,
+            title: "Mentora",
+          }}
+        />
+
+        <Stack.Screen
+          name="profile/index"
+          options={{
+            headerShown: true,
+            title: "Mi Perfil",
+          }}
+        />
+
+        <Stack.Screen
+          name="profile/edit-profile"
+          options={{
+            headerShown: true,
+            title: "Editar perfil",
+          }}
+        />
+
+        <Stack.Screen
+          name="profile/change-password"
+          options={{
+            headerShown: true,
+            title: "Cambiar contraseña",
+          }}
+        />
+      </Stack>
+    </SafeAreaView>
   );
 }

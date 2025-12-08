@@ -13,6 +13,7 @@ import com.mentora.backend.model.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
+import com.mentora.backend.requests.EditEvaluationRequest;
 import com.mentora.backend.repository.UserRepository;
 import com.mentora.backend.repository.EvaluationSubmissionRepository;
 import java.io.IOException;
@@ -92,7 +93,8 @@ public class EvaluationService {
         e.getFileName(),
         signedUrl,
         e.getCreatedDate(),
-        e.getDueDate()
+        e.getDueDate(),
+        e.getCourse().getId()
     );
   }
 
@@ -168,6 +170,52 @@ public class EvaluationService {
     );
     activityRepository.save(activity);
 
+    return getDtEvaluationSubmission(saved);
+  }
+
+  public DtEvaluation updateEvaluation(Long evaluationId, EditEvaluationRequest req) throws IOException {
+      Evaluation ev = evaluationRepository.findById(evaluationId)
+              .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluación no encontrada"));
+
+      if (req.getTitle() != null) ev.setTitle(req.getTitle());
+      if (req.getContent() != null) ev.setContent(req.getContent());
+      if (req.getDueDate() != null) ev.setDueDate(req.getDueDate());
+
+      if (Boolean.TRUE.equals(req.getClearFile())) {
+        ev.setFileName(null);
+        ev.setFileUrl(null);
+    }
+
+      if (req.getFile() != null) {
+        DtFileResource file = fileStorageService.store(req.getFile());
+        ev.setFileName(file.getFilename());
+        ev.setFileUrl(file.getStoragePath());
+      }
+
+      Evaluation saved = evaluationRepository.save(ev);
+
+      return getDtEvaluation(saved);
+  }
+
+  public DtEvaluationSubmission gradeEvaluation(Long evaluationId, String studentCi, Integer grade) {
+    if (grade < 1 || grade > 12) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nota debe estar entre 1 y 12");
+    }
+
+    List<EvaluationSubmission> submissions = evaluationSubmissionRepository.findByEvaluationIdAndAuthorCi(evaluationId, studentCi);
+
+    if (submissions.size() == 0) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Estudiante no ha participado en la evaluación");
+    }
+
+    EvaluationSubmission submission = submissions.get(0);
+
+    if (submission.getNote() != null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La respuesta ya ha sido calificada");
+    }
+
+    submission.setNote(grade);
+    EvaluationSubmission saved = evaluationSubmissionRepository.save(submission);
     return getDtEvaluationSubmission(saved);
   }
 }

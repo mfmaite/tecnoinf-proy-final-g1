@@ -5,7 +5,6 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primary[10],
-    // justifyContent: "center", NO USAR
     paddingTop: 10,
     paddingHorizontal: 20,
   },
@@ -168,8 +167,8 @@ export const styles = StyleSheet.create({
   cellDate: { flex: 2, textAlign: "center" },
   header: { backgroundColor: colors.primary[20], padding: 16, borderRadius: 8, marginBottom: 16 },
   headerTitle: { fontSize: 24, fontWeight: "700", color: colors.secondary[60], marginBottom: 16 },
-    contentCard: {
-    backgroundColor: colors.primary[10],
+  contentCard: {
+    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
@@ -179,20 +178,78 @@ export const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  input: {
-      width: "100%",
-      borderWidth: 1,
-      borderColor: colors.surfaceLight[40],
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 12,
-      fontSize: 16,
-      backgroundColor: colors.surfaceLight[20],
-    },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
   contentText: { fontSize: 14, marginBottom: 4 },
   contentFile: { fontStyle: "italic", color: colors.textNeutral[40], marginBottom: 4 },
   contentDate: { fontSize: 12, color: colors.textNeutral[40] },
+  chipRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 6,
+    flexWrap: "wrap",
+  },
+  chip: {
+    backgroundColor: "#eef2ff",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  chipText: {
+    color: "#3730a3",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  chipMuted: {
+    backgroundColor: "#f3f4f6",
+  },
+  chipMutedText: {
+    color: "#374151",
+  },
+  chipDanger: {
+    backgroundColor: "#fee2e2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  chipDangerText: {
+    color: "#b91c1c",
+    fontWeight: "700",
+  },
+  badge: {
+    backgroundColor: "#f3f4f6",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  badgeText: {
+    color: "#111827",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  linkPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.secondary[60],
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  forumButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  forumButtonText: {
+    color: colors.secondary[60],
+    fontWeight: "700",
+  },
   sortContainerBox: {
     width: "90%",
     marginBottom: 12,
@@ -254,4 +311,28 @@ export const styles = StyleSheet.create({
   errorText: {
     color: "red",
   },
+  activityCardItem: {
+  backgroundColor: "#fff",
+  borderRadius: 12,
+  padding: 12,
+  marginVertical: 6,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 2,
+},
+activityDescription: {
+  fontSize: 15,
+  fontWeight: "500",
+  color: "#333",
+},
+activityDate: {
+  fontSize: 12,
+  color: "#666",
+  marginTop: 4,
+},
+safeArea: {
+  flex: 1,
+  backgroundColor: colors.surfaceLight[20],
+},
 });

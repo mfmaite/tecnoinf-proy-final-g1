@@ -1,10 +1,10 @@
-// app/(main)/profile/index.tsx
 import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { styles as globalStyles } from "../../../styles/styles";
 import { colors } from "../../../styles/colors";
+import { UserProfilePicture } from "../../../components/user-profile-picture/user-profile-picture";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -19,19 +19,16 @@ export default function ProfileScreen() {
     router.push("/(main)/profile/edit-profile");
   };
 
+  const goToChangePassword = () => {
+    router.push("/(main)/profile/change-password");
+  };
+
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Mi Perfil</Text>
 
-      {user?.pictureUrl ? (
-        <Image source={{ uri: user.pictureUrl }} style={localStyles.avatar} />
-      ) : (
-        <View style={[localStyles.avatar, localStyles.avatarPlaceholder]}>
-          <Text style={localStyles.avatarInitial}>
-            {user?.name?.charAt(0)?.toUpperCase() || "?"}
-          </Text>
-        </View>
-      )}
+      <View style={{ alignItems: "center", marginBottom: 20 }}>
+        <UserProfilePicture name={user?.name || "?"} pictureUrl={user?.pictureUrl} size="2xl" />
+      </View>
 
       <View style={localStyles.infoBox}>
         <Text style={localStyles.label}>Nombre</Text>
@@ -56,6 +53,13 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
+        style={globalStyles.buttonPrimary}
+        onPress={goToChangePassword}
+      >
+        <Text style={globalStyles.buttonText}>Cambiar contraseña</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         style={[globalStyles.buttonSecondary, { backgroundColor: colors.accent.danger[50] }]}
         onPress={handleLogout}
       >
@@ -66,24 +70,6 @@ export default function ProfileScreen() {
 }
 
 const localStyles = StyleSheet.create({
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 20,
-    backgroundColor: colors.surfaceLight[30],
-    alignSelf: "center",
-  },
-  avatarPlaceholder: {
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center"
-  },
-  avatarInitial: {
-    fontSize: 40,
-    color: colors.textNeutral[10],
-    fontWeight: "700" as const,
-  },
   infoBox: {
     width: "100%",
     backgroundColor: colors.surfaceLight[10],

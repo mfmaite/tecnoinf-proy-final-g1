@@ -1,7 +1,6 @@
 import React, {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useState,
 } from "react";
 import {
@@ -12,9 +11,9 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Image,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import {
   getForumPosts,
   createForumPost,
@@ -24,6 +23,25 @@ import { colors } from "../../../../styles/colors";
 import { styles as globalStyles } from "../../../../styles/styles";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { getCourseById } from "../../../../services/courses";
+import { UserProfilePicture } from "@/components/user-profile-picture/user-profile-picture";
+
+type ForumParams = {
+  courseId: string;
+  forumId: string;
+  forumType?: string;
+};
+
+export const screenOptions = ({
+  route,
+}: {
+  route: { params?: ForumParams };
+}): NativeStackNavigationOptions => ({
+  title:
+    route.params?.forumType === "ANNOUNCEMENTS"
+      ? "Foro de Anuncios"
+      : "Foro de Consultas",
+  headerShown: true,
+});
 
 export default function ForumView() {
   const { courseId, forumId } = useLocalSearchParams<{
@@ -42,9 +60,6 @@ export default function ForumView() {
   const userCi = user?.ci ?? null;
   const isProfessor = user?.role === "PROFESOR" || user?.role === "ADMIN";
 
-  // ────────────────────────────────
-  // 📘 Cargar foro y posts
-  // ────────────────────────────────
   useEffect(() => {
     if (!forumId || !courseId) return;
     const fetch = async () => {
@@ -62,19 +77,6 @@ export default function ForumView() {
     };
     fetch();
   }, [courseId, forumId]);
-
-  // ────────────────────────────────
-  // 🧭 Título dinámico en header
-  // ────────────────────────────────
-  useLayoutEffect(() => {
-    if (forumType)
-      (router as any).setParams?.({
-        title:
-          forumType === "ANNOUNCEMENTS"
-            ? "Foro de Anuncios"
-            : "Foro de Consultas",
-      });
-  }, [forumType, router]);
 
   useFocusEffect(
     useCallback(() => {
@@ -95,15 +97,11 @@ export default function ForumView() {
 
       refreshPosts();
       return () => {
-        isActive = false; // previene update si desmonta rápido
+        isActive = false;
       };
     }, [forumId])
   );
 
-
-  // ────────────────────────────────
-  // ✍️ Publicar nuevo post
-  // ────────────────────────────────
   const [isPosting, setIsPosting] = useState(false);
   async function handlePost() {
     if (!message.trim()) return Alert.alert("Escribe un mensaje.");
@@ -120,10 +118,7 @@ export default function ForumView() {
       setIsPosting(false);
     }
   }
-  
-  // ────────────────────────────────
-  // 🧱 Render principal
-  // ────────────────────────────────
+
   if (loading)
     return (
       <ActivityIndicator
@@ -141,13 +136,7 @@ export default function ForumView() {
 
   return (
     <ScrollView style={globalStyles.container}>
-      <Text style={globalStyles.title}>
-        {forumType === "ANNOUNCEMENTS"
-          ? "Foro de Anuncios"
-          : "Foro de Consultas"}
-      </Text>
 
-      {/* 📝 Campo para crear post */}
       {canPost && (
         <View style={{ marginBottom: 24 }}>
           <TextInput
@@ -184,7 +173,6 @@ export default function ForumView() {
         </View>
       )}
 
-      {/* 📬 Listado de posts */}
       {posts.length === 0 ? (
         <Text>No hay publicaciones aún.</Text>
       ) : (
@@ -224,18 +212,8 @@ export default function ForumView() {
                   marginBottom: 6,
                 }}
               >
-                {p.authorPictureUrl ? (
-                  <Image
-                    source={{ uri: p.authorPictureUrl }}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      marginRight: 8,
-                    }}
-                  />
-                ) : null}
-                <Text style={{ fontWeight: "bold", color: colors.primary[70] }}>
+                <UserProfilePicture name={p.authorName} pictureUrl={p.authorPictureUrl ?? undefined} size="sm" />
+                <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>
                   {p.authorName}
                 </Text>
               </View>

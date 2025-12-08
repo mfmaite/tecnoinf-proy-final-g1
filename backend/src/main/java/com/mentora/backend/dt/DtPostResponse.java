@@ -8,9 +8,8 @@ public class DtPostResponse {
     private LocalDateTime createdDate;
     private String authorCi;
     private String authorName;
+    private String authorPictureUrl;
     private Long postId;
-
-    // constructores, getters y setters
 
     public DtPostResponse() {}
 
@@ -28,6 +27,7 @@ public class DtPostResponse {
     public LocalDateTime getCreatedDate() {return createdDate;}
     public String getAuthorCi() {return authorCi;}
     public String getAuthorName() {return authorName;}
+    public String getAuthorPictureUrl() { return authorPictureUrl; }
     public Long getPostId() {return postId;}
 
     public void setId(Long id) {this.id = id;}
@@ -35,5 +35,6 @@ public class DtPostResponse {
     public void setCreatedDate(LocalDateTime createdDate) {this.createdDate = createdDate;}
     public void setAuthorCi(String authorCi) {this.authorCi = authorCi;}
     public void setAuthorName(String authorName) {this.authorName = authorName;}
+    public void setAuthorPictureUrl(String authorPictureUrl) { this.authorPictureUrl = authorPictureUrl; }
     public void setPostId(Long postId) {this.postId = postId;}
 }

@@ -1,5 +1,6 @@
 package com.mentora.backend.controller;
 
+import com.mentora.backend.dt.DtEvaluation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,14 +12,20 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.mentora.backend.requests.CreateEvaluationSubmissionRequest;
+import com.mentora.backend.requests.EditEvaluationRequest;
+
 import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.mentora.backend.dt.DtEvaluationSubmission;
 import com.mentora.backend.responses.GetEvaluationWithSubmissionResponse;
+import com.mentora.backend.requests.GradeEvaluationRequest;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/evaluations")
+@Tag(name = "Evaluaciones", description = "Gestiona las evaluaciones")
 public class EvaluationController {
   private final EvaluationService evaluationService;
 
@@ -98,5 +105,63 @@ public class EvaluationController {
       ));
     }
 
+  }
+
+  @Operation(
+    summary = "Editar evaluación",
+    description = "Actualiza una evaluación existente. Solo profesores",
+    security = @SecurityRequirement(name = "bearerAuth")
+  )
+  @ApiResponse(responseCode = "200", description = "Evaluación actualizada")
+  @ApiResponse(responseCode = "404", description = "Evaluación no encontrada")
+  @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+  @PreAuthorize("hasRole('PROFESOR')")
+  @PutMapping(value = "/{evaluationId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<DtApiResponse<DtEvaluation>> updateEvaluation(
+    @PathVariable Long evaluationId,
+    @ModelAttribute EditEvaluationRequest req)
+  {
+    try {
+        DtEvaluation updated = evaluationService.updateEvaluation(evaluationId, req);
+
+        return ResponseEntity.ok(
+            new DtApiResponse<>(true, 200, "Evaluación actualizada", updated)
+        );
+
+    } catch (ResponseStatusException e) {
+        return ResponseEntity.status(e.getStatusCode()).body(
+                new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null)
+        );
+    } catch (IOException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new DtApiResponse<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), null));
+    }
+  }
+
+  @Operation(
+    summary = "Calificar evaluación",
+    description = "Califica una evaluación existente. Solo profesores",
+    security = @SecurityRequirement(name = "bearerAuth")
+  )
+  @ApiResponse(responseCode = "200", description = "Evaluación actualizada")
+  @ApiResponse(responseCode = "404", description = "Evaluación no encontrada")
+  @ApiResponse(responseCode = "403", description = "No tiene permisos necesarios")
+  @PreAuthorize("hasRole('PROFESOR')")
+  @PutMapping(value = "/{evaluationId}/grade")
+  public ResponseEntity<DtApiResponse<DtEvaluationSubmission>> gradeEvaluation(
+    @PathVariable Long evaluationId,
+    @RequestBody GradeEvaluationRequest req
+  ) {
+    try {
+      DtEvaluationSubmission graded = evaluationService.gradeEvaluation(evaluationId, req.getStudentCi(), req.getGrade());
+
+      return ResponseEntity.ok(new DtApiResponse<>(
+        true,
+        200,
+        "Evaluación calificada",
+        graded
+      ));
+    } catch (ResponseStatusException e) {
+      return ResponseEntity.status(e.getStatusCode()).body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
+    }
   }
 }

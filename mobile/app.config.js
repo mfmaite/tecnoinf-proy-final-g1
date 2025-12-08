@@ -13,8 +13,8 @@ export default ({ config }) => ({
     ...config.android,
     package: "com.mentora.mobile",
 
-    // 🔐 INYECTAMOS EL GOOGLE SERVICES DESDE SECRET, NO DESDE ARCHIVO LOCAL
-    googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
+
+    googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Slot, useRouter } from "expo-router";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { NotificationProvider, useNotification } from "../contexts/tuviejaentanga"
+import { NotificationProvider, useNotification } from "../contexts/NotificationContext"
 import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";

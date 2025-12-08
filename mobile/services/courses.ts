@@ -1,8 +1,5 @@
 import { api } from "./api";
 
-// ─────────────────────────────────────
-// 🧩 Tipos base
-// ─────────────────────────────────────
 export interface ForumPost {
   id: number;
   authorCi: string;
@@ -33,12 +30,16 @@ export interface Content {
   fileName?: string | null;
   fileUrl?: string | null;
   createdDate?: string | null;
+  type?: "simpleContent" | "evaluation" | "quiz";
+  dueDate?: string | null;
 }
 
 export interface CourseResponse {
   course: CourseData;
   contents: Content[];
 }
+
+export type ContentType = "simpleContent" | "evaluation" | "quiz";
 
 export interface Participant {
   ci: string;
@@ -49,7 +50,6 @@ export interface Participant {
   role?: string | null;
 }
 
-// 🔹 Estructura genérica de respuesta del backend
 interface ApiResponse<T> {
   success: boolean;
   status?: number;
@@ -57,9 +57,6 @@ interface ApiResponse<T> {
   data: T;
 }
 
-// ─────────────────────────────────────
-// 📘 GET /courses/:courseId
-// ─────────────────────────────────────
 export async function getCourseById(courseId: string): Promise<CourseResponse> {
   try {
     const response = await api.get<ApiResponse<any>>(
@@ -125,9 +122,30 @@ export const getCourses = async (): Promise<CourseListItem[]> => {
   }
 };
 
-// ─────────────────────────────────────
-// 👥 GET /courses/:courseId/participants
-// ─────────────────────────────────────
+export async function getContentByType(
+  courseId: string,
+  type: ContentType,
+  contentId: string | number
+): Promise<any> {
+  try {
+    const response = await api.get<ApiResponse<any>>(
+      `/courses/${encodeURIComponent(courseId)}/contents/${type}/${encodeURIComponent(
+        String(contentId)
+      )}`
+    );
+    const { success, message, data } = response.data;
+    if (!success || !data) {
+      throw new Error(message || "No se pudo obtener el contenido.");
+    }
+    return data;
+  } catch (error: any) {
+    console.error("[getContentByType] Error:", error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message || "No se pudo obtener el contenido."
+    );
+  }
+}
+
 export async function getCourseParticipants(
   courseId: string
 ): Promise<Participant[]> {

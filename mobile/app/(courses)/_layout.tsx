@@ -30,6 +30,30 @@ export default function CoursesLayout() {
         />
 
         <Stack.Screen
+          name="[courseId]/contents/[contentId]"
+          options={{
+            headerShown: true,
+            title: "Contenido",
+          }}
+        />
+
+        <Stack.Screen
+          name="[courseId]/evaluations/[evaluationId]"
+          options={{
+            headerShown: true,
+            title: "Evaluación",
+          }}
+        />
+
+        <Stack.Screen
+          name="[courseId]/quizzes/[quizId]"
+          options={{
+            headerShown: true,
+            title: "Quiz",
+          }}
+        />
+
+        <Stack.Screen
           name="participants"
           options={{
             headerShown: true,

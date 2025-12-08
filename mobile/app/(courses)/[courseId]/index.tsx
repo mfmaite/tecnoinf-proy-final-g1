@@ -4,16 +4,12 @@ import {
   Text,
   ScrollView,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
-  Linking,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
-import { Directory, File, Paths } from "expo-file-system";
-import * as Sharing from "expo-sharing";
 
 import { colors } from "../../../styles/colors";
 import { styles } from "../../../styles/styles";
@@ -44,9 +40,6 @@ export default function CourseView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ─────────────────────────────────────────────
-  // 📚 Cargar curso
-  // ─────────────────────────────────────────────
   useEffect(() => {
     if (!courseId) return;
 
@@ -66,89 +59,11 @@ export default function CourseView() {
     fetchCourse();
   }, [courseId]);
 
-  // ─────────────────────────────────────────────
-  // 🧭 Actualizar título dinámico
-  // ─────────────────────────────────────────────
   useLayoutEffect(() => {
-    if (!courseData) return; // ✅ si no hay datos, salimos temprano
+    if (!courseData) return;
     (navigation as any).setOptions?.({ title: courseData.name ?? "Curso" });
   }, [courseData, navigation]);
 
-  // ─────────────────────────────────────────────
-  // 📎 Descarga y apertura de archivos
-  // ─────────────────────────────────────────────
-  async function handleDownload(url?: string | null, fileName?: string | null) {
-    if (!url) {
-      Alert.alert("Archivo no disponible");
-      return;
-    }
-
-    try {
-      const name = fileName || url.split("/").pop() || `archivo_${Date.now()}`;
-      const destination = new Directory(Paths.document, name); // carpeta principal + nombre
-      await destination.create(); // asegúrate que exista
-
-      const file = await File.downloadFileAsync(url, destination);
-      // file es instancia de File, tiene .uri entre otras props
-
-      const uri = file.uri;
-
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
-      } else {
-        await Linking.openURL(uri);
-      }
-    } catch (err) {
-      console.warn("[handleDownload] Error al descargar:", err);
-      try {
-        if (url) await Linking.openURL(url);
-      } catch {
-        Alert.alert("No se puede abrir el archivo.");
-      }
-    }
-  }
-  // ─────────────────────────────────────────────
-  // 🔗 Render de texto con enlaces clicables
-  // ─────────────────────────────────────────────
-  function renderContentWithLinks(content?: string | null) {
-    if (!content) return null;
-
-    const parts = content.split(/(https?:\/\/[^\s]+)/g);
-
-    return (
-      <Text style={styles.contentText}>
-        {parts.map((part, idx) => {
-          if (!part) return null;
-          const isUrl =
-            part.startsWith("http://") || part.startsWith("https://");
-
-          return isUrl ? (
-            <Text
-              key={idx}
-              style={styles.link}
-              onPress={async () => {
-                try {
-                  const supported = await Linking.canOpenURL(part);
-                  if (supported) await Linking.openURL(part);
-                  else Alert.alert("No se puede abrir el enlace.");
-                } catch {
-                  Alert.alert("Error al abrir el enlace.");
-                }
-              }}
-            >
-              {part}
-            </Text>
-          ) : (
-            <Text key={idx}>{part}</Text>
-          );
-        })}
-      </Text>
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // ⏳ Render principal
-  // ─────────────────────────────────────────────
   if (loading)
     return (
       <ActivityIndicator
@@ -163,15 +78,11 @@ export default function CourseView() {
   if (!courseData)
     return <Text style={styles.error}>Curso no encontrado.</Text>;
 
-  // ─────────────────────────────────────────────
-  // 🎨 Render UI
-  // ─────────────────────────────────────────────
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* 🔹 Botón de participantes */}
       <TouchableOpacity
         style={styles.buttonPrimary}
         onPress={() =>
@@ -185,7 +96,6 @@ export default function CourseView() {
         <Text style={styles.buttonText}>Ver Participantes</Text>
       </TouchableOpacity>
 
-      {/* 🧾 Encabezado */}
       <View style={styles.header}>
         <Text style={styles.subtitle}>
           ID: {courseData.id}
@@ -197,34 +107,39 @@ export default function CourseView() {
         </Text>
       </View>
 
-      {/* 📘 Contenidos */}
       <Text style={styles.title}>Contenidos</Text>
       {contents.length ? (
         contents.map((item) => (
-          <View key={item.id} style={styles.contentCard}>
+          <TouchableOpacity
+            key={item.type + "-" + item.id}
+            style={styles.contentCard}
+            activeOpacity={0.85}
+            onPress={() => {
+              if (item.type === "quiz") {
+                router.push({ pathname: "/(courses)/[courseId]/quizzes/[quizId]" as any, params: { courseId: String(courseId), quizId: String(item.id) } });
+              } else if (item.type === "evaluation") {
+                router.push({ pathname: "/(courses)/[courseId]/evaluations/[evaluationId]" as any, params: { courseId: String(courseId), evaluationId: String(item.id) } });
+              } else {
+                router.push({ pathname: "/(courses)/[courseId]/contents/[contentId]" as any, params: { courseId: String(courseId), contentId: String(item.id) } });
+              }
+            }}
+          >
             <Text style={styles.subtitle}>{item.title || "Sin título"}</Text>
-            {renderContentWithLinks(item.content)}
-
-            {item.fileName && item.fileUrl && (
-              <View>
-                <Text style={styles.contentFile}>Archivo: {item.fileName}</Text>
-                <TouchableOpacity
-                  style={styles.buttonPrimary}
-                  onPress={() => handleDownload(item.fileUrl, item.fileName)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.buttonText}>Descargar</Text>
-                </TouchableOpacity>
+            <View style={styles.chipRow}>
+              <View style={[styles.chip]}>
+                <Text style={styles.chipText}>
+                  {item.type === "quiz" ? "Quiz" : item.type === "evaluation" ? "Evaluación" : "Contenido"}
+                </Text>
               </View>
-            )}
-
-            <Text style={styles.contentDate}>
-              Creado:{" "}
-              {item.createdDate
-                ? new Date(item.createdDate).toLocaleDateString("es-ES")
-                : "—"}
-            </Text>
-          </View>
+              {item?.dueDate ? (
+                <View style={[styles.chip, styles.chipMuted]}>
+                  <Text style={styles.chipMutedText}>
+                    Vence: {new Date(item.dueDate).toLocaleDateString("es-ES")}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </TouchableOpacity>
         ))
       ) : (
         <Text style={styles.emptyText}>No hay contenidos disponibles.</Text>

@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
+import * as Notifications from "expo-notifications";
+import { api } from "../../services/api";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -9,6 +11,24 @@ export default function HomeScreen() {
   const goToProfilePage = () => {
     router.push("/(main)/profile/");
   };
+  // Registra el token FCM del dispositivo
+  const registerPushToken = async () => {
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") return;
+
+      const { data: token } = await Notifications.getDevicePushTokenAsync();
+      if (!token) return;
+
+      await api.post("/users/device-token", { token });
+    } catch (e) {
+      console.warn("[push] No se pudo registrar el token:", e);
+    }
+  };
+
+  useEffect(() => {
+    registerPushToken();
+  }, []);
   const handleCourses = () => {
     router.push("/(courses)/coursesList");
   };

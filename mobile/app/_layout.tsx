@@ -10,7 +10,7 @@ import { ActivityIndicator, View } from "react-native";
 import { api } from "../services/api";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// 🔔 Configuración global
+//  Configuración global
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,   // muestra alerta nativa
@@ -34,7 +34,7 @@ export default function RootLayout() {
 
 function AppNavigator() {
   const { token } = useAuth(); // auth token backend
-  const { expoPushToken } = useNotification(); // token de Expo
+  const { fcmToken } = useNotification();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -52,21 +52,21 @@ function AppNavigator() {
   // 📲 Enviar token al backend si estamos logueados
   useEffect(() => {
     const savePushToken = async () => {
-      if (expoPushToken && isLoggedIn) {
+      if (fcmToken && isLoggedIn) {
         try {
           await api.post("/users/device-token", {
-            token: expoPushToken,
+            token: fcmToken,
           });
-          console.log("🔥 Token guardado en backend");
+          console.log("Token guardado en backend");
         } catch (e) {
-          console.log("❌ Error guardando token en backend", e);
+          console.log("Error guardando token en backend", e);
         }
       }
     };
     savePushToken();
-  }, [expoPushToken, isLoggedIn]);
+  }, [fcmToken, isLoggedIn]);
 
-  // 🔗 Deep linking global (igual que antes)
+  //  Deep linking global (igual que antes)
   useEffect(() => {
     const subscription = Linking.addEventListener("url", (event) => {
       const { path, queryParams } = Linking.parse(event.url);

@@ -148,6 +148,7 @@ export default function CoursesList() {
             selectedValue={sortOrder}
             onValueChange={(value) => setSortOrder(value as any)}
             mode="dropdown"
+            style={styles.pickerItem}
           >
             <Picker.Item label="Nombre (A-Z)" value="name-asc" />
             <Picker.Item label="Nombre (Z-A)" value="name-desc" />

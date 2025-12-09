@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
@@ -14,7 +14,6 @@ export default function HomeScreen() {
   const goToProfilePage = () => {
     router.push("/(main)/profile/");
   };
-
   const handleCourses = () => {
     router.push("/(courses)/coursesList");
   };

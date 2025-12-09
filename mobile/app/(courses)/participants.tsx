@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
+import { colors } from "../../styles/colors";
 
 interface Participant {
   ci: string;
@@ -159,13 +160,11 @@ const localStyles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 12,
-    marginHorizontal: 12,
     marginBottom: 8,
   },
   itemCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.primary[20],
     padding: 12,
-    marginHorizontal: 12,
     marginVertical: 6,
     borderRadius: 8,
     elevation: 1,

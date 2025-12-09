@@ -12,10 +12,13 @@ import com.mentora.backend.model.DeviceToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,10 +44,30 @@ public class PushNotificationService {
             }
 
             InputStream credentialsStream = null;
+
             if (credentialsPath != null && !credentialsPath.isBlank()) {
-                File f = new File(credentialsPath);
-                if (f.exists()) {
-                    credentialsStream = new FileInputStream(f);
+                String trimmed = credentialsPath.trim();
+                // Inline JSON provided via env/property
+                if (trimmed.startsWith("{")) {
+                    credentialsStream = new ByteArrayInputStream(trimmed.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    // Base64-encoded JSON provided via env/property
+                    try {
+                        byte[] decoded = Base64.getDecoder().decode(trimmed);
+                        String asString = new String(decoded, StandardCharsets.UTF_8).trim();
+                        if (asString.startsWith("{")) {
+                            credentialsStream = new ByteArrayInputStream(decoded);
+                        }
+                    } catch (IllegalArgumentException ignored) {
+                        // Not base64, proceed to path resolution
+                    }
+                    // Treat as filesystem path
+                    if (credentialsStream == null) {
+                        File f = new File(credentialsPath);
+                        if (f.exists()) {
+                            credentialsStream = new FileInputStream(f);
+                        }
+                    }
                 }
             }
 

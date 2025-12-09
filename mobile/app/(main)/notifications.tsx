@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -45,12 +45,18 @@ export default function NotificationsPage() {
     loadNotifications();
   }, []);
 
+  const orderedNotifications = useMemo(() => {
+    const unread = notifications.filter(n => !n.isRead);
+    const read = notifications.filter(n => n.isRead);
+    return [...unread, ...read];
+  }, [notifications]);
+
   const handlePress = async (notification: Notification) => {
     try {
       if (!notification.isRead) {
         await markNotificationAsRead(notification.id);
-        setNotifications((prev) =>
-          prev.map((n) =>
+        setNotifications(prev =>
+          prev.map(n =>
             n.id === notification.id ? { ...n, isRead: true } : n
           )
         );
@@ -68,78 +74,81 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <View style={globalStyles.loader}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={colors.primary[60]} />
       </View>
     );
   }
 
   if (notifications.length === 0) {
     return (
-      <View style={localStyles.center}>
-        <Text style={localStyles.emptyText}>No tenés notificaciones</Text>
+      <View style={globalStyles.center}>
+        <Text style={globalStyles.emptyText}>No tenés notificaciones</Text>
       </View>
     );
   }
 
-  return (
-    <View style={[globalStyles.container, localStyles.container]}>
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const unread = !item.isRead;
-          return (
-            <TouchableOpacity
-              onPress={() => handlePress(item)}
-              activeOpacity={0.85}
-              style={[
-                localStyles.itemCard,
-                unread ? localStyles.itemCardUnread : undefined,
-              ]}
-            >
-              <View style={localStyles.itemRow}>
-                <Text style={localStyles.message}>{item.message}</Text>
-                {unread ? (
-                  <View style={globalStyles.badge}>
-                    <Text style={globalStyles.badgeText}>Nuevo</Text>
-                  </View>
-                ) : null}
+  const renderItem = ({ item }: { item: Notification }) => {
+    const unread = !item.isRead;
+    return (
+      <TouchableOpacity onPress={() => handlePress(item)} activeOpacity={0.85}>
+        <View
+          style={[
+            styles.itemCardBase,
+            unread ? styles.itemUnread : styles.itemRead,
+          ]}
+        >
+          <View style={styles.row}>
+            <Text style={styles.message}>{item.message}</Text>
+
+            {unread && (
+              <View style={globalStyles.badge}>
+                <Text style={globalStyles.badgeText}>Nuevo</Text>
               </View>
-              {item.link ? (
-                <Text style={[globalStyles.link, { marginTop: 6 }]}>
-                  Ir a contenido →
-                </Text>
-              ) : null}
-            </TouchableOpacity>
-          );
-        }}
+            )}
+          </View>
+
+          {item.link && (
+            <Text style={[globalStyles.link, { marginTop: 6 }]}>
+              Ir al contenido →
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={globalStyles.container}>
+      <FlatList
+        data={orderedNotifications}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
       />
     </View>
   );
 }
 
-const localStyles = StyleSheet.create({
-  container: {
-    paddingTop: 8,
-  },
-  itemCard: {
+const styles = StyleSheet.create({
+  itemCardBase: {
     backgroundColor: colors.surfaceLight[10],
     padding: 12,
     marginVertical: 6,
     borderRadius: 8,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: colors.textNeutral[20],
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    elevation: 2,
   },
-  itemCardUnread: {
+  itemUnread: {
     backgroundColor: colors.primary[20],
-    borderColor: colors.primary[20],
+    borderColor: colors.primary[40],
   },
-  itemRow: {
+  itemRead: {
+    opacity: 0.7,
+  },
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 8,
@@ -147,15 +156,6 @@ const localStyles = StyleSheet.create({
   message: {
     flex: 1,
     fontWeight: "600",
-    color: "#1f2937",
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  emptyText: {
-    color: "#9ca3af",
+    color: colors.textNeutral[50],
   },
 });

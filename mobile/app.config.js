@@ -12,8 +12,6 @@ export default ({ config }) => ({
   android: {
     ...config.android,
     package: "com.mentora.mobile",
-
-
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",

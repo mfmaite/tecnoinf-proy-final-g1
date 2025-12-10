@@ -36,7 +36,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (partnerName) {
-      navigationRef.current.setOptions({ title: `Chat con ${partnerName}` });
+      navigationRef.current.setOptions({ title: `${partnerName}` });
     }
   }, [partnerName]);
 

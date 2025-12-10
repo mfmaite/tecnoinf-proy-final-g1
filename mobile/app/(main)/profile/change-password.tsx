@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Text
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors } from "../../../styles/colors";
 import { changePassword } from "@/services/userService";
@@ -47,8 +48,7 @@ export default function ChangePasswordScreen() {
 
     try {
       setLoading(true);
-      // Aquí se llamaría al backend para cambiar la contraseña
-      await changePassword( currentPassword, newPassword, confirmPassword);
+      await changePassword(currentPassword, newPassword, confirmPassword);
       Alert.alert("Éxito", "Contraseña cambiada correctamente.", [
         { text: "OK", onPress: () => router.back() },
       ]);
@@ -61,59 +61,68 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña actual"
-          secureTextEntry
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-        />
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <View style={styles.container}>
+        <View style={styles.card}>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Nueva contraseña"
-          secureTextEntry
-          value={newPassword}
-          onChangeText={setNewPassword}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Contraseña actual"
+            placeholderTextColor={colors.textNeutral[40]}
+            secureTextEntry
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirmar nueva contraseña"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Nueva contraseña"
+            placeholderTextColor={colors.textNeutral[40]}
+            secureTextEntry
+            value={newPassword}
+            onChangeText={setNewPassword}
+          />
 
-        <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.6 }]}
-          onPress={handleChangePassword}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Guardar cambios</Text>
-          )}
-        </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Confirmar nueva contraseña"
+            placeholderTextColor={colors.textNeutral[40]}
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
 
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.secondaryButtonText}>Cancelar</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.6 }]}
+            onPress={handleChangePassword}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Guardar cambios</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.secondaryButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: colors.primary[10],
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
@@ -132,13 +141,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: colors.secondary[60],
-    marginBottom: 24,
-    textAlign: "center",
-  },
   input: {
     width: "100%",
     borderWidth: 1,
@@ -148,6 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 16,
     backgroundColor: colors.surfaceLight[20],
+    color: colors.textNeutral[50], // ← Texto siempre visible
   },
   button: {
     backgroundColor: colors.primary[60],

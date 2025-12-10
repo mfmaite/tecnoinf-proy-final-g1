@@ -7,8 +7,14 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Image,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  useLocalSearchParams,
+  useRouter,
+  useNavigation,
+} from "expo-router";
+
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../services/api";
 import { getOrCreateChatWith } from "../../../services/chat";
@@ -26,6 +32,7 @@ interface UserProfile {
 }
 
 export default function ViewProfileScreen() {
+  const navigation = useNavigation();
   const router = useRouter();
   const { ci } = useLocalSearchParams<{ ci: string }>();
   const { user } = useAuth();
@@ -57,6 +64,17 @@ export default function ViewProfileScreen() {
   }, [ci]);
 
   // ────────────────────────────────
+  // 🏷 Actualizar título dinámico
+  // ────────────────────────────────
+  useEffect(() => {
+    if (profile?.name) {
+      navigation.setOptions({
+        title: `Perfil de ${profile.name}`,
+      });
+    }
+  }, [profile, navigation]);
+
+  // ────────────────────────────────
   // ⏳ Estado de carga / error
   // ────────────────────────────────
   if (loading)
@@ -86,9 +104,7 @@ export default function ViewProfileScreen() {
   //   - y el usuario logueado es distinto
   // ────────────────────────────────
   const canMessage =
-  user &&
-  user.ci !== profile.ci &&
-  profile.role === "PROFESOR";
+    user && user.ci !== profile.ci && profile.role === "PROFESOR";
 
   const handleStartChat = async () => {
     try {
@@ -107,7 +123,6 @@ export default function ViewProfileScreen() {
     }
   };
 
-
   // ────────────────────────────────
   // 🎨 Render principal
   // ────────────────────────────────
@@ -116,7 +131,10 @@ export default function ViewProfileScreen() {
       {/* Avatar */}
       <View style={localStyles.avatarWrapper}>
         {profile.pictureUrl ? (
-          <Ionicons name="person-circle" size={120} color={colors.primary[60]} />
+          <Image
+            source={{ uri: profile.pictureUrl }}
+            style={localStyles.avatarImage}
+          />
         ) : (
           <Ionicons
             name="person-circle-outline"
@@ -126,9 +144,8 @@ export default function ViewProfileScreen() {
         )}
       </View>
 
-      {/* Info básica */}
-      <Text style={localStyles.name}>{profile.name}</Text>
-      <Text style={localStyles.role}>
+      {/* Rol (con estilo de name) */}
+      <Text style={localStyles.name}>
         {profile.role === "PROFESOR" ? "Profesor" : "Estudiante"}
       </Text>
 
@@ -189,6 +206,12 @@ const localStyles = StyleSheet.create({
   },
   avatarWrapper: {
     marginBottom: 16,
+  },
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.surfaceLight[20],
   },
   name: {
     fontSize: 22,

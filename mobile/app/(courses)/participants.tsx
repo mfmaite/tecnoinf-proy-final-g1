@@ -9,10 +9,12 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
 import { colors } from "../../styles/colors";
+import { getOrCreateChatWith } from "../../services/chat";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface Participant {
   ci: string;
@@ -29,6 +31,9 @@ export default function ParticipantsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState("");
+
+  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!courseId) return;
@@ -89,21 +94,46 @@ export default function ParticipantsList() {
         <Text style={localStyles.name}>{item.name}</Text>
         <Text style={localStyles.ci}>CI: {item.ci}</Text>
       </View>
+
       <Text style={localStyles.meta}>{item.email ?? ""}</Text>
       <Text style={localStyles.meta}>{item.description ?? ""}</Text>
+
       <View style={localStyles.actionsRow}>
+        {/* 🔹 Ver perfil */}
         <TouchableOpacity
-            style={styles.button}
-            onPress={() => Alert.alert("Ver Perfil", "Funcionalidad no implementada")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Ver Perfil</Text>
-          </TouchableOpacity>
-        {item.role === "PROFESOR" && (
+          style={styles.button}
+          onPress={() =>
+            router.push({
+              pathname: "/(courses)/[ci]",
+              params: { ci: item.ci },
+            })
+          }
+          activeOpacity={0.8}
+        >
+          <Text style={styles.buttonText}>Ver Perfil</Text>
+        </TouchableOpacity>
+
+        {/* 💬 Mensajes solo a profesores (y no a uno mismo) */}
+        {item.role === "PROFESOR" && user?.ci !== item.ci && (
           <TouchableOpacity
             style={styles.msgButton}
-            onPress={() => Alert.alert("Mensajes", "Funcionalidad no implementada")}
             activeOpacity={0.8}
+            onPress={async () => {
+              try {
+                const chat = await getOrCreateChatWith(item.ci);
+                if (!chat?.id) {
+                  Alert.alert("Error", "No se pudo iniciar el chat.");
+                  return;
+                }
+
+                router.push({
+                  pathname: "/(main)/chats/[partnerCi]",
+                  params: { partnerCi: item.ci, chatId: String(chat.id) },
+                });
+              } catch {
+                Alert.alert("Error", "No se pudo iniciar el chat.");
+              }
+            }}
           >
             <Text style={styles.msgButtonText}>Mensajes</Text>
           </TouchableOpacity>
@@ -141,7 +171,9 @@ export default function ParticipantsList() {
         renderItem={renderItem}
         ListEmptyComponent={
           <View style={localStyles.center}>
-            <Text style={localStyles.emptyText}>No se encontraron participantes.</Text>
+            <Text style={localStyles.emptyText}>
+              No se encontraron participantes.
+            </Text>
           </View>
         }
       />
@@ -149,6 +181,9 @@ export default function ParticipantsList() {
   );
 }
 
+/* ────────────────────────────────
+   🎨 Estilos locales
+   ──────────────────────────────── */
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,

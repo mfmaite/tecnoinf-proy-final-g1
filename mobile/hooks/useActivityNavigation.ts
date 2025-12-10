@@ -2,21 +2,27 @@ import { useRouter } from "expo-router";
 import { api } from "../services/api";
 
 /**
- * Estructura de lo que el hook parsea.
+ * Tipos posibles de links que vienen del backend.
  */
 type ParsedLink =
   | { type: "COURSE"; courseId: string }
   | { type: "FORUM"; courseId: string; forumId: string }
   | { type: "POST"; courseId: string; forumId: string; postId: string }
+  | { type: "CONTENT"; courseId: string; contentId: string }
+  | { type: "QUIZ"; courseId: string; quizId: string }
+  | { type: "EVALUATION"; courseId: string; evaluationId: string }
   | { type: "CHAT"; chatId: string }
   | null;
 
 /**
  * Parsea el link que viene del backend/web.
- * Ejemplos soportados:
+ * Ejemplos soportados ahora:
  *  - /courses/AAH2025
  *  - /courses/AAH2025/forums/4
  *  - /courses/AAH2025/forums/4/posts/33
+ *  - /courses/AAH2025/contents/12
+ *  - /courses/AAH2025/quizzes/8
+ *  - /courses/AAH2025/evaluations/5
  *  - /chats/18
  */
 function parseBackendLink(link: string): ParsedLink {
@@ -32,14 +38,26 @@ function parseBackendLink(link: string): ParsedLink {
     if (parts[2] === "forums") {
       const forumId = parts[3];
 
-      if (parts.length === 4) {
-        return { type: "FORUM", courseId, forumId };
-      }
-
+      if (parts.length === 4) return { type: "FORUM", courseId, forumId };
       if (parts[4] === "posts") {
         const postId = parts[5];
         return { type: "POST", courseId, forumId, postId };
       }
+    }
+
+    if (parts[2] === "contents") {
+      const contentId = parts[3];
+      return { type: "CONTENT", courseId, contentId };
+    }
+
+    if (parts[2] === "quizzes") {
+      const quizId = parts[3];
+      return { type: "QUIZ", courseId, quizId };
+    }
+
+    if (parts[2] === "evaluations") {
+      const evaluationId = parts[3];
+      return { type: "EVALUATION", courseId, evaluationId };
     }
   }
 
@@ -50,16 +68,10 @@ function parseBackendLink(link: string): ParsedLink {
   return null;
 }
 
-/**
- * Hook que expone navigateByActivityLink(link), para usar en cualquier pantalla
- * donde quieras navegar a partir de un 'link' del backend.
- */
 export function useActivityNavigation() {
   const router = useRouter();
 
-  /**
-   * Resuelve partnerCi para un chat usando el endpoint /chats/{chatId}
-   */
+  /** Obtiene partnerCi desde backend, necesario para chats */
   async function resolveChatPartner(chatId: string): Promise<string | null> {
     try {
       const response = await api.get(`/chats/${chatId}`);
@@ -71,66 +83,59 @@ export function useActivityNavigation() {
   }
 
   /**
-   * API principal del hook: recibe un link crudo del backend,
-   * lo parsea y navega al lugar correcto.
+   * Navega a partir del link crudo enviado por backend
    */
   async function navigateByActivityLink(rawLink: string) {
-  const parsed = parseBackendLink(rawLink);
+    const parsed = parseBackendLink(rawLink);
 
-  if (!parsed) {
-    console.warn("⚠ Link no reconocido:", rawLink);
-    return;
-  }
+    if (!parsed) {
+      console.warn("⚠ Link no reconocido:", rawLink);
+      return;
+    }
 
-  switch (parsed.type) {
-    case "COURSE":
-      router.push({
-        pathname: "/(courses)/[courseId]",
-        params: { courseId: parsed.courseId }
-      });
-      break;
+    switch (parsed.type) {
+      case "COURSE":
+        router.push(`/(courses)/${parsed.courseId}`);
+        break;
 
-    case "FORUM":
-      router.push({
-        pathname: "/(courses)/[courseId]/forums/[forumId]",
-        params: {
-          courseId: parsed.courseId,
-          forumId: parsed.forumId,
-        },
-      });
-      break;
+      case "FORUM":
+        router.push(`/(courses)/${parsed.courseId}/forums/${parsed.forumId}`);
+        break;
 
-    case "POST":
-      router.push({
-        pathname:
-          "/(courses)/[courseId]/forums/[forumId]/[postId]",
-        params: {
-          courseId: parsed.courseId,
-          forumId: parsed.forumId,
-          postId: parsed.postId,
-        },
-      });
-      break;
+      case "POST":
+        router.push(
+          `/(courses)/${parsed.courseId}/forums/${parsed.forumId}/${parsed.postId}`
+        );
+        break;
 
-    case "CHAT": {
-      const partnerCi = await resolveChatPartner(parsed.chatId);
+      case "CONTENT":
+        router.push(
+          `/(courses)/${parsed.courseId}/contents/${parsed.contentId}`
+        );
+        break;
 
-      if (!partnerCi) {
-        console.warn("⚠ No se pudo resolver partnerCi del chat.");
-        return;
+      case "QUIZ":
+        router.push(`/(courses)/${parsed.courseId}/quizzes/${parsed.quizId}`);
+        break;
+
+      case "EVALUATION":
+        router.push(
+          `/(courses)/${parsed.courseId}/evaluations/${parsed.evaluationId}`
+        );
+        break;
+
+      case "CHAT": {
+        const partnerCi = await resolveChatPartner(parsed.chatId);
+        if (!partnerCi) {
+          console.warn("⚠ No se pudo resolver partnerCi del chat.");
+          return;
+        }
+
+        router.push(`/(main)/chats/${partnerCi}`);
+        break;
       }
-
-      router.push({
-        pathname: "/(main)/chats/[partnerCi]",
-        params: {
-          partnerCi,
-          chatId: parsed.chatId,
-        },
-      });
-      break;
     }
   }
-}
 
   return { navigateByActivityLink };
 }

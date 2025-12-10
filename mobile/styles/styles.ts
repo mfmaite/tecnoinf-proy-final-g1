@@ -270,6 +270,9 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: "hidden",
   },
+  pickerItem: {
+    color: colors.textNeutral[50],
+  },
   link: {
     color: "#2563EB",
     textDecorationLine: "underline",

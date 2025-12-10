@@ -104,7 +104,7 @@ export default function ParticipantsList() {
           style={styles.button}
           onPress={() =>
             router.push({
-              pathname: "/(courses)/[ci]",
+              pathname: "/(main)/profile/[ci]",
               params: { ci: item.ci },
             })
           }

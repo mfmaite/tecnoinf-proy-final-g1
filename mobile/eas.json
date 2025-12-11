@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">= 16.28.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://backend-production-c1fc.up.railway.app",
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://backend-production-c1fc.up.railway.app",
+        "OOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

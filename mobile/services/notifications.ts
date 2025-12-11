@@ -1,3 +1,4 @@
+// services/notifications.ts
 import { api } from "./api";
 
 export async function getNotifications() {

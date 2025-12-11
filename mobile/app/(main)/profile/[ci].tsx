@@ -40,10 +40,12 @@ export default function ViewProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const roleLabels: Record<string, string> = {
+    ADMIN: "Administrador",
+    PROFESOR: "Profesor",
+    ESTUDIANTE: "Estudiante",
+  };
 
-  // ────────────────────────────────
-  // 📦 Obtener perfil por CI
-  // ────────────────────────────────
   useEffect(() => {
     if (!ci) return;
 
@@ -63,20 +65,15 @@ export default function ViewProfileScreen() {
     fetchProfile();
   }, [ci]);
 
-  // ────────────────────────────────
-  // 🏷 Actualizar título dinámico
-  // ────────────────────────────────
   useEffect(() => {
     if (profile?.name) {
       navigation.setOptions({
-        title: `Perfil de ${profile.name}`,
+        title: `${profile.name}`,
       });
     }
   }, [profile, navigation]);
 
-  // ────────────────────────────────
-  // ⏳ Estado de carga / error
-  // ────────────────────────────────
+
   if (loading)
     return (
       <View style={localStyles.center}>
@@ -98,13 +95,8 @@ export default function ViewProfileScreen() {
       </View>
     );
 
-  // ────────────────────────────────
-  // 💬 Mostrar botón de "Enviar mensaje" solo si:
-  //   - el perfil es de un profesor
-  //   - y el usuario logueado es distinto
-  // ────────────────────────────────
   const canMessage =
-    user && user.ci !== profile.ci && profile.role === "PROFESOR";
+    user && user.ci !== profile.ci;
 
   const handleStartChat = async () => {
     try {
@@ -123,9 +115,6 @@ export default function ViewProfileScreen() {
     }
   };
 
-  // ────────────────────────────────
-  // 🎨 Render principal
-  // ────────────────────────────────
   return (
     <ScrollView contentContainerStyle={localStyles.container}>
       {/* Avatar */}
@@ -146,8 +135,9 @@ export default function ViewProfileScreen() {
 
       {/* Rol (con estilo de name) */}
       <Text style={localStyles.name}>
-        {profile.role === "PROFESOR" ? "Profesor" : "Estudiante"}
+        {roleLabels[`${profile.role}`] ?? "Desconocido"}
       </Text>
+
 
       {/* Info detallada */}
       <View style={localStyles.infoCard}>

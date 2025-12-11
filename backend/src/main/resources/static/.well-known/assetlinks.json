@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mentora.mobile",
+      "sha256_cert_fingerprints": [
+        "3A:EB:10:1A:34:68:A7:6E:F6:19:28:FB:66:8D:6C:9E:75:79:97:F4:9A:6A:C2:8C:B5:54:FF:C1:A6:5F:CD:52"
+      ]
+    }
+  }
+]

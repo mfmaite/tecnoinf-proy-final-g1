@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../styles/colors";
 import { changePassword } from "@/services/userService";
 
@@ -19,10 +20,14 @@ export default function ChangePasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
 
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const validatePassword = (password: string) => {
-    // Al menos 8 caracteres, una mayúscula, una minúscula y un número
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return regex.test(password);
   };
@@ -65,32 +70,62 @@ export default function ChangePasswordScreen() {
       <View style={styles.container}>
         <View style={styles.card}>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Contraseña actual"
-            placeholderTextColor={colors.textNeutral[40]}
-            secureTextEntry
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-          />
+          {/* Contraseña actual */}
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña actual"
+              placeholderTextColor={colors.textNeutral[40]}
+              secureTextEntry={!showCurrent}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+            />
+            <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)}>
+              <Ionicons
+                name={showCurrent ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color={colors.textNeutral[40]}
+              />
+            </TouchableOpacity>
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Nueva contraseña"
-            placeholderTextColor={colors.textNeutral[40]}
-            secureTextEntry
-            value={newPassword}
-            onChangeText={setNewPassword}
-          />
+          {/* Nueva contraseña */}
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nueva contraseña"
+              placeholderTextColor={colors.textNeutral[40]}
+              secureTextEntry={!showNew}
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TouchableOpacity onPress={() => setShowNew(!showNew)}>
+              <Ionicons
+                name={showNew ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color={colors.textNeutral[40]}
+              />
+            </TouchableOpacity>
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirmar nueva contraseña"
-            placeholderTextColor={colors.textNeutral[40]}
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+          {/* Confirmar nueva contraseña */}
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirmar nueva contraseña"
+              placeholderTextColor={colors.textNeutral[40]}
+              secureTextEntry={!showConfirm}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+              <Ionicons
+                name={showConfirm ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color={colors.textNeutral[40]}
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, loading && { opacity: 0.6 }]}
@@ -141,16 +176,22 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  input: {
+  inputWrapper: {
     width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: colors.surfaceLight[40],
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
     backgroundColor: colors.surfaceLight[20],
-    color: colors.textNeutral[50], // ← Texto siempre visible
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.textNeutral[50],
   },
   button: {
     backgroundColor: colors.primary[60],

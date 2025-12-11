@@ -92,7 +92,7 @@ export default function ChatsListScreen() {
               <UserProfilePicture name={other.name} pictureUrl={other.pictureUrl} size="sm" />
 
               <Text style={{ fontSize: 16, fontWeight: "500", marginLeft: 10 }}>
-                Chat con {other.name}
+                {other.name}
               </Text>
             </TouchableOpacity>
           );

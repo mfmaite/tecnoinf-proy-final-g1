@@ -104,3 +104,22 @@ export const getUserActivities = async (userCi: string): Promise<UserActivity[]>
     );
   }
 };
+
+export const getUserProfileByCi = async (ci: string): Promise<UserDto> => {
+  try {
+    const { data } = await api.get<ApiResponse<UserDto>>(
+      `/users/profile?ci=${encodeURIComponent(ci)}`
+    );
+
+    if (!data.success || !data.data) {
+      throw new Error(data.message || "No se pudo obtener el perfil del usuario.");
+    }
+
+    return data.data;
+  } catch (error: any) {
+    console.error("[getUserProfileByCi] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "Error al obtener el perfil del usuario."
+    );
+  }
+};

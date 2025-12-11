@@ -112,7 +112,6 @@ export default function ParticipantsList() {
   // Render de cada participante
   // ─────────────────────────────────────
   const renderItem = ({ item }: { item: Participant }) => {
-    // Lógica del botón de chat, más futureproof
     const canChat = user?.ci !== item.ci;
 
     return (

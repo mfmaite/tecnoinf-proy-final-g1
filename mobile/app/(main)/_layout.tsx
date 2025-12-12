@@ -45,6 +45,13 @@ export default function MainLayout() {
             title: "Cambiar contraseña",
           }}
         />
+        <Stack.Screen
+          name="chats/index"
+          options={{
+            headerShown: true,
+            title: "Chats",
+          }}
+        />
       </Stack>
     </SafeAreaView>
   );

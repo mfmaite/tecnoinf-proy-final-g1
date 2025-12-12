@@ -2,11 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
 import { login as loginService } from "../services/auth";
 import { changePassword as changePasswordService } from "../services/userService";
-import { api } from "../services/api"; // ✅ Import necesario para setear headers globales
+import { api } from "../services/api";
 
-// ─────────────────────────────────────────────
-// 🧩 Tipos
-// ─────────────────────────────────────────────
 type User = {
   ci: string;
   name: string;
@@ -16,9 +13,6 @@ type User = {
   role: "ADMIN" | "PROFESOR" | "ESTUDIANTE" | string;
 };
 
-/**
- * Tipado del contexto de autenticación.
- */
 type AuthContextType = {
   token: string | null;
   user: User | null;
@@ -30,27 +24,21 @@ type AuthContextType = {
     newPassword: string,
     confirmPassword: string
   ) => Promise<void>;
-
   isAuthenticated: boolean;
   isProfessor: boolean;
   isStudent: boolean;
+  loadingAuth: boolean; // 🔹 agregado
 };
 
-/**
- * Creación del contexto
- */
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-/**
- * Provider global de autenticación
- */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // 🔹 Cargar sesión almacenada al iniciar la app
   useEffect(() => {
     (async () => {
       try {
@@ -59,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (storedToken) {
           setToken(storedToken);
-          api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`; // ✅ Header global
+          api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
         }
 
         if (storedUser) setUser(JSON.parse(storedUser));
@@ -67,94 +55,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.warn("[AuthContext] Error restaurando sesión:", err);
         await SecureStore.deleteItemAsync("token");
         await SecureStore.deleteItemAsync("user");
+      } finally {
+        setLoadingAuth(false);
       }
     })();
   }, []);
 
-  // ─────────────────────────────────────────────
-  // 🔹 Sincronizar el header global de Axios cuando cambia el token
-  // ─────────────────────────────────────────────
   useEffect(() => {
-    if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    } else {
-      delete api.defaults.headers.common["Authorization"];
-    }
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    else delete api.defaults.headers.common["Authorization"];
   }, [token]);
 
-  // ─────────────────────────────────────────────
-  // 🔹 Login
-  // ─────────────────────────────────────────────
   const login = async (ci: string, password: string) => {
-    try {
-      const { token, user } = await loginService(ci, password);
-      if (!token) throw new Error("No se recibió token del servidor.");
-
-      setToken(token);
-      setUser(user);
-
-      // ✅ Setear header global inmediato
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      await SecureStore.setItemAsync("token", token);
-      await SecureStore.setItemAsync("user", JSON.stringify(user));
-    } catch (error) {
-      console.error("[AuthContext] Error en login:", error);
-      throw error;
-    }
+    const { token, user } = await loginService(ci, password);
+    setToken(token);
+    setUser(user);
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    await SecureStore.setItemAsync("token", token);
+    await SecureStore.setItemAsync("user", JSON.stringify(user));
   };
 
-  // 🔹 Logout
   const logout = async () => {
-    try {
-      setToken(null);
-      setUser(null);
-      delete api.defaults.headers.common["Authorization"];
-      await SecureStore.deleteItemAsync("token");
-      await SecureStore.deleteItemAsync("user");
-    } catch (error) {
-      console.error("[AuthContext] Error en logout:", error);
-    }
+    setToken(null);
+    setUser(null);
+    delete api.defaults.headers.common["Authorization"];
+    await SecureStore.deleteItemAsync("token");
+    await SecureStore.deleteItemAsync("user");
   };
 
-  // 🔹 Actualizar datos del usuario localmente
-  const updateUser = async (updatedData: Partial<User>) => {
+  const updateUser = async (data: Partial<User>) => {
     if (!user) return;
-    try {
-      const newUser = { ...user, ...updatedData };
-      setUser(newUser);
-      await SecureStore.setItemAsync("user", JSON.stringify(newUser));
-    } catch (error) {
-      console.error("[AuthContext] Error al actualizar usuario:", error);
-      throw error;
-    }
+    const newUser = { ...user, ...data };
+    setUser(newUser);
+    await SecureStore.setItemAsync("user", JSON.stringify(newUser));
   };
 
-  // ─────────────────────────────────────────────
-  // 🔹 Cambiar contraseña
-  // ─────────────────────────────────────────────
-  const changePassword = async (
-    oldPassword: string,
-    newPassword: string,
-    confirmPassword: string
-  ) => {
-    try {
-      await changePasswordService(oldPassword, newPassword, confirmPassword);
-    } catch (error) {
-      console.error("[AuthContext] Error al cambiar contraseña:", error);
-      throw error;
-    }
-  };
+  const changePassword = changePasswordService;
 
-  // 🔹 Helpers derivados del estado actual
   const isAuthenticated = !!token;
-  const isProfessor =
-    user?.role === "PROFESOR" || user?.role === "ADMIN" || false;
-  const isStudent = user?.role === "ESTUDIANTE" || false;
+  const isProfessor = user?.role === "PROFESOR" || user?.role === "ADMIN";
+  const isStudent = user?.role === "ESTUDIANTE";
 
-  // ─────────────────────────────────────────────
-  // 🔹 Provider
-  // ─────────────────────────────────────────────
   return (
     <AuthContext.Provider
       value={{
@@ -167,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated,
         isProfessor,
         isStudent,
+        loadingAuth,
       }}
     >
       {children}

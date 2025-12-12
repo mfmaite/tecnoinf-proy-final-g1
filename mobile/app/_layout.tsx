@@ -11,14 +11,14 @@ import { api } from "../services/api";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useActivityNavigation } from "../hooks/useActivityNavigation";
 
-// Configuración global de notificaciones
+//  Configuración global de notificaciones
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
+    shouldShowAlert: true,   // muestra alerta nativa
+    shouldPlaySound: true,   // suena al llegar
+    shouldSetBadge: true,    // modifica badge del ícono
+    shouldShowBanner: true,  // iOS: muestra banner arriba
+    shouldShowList: true,    // iOS: aparece en Notification Center
   }),
 });
 
@@ -57,7 +57,9 @@ function AppNavigator() {
     const savePushToken = async () => {
       if (fcmToken && isLoggedIn) {
         try {
-          await api.post("/users/device-token", { token: fcmToken });
+          await api.post("/users/device-token", {
+            token: fcmToken,
+          });
           console.log("Token guardado en backend");
         } catch (e) {
           console.log("Error guardando token en backend", e);

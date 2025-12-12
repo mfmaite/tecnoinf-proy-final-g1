@@ -41,7 +41,7 @@ export default function EditProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
     });
 
     if (result.canceled || !result.assets?.[0]?.uri) return;

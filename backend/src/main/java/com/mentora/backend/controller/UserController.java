@@ -7,6 +7,8 @@ import com.mentora.backend.dt.DtActivity;
 import com.mentora.backend.responses.BulkCreateUsersResponse;
 import com.mentora.backend.responses.DtApiResponse;
 import com.mentora.backend.service.UserService;
+import com.mentora.backend.service.DeviceTokenService;
+import com.mentora.backend.requests.RegisterDeviceTokenRequest;
 import com.opencsv.exceptions.CsvException;
 import com.mentora.backend.requests.ResetPasswordRequest;
 import com.mentora.backend.requests.UpdateUserRequest;
@@ -64,6 +66,7 @@ public class UserController {
     private final QuizSubmissionRepository quizSubmissionRepository;
     private final EvaluationService evaluationService;
     private final QuizService quizService;
+    private final DeviceTokenService deviceTokenService;
 
     public UserController(
             UserService userService,
@@ -74,7 +77,8 @@ public class UserController {
             QuizRepository quizRepository,
             QuizSubmissionRepository quizSubmissionRepository,
             EvaluationService evaluationService,
-            QuizService quizService
+            QuizService quizService,
+            DeviceTokenService deviceTokenService
     ) {
         this.userService = userService;
         this.userRepository = userRepository;
@@ -85,6 +89,29 @@ public class UserController {
         this.quizSubmissionRepository = quizSubmissionRepository;
         this.evaluationService = evaluationService;
         this.quizService = quizService;
+        this.deviceTokenService = deviceTokenService;
+    }
+
+    @Operation(
+            summary = "Registrar token de dispositivo para notificaciones",
+            description = "Guarda o actualiza el token de notificaciones push del dispositivo actual",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Token guardado correctamente")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @PostMapping("/device-token")
+    public ResponseEntity<DtApiResponse<Object>> registerDeviceToken(@RequestBody @Valid RegisterDeviceTokenRequest request) {
+        try {
+            String userCi = SecurityContextHolder.getContext().getAuthentication().getName();
+            deviceTokenService.upsertToken(userCi, request.getToken());
+            return ResponseEntity.ok(new DtApiResponse<>(true, HttpStatus.OK.value(), "Token de dispositivo registrado", null));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new DtApiResponse<>(false, e.getStatusCode().value(), e.getReason(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new DtApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), "Error al registrar token", null));
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN')")

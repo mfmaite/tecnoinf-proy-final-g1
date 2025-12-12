@@ -2,45 +2,80 @@ import { useRouter } from "expo-router";
 import { api } from "../services/api";
 
 /**
- * Estructura de lo que el hook parsea.
+ * Normaliza cualquier link entrante para obtener solo el path relevante.
+ * Soporta:
+ *  - https://mentora.app/courses/AAH2025/forums/4
+ *  - mentora://courses/AAH2025/forums/4
+ *  - /courses/AAH2025/forums/4
+ *  - courses/AAH2025/forums/4
+ */
+function normalizeLink(rawLink: string): string {
+  if (!rawLink) return rawLink;
+
+  let link = rawLink.trim();
+
+  // Caso 1: URL completa (https://mentora.app/...)
+  if (link.startsWith("http://") || link.startsWith("https://")) {
+    try {
+      const url = new URL(link);
+      return url.pathname + url.search + url.hash;
+    } catch {
+      // Si falla, seguimos probando
+    }
+  }
+
+  // Caso 2: esquema personalizado (mentora://courses/...)
+  if (link.startsWith("mentora://")) {
+    const withoutScheme = link.replace("mentora://", "");
+    return withoutScheme.startsWith("/") ? withoutScheme : "/" + withoutScheme;
+  }
+
+  // Caso 3: ruta cruda sin slash inicial (courses/AAH2025)
+  if (!link.startsWith("/")) {
+    return "/" + link;
+  }
+
+  return link;
+}
+
+
+/**
+ * Parsea el path limpio en tipos conocidos.
  */
 type ParsedLink =
   | { type: "COURSE"; courseId: string }
   | { type: "FORUM"; courseId: string; forumId: string }
   | { type: "POST"; courseId: string; forumId: string; postId: string }
+  | { type: "CONTENT"; courseId: string; contentId: string }
+  | { type: "QUIZ"; courseId: string; quizId: string }
+  | { type: "EVALUATION"; courseId: string; evaluationId: string }
   | { type: "CHAT"; chatId: string }
   | null;
 
-/**
- * Parsea el link que viene del backend/web.
- * Ejemplos soportados:
- *  - /courses/AAH2025
- *  - /courses/AAH2025/forums/4
- *  - /courses/AAH2025/forums/4/posts/33
- *  - /chats/18
- */
 function parseBackendLink(link: string): ParsedLink {
   const parts = link.split("/").filter(Boolean);
 
   if (parts[0] === "courses") {
     const courseId = parts[1];
 
-    if (parts.length === 2) {
-      return { type: "COURSE", courseId };
-    }
+    if (parts.length === 2) return { type: "COURSE", courseId };
 
     if (parts[2] === "forums") {
       const forumId = parts[3];
 
-      if (parts.length === 4) {
-        return { type: "FORUM", courseId, forumId };
-      }
-
-      if (parts[4] === "posts") {
-        const postId = parts[5];
-        return { type: "POST", courseId, forumId, postId };
-      }
+      if (parts.length === 4) return { type: "FORUM", courseId, forumId };
+      if (parts[4] === "posts")
+        return { type: "POST", courseId, forumId, postId: parts[5] };
     }
+
+    if (parts[2] === "contents")
+      return { type: "CONTENT", courseId, contentId: parts[3] };
+
+    if (parts[2] === "quizzes")
+      return { type: "QUIZ", courseId, quizId: parts[3] };
+
+    if (parts[2] === "evaluations")
+      return { type: "EVALUATION", courseId, evaluationId: parts[3] };
   }
 
   if (parts[0] === "chats") {
@@ -50,16 +85,9 @@ function parseBackendLink(link: string): ParsedLink {
   return null;
 }
 
-/**
- * Hook que expone navigateByActivityLink(link), para usar en cualquier pantalla
- * donde quieras navegar a partir de un 'link' del backend.
- */
 export function useActivityNavigation() {
   const router = useRouter();
 
-  /**
-   * Resuelve partnerCi para un chat usando el endpoint /chats/{chatId}
-   */
   async function resolveChatPartner(chatId: string): Promise<string | null> {
     try {
       const response = await api.get(`/chats/${chatId}`);
@@ -70,67 +98,57 @@ export function useActivityNavigation() {
     }
   }
 
-  /**
-   * API principal del hook: recibe un link crudo del backend,
-   * lo parsea y navega al lugar correcto.
-   */
   async function navigateByActivityLink(rawLink: string) {
-  const parsed = parseBackendLink(rawLink);
+    const cleanPath = normalizeLink(rawLink);
+    const parsed = parseBackendLink(cleanPath);
 
-  if (!parsed) {
-    console.warn("⚠ Link no reconocido:", rawLink);
-    return;
-  }
+    if (!parsed) {
+      console.warn("⚠ Link no reconocido:", rawLink, "→", cleanPath);
+      return;
+    }
 
-  switch (parsed.type) {
-    case "COURSE":
-      router.push({
-        pathname: "/(courses)/[courseId]",
-        params: { courseId: parsed.courseId }
-      });
-      break;
+    switch (parsed.type) {
+      case "COURSE":
+        router.push(`/(courses)/${parsed.courseId}`);
+        break;
 
-    case "FORUM":
-      router.push({
-        pathname: "/(courses)/[courseId]/forums/[forumId]",
-        params: {
-          courseId: parsed.courseId,
-          forumId: parsed.forumId,
-        },
-      });
-      break;
+      case "FORUM":
+        router.push(`/(courses)/${parsed.courseId}/forums/${parsed.forumId}`);
+        break;
 
-    case "POST":
-      router.push({
-        pathname:
-          "/(courses)/[courseId]/forums/[forumId]/[postId]",
-        params: {
-          courseId: parsed.courseId,
-          forumId: parsed.forumId,
-          postId: parsed.postId,
-        },
-      });
-      break;
+      case "POST":
+        router.push(
+          `/(courses)/${parsed.courseId}/forums/${parsed.forumId}/${parsed.postId}`
+        );
+        break;
 
-    case "CHAT": {
-      const partnerCi = await resolveChatPartner(parsed.chatId);
+      case "CONTENT":
+        router.push(
+          `/(courses)/${parsed.courseId}/contents/${parsed.contentId}`
+        );
+        break;
 
-      if (!partnerCi) {
-        console.warn("⚠ No se pudo resolver partnerCi del chat.");
-        return;
+      case "QUIZ":
+        router.push(`/(courses)/${parsed.courseId}/quizzes/${parsed.quizId}`);
+        break;
+
+      case "EVALUATION":
+        router.push(
+          `/(courses)/${parsed.courseId}/evaluations/${parsed.evaluationId}`
+        );
+        break;
+
+      case "CHAT": {
+        const partnerCi = await resolveChatPartner(parsed.chatId);
+        if (!partnerCi) {
+          console.warn("⚠ No se pudo resolver partnerCi del chat.");
+          return;
+        }
+        router.push(`/(main)/chats/${partnerCi}`);
+        break;
       }
-
-      router.push({
-        pathname: "/(main)/chats/[partnerCi]",
-        params: {
-          partnerCi,
-          chatId: parsed.chatId,
-        },
-      });
-      break;
     }
   }
-}
 
   return { navigateByActivityLink };
 }

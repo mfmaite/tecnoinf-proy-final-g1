@@ -8,8 +8,6 @@ export const api = axios.create({
   baseURL: API_URL,
   timeout: 10000,
 });
-
-// ✅ Interceptor de respuesta: manejo centralizado de errores
 api.interceptors.response.use(
   (response) => response,
   async (error) => {

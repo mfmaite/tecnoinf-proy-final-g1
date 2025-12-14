@@ -104,8 +104,12 @@ export default function ChatScreen() {
     try {
       setIsSending(true);
       const msg = await sendMessage(partnerCi, text.trim());
+
       setMessages((prev) => [...prev, msg]);
       setText("");
+
+      // re-sync desde backend
+      // await load();
 
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });

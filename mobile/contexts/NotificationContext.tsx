@@ -79,12 +79,10 @@ export function NotificationProvider({ children }: Props) {
     }
   }, [sendTokenToBackend]);
 
-  // SOLO se ejecuta cuando hay usuario autenticado
   useEffect(() => {
     if (user) registerPushToken();
   }, [user, registerPushToken]);
 
-  // listeners globales de notificaciones
   useEffect(() => {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {

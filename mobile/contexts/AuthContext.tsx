@@ -27,7 +27,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isProfessor: boolean;
   isStudent: boolean;
-  loadingAuth: boolean; // 🔹 agregado
+  loadingAuth: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);

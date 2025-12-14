@@ -22,10 +22,6 @@ export default function NewChatScreen() {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-
-  // ─────────────────────────────────────
-  // Al entrar: ver si el chat ya existe
-  // ─────────────────────────────────────
   useEffect(() => {
     if (!recipientCi || !user?.ci) return;
 
@@ -56,10 +52,6 @@ export default function NewChatScreen() {
 
     checkExistingChat();
   }, [recipientCi, router, user?.ci]);
-
-  // ─────────────────────────────────────
-  // Enviar primer mensaje → crea el chat
-  // ─────────────────────────────────────
   const handleSend = async () => {
     if (!text.trim() || !recipientCi) return;
 
@@ -81,10 +73,6 @@ export default function NewChatScreen() {
       setSending(false);
     }
   };
-
-  // ─────────────────────────────────────
-  // UI
-  // ─────────────────────────────────────
   if (loading) {
     return (
       <View style={localStyles.center}>

@@ -1,8 +1,6 @@
 import { api } from "./api";
 
-// ──────────────────────────────
-// Tipos base
-// ──────────────────────────────
+
 export interface Post {
   id: number;
   authorCi: string;
@@ -31,9 +29,6 @@ interface ApiResponse<T> {
   data: T;
 }
 
-// ──────────────────────────────
-// GET /post/:postId
-// ──────────────────────────────
 export async function getPostById(postId: string): Promise<PostDetail> {
   try {
     const { data } = await api.get<ApiResponse<PostDetail>>(
@@ -53,9 +48,6 @@ export async function getPostById(postId: string): Promise<PostDetail> {
   }
 }
 
-// ──────────────────────────────
-// POST /post/:postId/response
-// ──────────────────────────────
 export async function createResponse(
   postId: string,
   message: string
@@ -79,9 +71,6 @@ export async function createResponse(
   }
 }
 
-// ──────────────────────────────
-// PUT /post/:postId
-// ──────────────────────────────
 export async function updatePost(
   postId: string,
   message: string
@@ -105,9 +94,6 @@ export async function updatePost(
   }
 }
 
-// ──────────────────────────────
-// DELETE /post/:postId
-// ──────────────────────────────
 export async function deletePost(postId: string): Promise<void> {
   try {
     const { data } = await api.delete<ApiResponse<unknown>>(
@@ -125,9 +111,6 @@ export async function deletePost(postId: string): Promise<void> {
   }
 }
 
-// ──────────────────────────────
-// PUT /post/:postId/response/:responseId
-// ──────────────────────────────
 export async function updateResponse(
   postId: string,
   responseId: string,
@@ -148,9 +131,6 @@ export async function updateResponse(
   }
 }
 
-// ──────────────────────────────
-// DELETE /post/:postId/response/:responseId
-// ──────────────────────────────
 export async function deleteResponse(postId: string, responseId: string): Promise<void> {
   try {
     const { data } = await api.delete<ApiResponse<unknown>>(

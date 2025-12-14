@@ -28,7 +28,6 @@ export default function NotificationsPage() {
 
   const { navigateByActivityLink } = useActivityNavigation();
 
-  // Cargar notificaciones
   const loadNotifications = async () => {
     try {
       setLoading(true);
@@ -54,7 +53,6 @@ export default function NotificationsPage() {
 
   const handlePress = async (notification: Notification) => {
     try {
-      // marcar como leída si no lo está
       if (!notification.isRead) {
         await markNotificationAsRead(notification.id);
         setNotifications(prev =>
@@ -64,7 +62,6 @@ export default function NotificationsPage() {
         );
       }
 
-      // navegar si tiene link
       if (notification.link) {
         await navigateByActivityLink(notification.link);
       }

@@ -34,7 +34,6 @@ export default function RecentActivityScreen() {
           const data = await getUserActivities(user.ci);
 
           if (isActive) {
-            // Invertimos acá para no hacerlo en el render
             setActivities(data.slice().reverse());
           }
         } catch (error) {

@@ -13,7 +13,6 @@ export default function AuthLayout() {
     }
   }, [loadingAuth, isAuthenticated, router]);
 
-  // evita parpadeo mientras autenticación se restaura
   if (loadingAuth) return null;
 
   return (

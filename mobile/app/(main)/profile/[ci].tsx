@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   Image,
 } from "react-native";
 import {
@@ -17,7 +16,6 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../services/api";
-import { getOrCreateChatWith } from "../../../services/chat";
 import { colors } from "../../../styles/colors";
 import { styles } from "../../../styles/styles";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -40,6 +38,7 @@ export default function ViewProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const roleLabels: Record<string, string> = {
     ADMIN: "Administrador",
     PROFESOR: "Profesor",
@@ -73,7 +72,6 @@ export default function ViewProfileScreen() {
     }
   }, [profile, navigation]);
 
-
   if (loading)
     return (
       <View style={localStyles.center}>
@@ -95,24 +93,13 @@ export default function ViewProfileScreen() {
       </View>
     );
 
-  const canMessage =
-    user && user.ci !== profile.ci;
+  const canMessage = user && user.ci !== profile.ci;
 
-  const handleStartChat = async () => {
-    try {
-      const chat = await getOrCreateChatWith(profile.ci);
-      if (!chat?.id) {
-        Alert.alert("Error", "No se pudo obtener o crear el chat.");
-        return;
-      }
-
-      router.push({
-        pathname: "/(main)/chats/[partnerCi]",
-        params: { partnerCi: profile.ci, chatId: String(chat.id) },
-      });
-    } catch {
-      Alert.alert("Error", "No se pudo iniciar el chat.");
-    }
+  const handleStartChat = () => {
+    router.push({
+      pathname: "/(main)/chats/new",
+      params: { recipientCi: profile.ci },
+    });
   };
 
   return (
@@ -135,7 +122,6 @@ export default function ViewProfileScreen() {
       <Text style={localStyles.name}>
         {roleLabels[`${profile.role}`] ?? "Desconocido"}
       </Text>
-
 
       <View style={localStyles.infoCard}>
         <Text style={localStyles.label}>CI:</Text>
@@ -200,11 +186,6 @@ const localStyles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.primary[70],
     marginBottom: 4,
-  },
-  role: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 16,
   },
   infoCard: {
     width: "100%",

@@ -10,14 +10,19 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Stack, useLocalSearchParams, useNavigation } from "expo-router";
-import { getChatMessages, sendMessage, getOrCreateChatWith } from "../../../services/chat";
+import { Stack, useLocalSearchParams, useNavigation, useFocusEffect } from "expo-router";
+import { getChatMessages, sendMessage } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
 import { getUserProfileByCi } from "../../../services/userService";
 
+
 export default function ChatScreen() {
-  const { partnerCi, chatId, partnerName } =
-    useLocalSearchParams<{ partnerCi?: string; chatId?: string; partnerName?: string }>();
+  const { chatId, partnerCi, partnerName } =
+    useLocalSearchParams<{
+      chatId?: string;
+      partnerCi?: string;
+      partnerName?: string;
+    }>();
 
   const navigation = useNavigation();
   const navigationRef = useRef(navigation);
@@ -31,18 +36,17 @@ export default function ChatScreen() {
   const isAtBottomRef = useRef(true);
   const [showNewMessagesButton, setShowNewMessagesButton] = useState(false);
 
-  // Nombre dinámico del header
-  const [displayName, setDisplayName] = useState<string | null>(partnerName ?? null);
+  const [displayName, setDisplayName] = useState<string | null>(
+    partnerName ?? null
+  );
 
   useEffect(() => {
     navigationRef.current = navigation;
   }, [navigation]);
 
-  // Buscar el nombre real desde backend si no vino por params
   useEffect(() => {
     const fetchPartnerName = async () => {
-      if (!partnerCi) return;
-      if (displayName) return;
+      if (!partnerCi || displayName) return;
 
       try {
         const profile = await getUserProfileByCi(partnerCi);
@@ -56,25 +60,16 @@ export default function ChatScreen() {
   }, [displayName, partnerCi]);
 
   const load = useCallback(async () => {
-    if (!partnerCi) return;
+    if (!chatId || isNaN(Number(chatId))) return;
 
     try {
-      let data: any[] = [];
-
-      if (chatId && !isNaN(Number(chatId))) {
-        data = await getChatMessages(Number(chatId));
-      } else {
-        const chat = await getOrCreateChatWith(partnerCi);
-        data = chat.messages ?? [];
-
-        if (data.length === 0) {
-          await sendMessage(partnerCi, "Hola! 😊");
-        }
-      }
+      const data = await getChatMessages(Number(chatId));
 
       setMessages(
         [...data].sort(
-          (a, b) => new Date(a.dateSent).getTime() - new Date(b.dateSent).getTime()
+          (a, b) =>
+            new Date(a.dateSent).getTime() -
+            new Date(b.dateSent).getTime()
         )
       );
     } catch (err) {
@@ -83,13 +78,13 @@ export default function ChatScreen() {
     } finally {
       setLoading(false);
     }
-  }, [chatId, partnerCi]);
+  }, [chatId]);
 
-  useEffect(() => {
-    load();
-    const interval = setInterval(load, 5000);
-    return () => clearInterval(interval);
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -109,7 +104,6 @@ export default function ChatScreen() {
     try {
       setIsSending(true);
       const msg = await sendMessage(partnerCi, text.trim());
-
       setMessages((prev) => [...prev, msg]);
       setText("");
 
@@ -124,9 +118,11 @@ export default function ChatScreen() {
   };
 
   const handleScroll = (event: any) => {
-    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    const { contentOffset, layoutMeasurement, contentSize } =
+      event.nativeEvent;
     const isBottom =
-      contentOffset.y + layoutMeasurement.height >= contentSize.height - 20;
+      contentOffset.y + layoutMeasurement.height >=
+      contentSize.height - 20;
 
     isAtBottomRef.current = isBottom;
     if (isBottom) setShowNewMessagesButton(false);
@@ -143,7 +139,7 @@ export default function ChatScreen() {
     <>
       <Stack.Screen
         options={{
-          title: displayName || partnerCi || "Chat",
+          title: displayName || "Chat",
         }}
       />
 
@@ -170,7 +166,9 @@ export default function ChatScreen() {
                   maxWidth: "80%",
                 }}
               >
-                <Text style={{ color: mine ? "white" : "black" }}>{item.message}</Text>
+                <Text style={{ color: mine ? "white" : "black" }}>
+                  {item.message}
+                </Text>
                 <Text
                   style={{
                     fontSize: 10,

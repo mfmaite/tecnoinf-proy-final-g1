@@ -11,8 +11,7 @@ import {
   getNotifications,
   markNotificationAsRead,
 } from "../../services/notifications";
-import { useRouter } from "expo-router";
-import { transformWebLinkToMobile } from "../../utils/linkMapper";
+import { useActivityNavigation } from "../../hooks/useActivityNavigation";
 import { styles as globalStyles } from "../../styles/styles";
 import { colors } from "../../styles/colors";
 
@@ -26,8 +25,10 @@ interface Notification {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
+  const { navigateByActivityLink } = useActivityNavigation();
+
+  // Cargar notificaciones
   const loadNotifications = async () => {
     try {
       setLoading(true);
@@ -53,6 +54,7 @@ export default function NotificationsPage() {
 
   const handlePress = async (notification: Notification) => {
     try {
+      // marcar como leída si no lo está
       if (!notification.isRead) {
         await markNotificationAsRead(notification.id);
         setNotifications(prev =>
@@ -62,12 +64,12 @@ export default function NotificationsPage() {
         );
       }
 
+      // navegar si tiene link
       if (notification.link) {
-        const mobileLink = transformWebLinkToMobile(notification.link);
-        router.push({ pathname: mobileLink as any });
+        await navigateByActivityLink(notification.link);
       }
     } catch (e) {
-      console.log("Error updating notification:", e);
+      console.log("Error al procesar la notificación:", e);
     }
   };
 
@@ -89,6 +91,7 @@ export default function NotificationsPage() {
 
   const renderItem = ({ item }: { item: Notification }) => {
     const unread = !item.isRead;
+
     return (
       <TouchableOpacity onPress={() => handlePress(item)} activeOpacity={0.85}>
         <View

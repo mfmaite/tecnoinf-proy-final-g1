@@ -113,7 +113,7 @@ export default function ViewProfileScreen() {
   // ────────────────────────────────
   return (
     <ScrollView contentContainerStyle={localStyles.container}>
-      {/* 🔹 Avatar */}
+      {/* Avatar */}
       <View style={localStyles.avatarWrapper}>
         {profile.pictureUrl ? (
           <Ionicons name="person-circle" size={120} color={colors.primary[60]} />
@@ -126,13 +126,13 @@ export default function ViewProfileScreen() {
         )}
       </View>
 
-      {/* 🔹 Info básica */}
+      {/* Info básica */}
       <Text style={localStyles.name}>{profile.name}</Text>
       <Text style={localStyles.role}>
         {profile.role === "PROFESOR" ? "Profesor" : "Estudiante"}
       </Text>
 
-      {/* 🔹 Info detallada */}
+      {/* Info detallada */}
       <View style={localStyles.infoCard}>
         <Text style={localStyles.label}>CI:</Text>
         <Text style={localStyles.value}>{profile.ci}</Text>
@@ -150,7 +150,7 @@ export default function ViewProfileScreen() {
         ) : null}
       </View>
 
-      {/* 💬 Enviar mensaje */}
+      {/* Enviar mensaje */}
       {canMessage && (
         <TouchableOpacity
           style={[styles.msgButton, { marginTop: 24 }]}

@@ -11,7 +11,17 @@ import { api } from "../services/api";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useActivityNavigation } from "../hooks/useActivityNavigation";
 
-//  Configuración global de notificaciones
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,   // muestra alerta nativa
@@ -42,7 +52,6 @@ function AppNavigator() {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-  // Verificamos login una única vez
   useEffect(() => {
     const checkToken = async () => {
       const storedToken = await SecureStore.getItemAsync("token");
@@ -52,14 +61,11 @@ function AppNavigator() {
     checkToken();
   }, [token]);
 
-  // Guardar token de notificaciones en backend
   useEffect(() => {
     const savePushToken = async () => {
       if (fcmToken && isLoggedIn) {
         try {
-          await api.post("/users/device-token", {
-            token: fcmToken,
-          });
+          await api.post("/users/device-token", { token: fcmToken });
           console.log("Token guardado en backend");
         } catch (e) {
           console.log("Error guardando token en backend", e);
@@ -69,39 +75,31 @@ function AppNavigator() {
     savePushToken();
   }, [fcmToken, isLoggedIn]);
 
-  // Handler de deep linking global (reset-password + activity links)
   useEffect(() => {
-
-    // App abierta por un deep link (cold start)
     const checkInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (!initialUrl) return;
 
       const parsed = Linking.parse(initialUrl);
 
-      // Caso especial reset-password (mantener tu lógica existente)
       if (parsed?.path === "reset-password" && parsed.queryParams?.token) {
         router.push(`/reset-password?token=${parsed.queryParams.token}`);
         return;
       }
 
-      // Otros deep links → usar activity navigation
       navigateByActivityLink(initialUrl);
     };
 
     checkInitialUrl();
 
-    // Listener cuando la app ya está abierta y llega un deep link nuevo
     const subscription = Linking.addEventListener("url", (event) => {
       const parsed = Linking.parse(event.url);
 
-      // Caso especial reset-password
       if (parsed?.path === "reset-password" && parsed.queryParams?.token) {
         router.push(`/reset-password?token=${parsed.queryParams.token}`);
         return;
       }
 
-      // Cualquier otro link → hook universal
       navigateByActivityLink(event.url);
     });
 

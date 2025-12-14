@@ -91,6 +91,7 @@ export default function NotificationsPage() {
 
   const renderItem = ({ item }: { item: Notification }) => {
     const unread = !item.isRead;
+
     return (
       <TouchableOpacity onPress={() => handlePress(item)} activeOpacity={0.85}>
         <View

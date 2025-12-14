@@ -35,9 +35,6 @@ export default function ParticipantsList() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // ─────────────────────────────────────
-  // Obtener participantes
-  // ─────────────────────────────────────
   useEffect(() => {
     if (!courseId) return;
 
@@ -73,7 +70,6 @@ export default function ParticipantsList() {
           throw new Error("Formato inesperado de respuesta (data no es array)");
         }
 
-        // Ordenar: profesores arriba
         const sorted = [...data].sort((a, b) =>
           a.role === "PROFESOR" && b.role !== "PROFESOR"
             ? -1
@@ -108,9 +104,6 @@ export default function ParticipantsList() {
     );
   }, [participants, search]);
 
-  // ─────────────────────────────────────
-  // Render de cada participante
-  // ─────────────────────────────────────
   const renderItem = ({ item }: { item: Participant }) => {
     const canChat = user?.ci !== item.ci;
 
@@ -139,7 +132,6 @@ export default function ParticipantsList() {
             <Text style={styles.buttonText}>Ver Perfil</Text>
           </TouchableOpacity>
 
-          {/* 💬 Mensajes (para todos excepto uno mismo) */}
           {canChat && (
             <TouchableOpacity
               style={styles.msgButton}

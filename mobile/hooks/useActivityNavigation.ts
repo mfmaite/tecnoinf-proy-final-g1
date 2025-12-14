@@ -20,7 +20,6 @@ function normalizeLink(rawLink: string): string {
       const url = new URL(link);
       return url.pathname + url.search + url.hash;
     } catch {
-      // Si falla, seguimos probando
     }
   }
 
@@ -39,9 +38,7 @@ function normalizeLink(rawLink: string): string {
 }
 
 
-/**
- * Parsea el path limpio en tipos conocidos.
- */
+// Parsea el path limpio en tipos conocidos.
 type ParsedLink =
   | { type: "COURSE"; courseId: string }
   | { type: "FORUM"; courseId: string; forumId: string }

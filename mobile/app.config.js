@@ -13,6 +13,22 @@ export default ({ config }) => ({
     ...config.android,
     package: "com.mentora.mobile",
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
+
+
+    intentFilters: [
+      {
+        action: "VIEW",
+        data: [
+          {
+            scheme: "https",
+            host: "mentora.app",
+            pathPrefix: "/"
+          }
+        ],
+        category: ["BROWSABLE", "DEFAULT"]
+      }
+    ],
+
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",

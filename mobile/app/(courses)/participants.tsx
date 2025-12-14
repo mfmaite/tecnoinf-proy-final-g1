@@ -37,14 +37,17 @@ export default function ParticipantsList() {
 
   useEffect(() => {
     if (!courseId) return;
+
     const fetchParticipants = async () => {
       setLoading(true);
       setError("");
+
       try {
         const base =
           typeof (api as any).getUri === "function"
             ? (api as any).getUri()
             : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
+
         const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(
           String(courseId)
         )}/participants`;
@@ -62,11 +65,20 @@ export default function ParticipantsList() {
 
         const parsed = JSON.parse(text);
         const data = parsed?.data ?? [];
+
         if (!Array.isArray(data)) {
           throw new Error("Formato inesperado de respuesta (data no es array)");
         }
 
-        setParticipants(data as Participant[]);
+        const sorted = [...data].sort((a, b) =>
+          a.role === "PROFESOR" && b.role !== "PROFESOR"
+            ? -1
+            : b.role === "PROFESOR" && a.role !== "PROFESOR"
+            ? 1
+            : 0
+        );
+
+        setParticipants(sorted as Participant[]);
       } catch (err: any) {
         console.error("[getParticipants] error:", err);
         setError(err?.message ?? "Error al obtener participantes");
@@ -81,6 +93,7 @@ export default function ParticipantsList() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return participants;
+
     return participants.filter(
       (p) =>
         (p.name ?? "").toLowerCase().includes(q) ||
@@ -88,63 +101,70 @@ export default function ParticipantsList() {
     );
   }, [participants, search]);
 
-  const renderItem = ({ item }: { item: Participant }) => (
-    <View style={localStyles.itemCard}>
-      <View style={localStyles.itemRow}>
-        <Text style={localStyles.name}>{item.name}</Text>
-        <Text style={localStyles.ci}>CI: {item.ci}</Text>
-      </View>
+  const renderItem = ({ item }: { item: Participant }) => {
+    const canChat = user?.ci !== item.ci;
 
-      <Text style={localStyles.meta}>{item.email ?? ""}</Text>
-      <Text style={localStyles.meta}>{item.description ?? ""}</Text>
+    return (
+      <View style={localStyles.itemCard}>
+        <View style={localStyles.itemRow}>
+          <Text style={localStyles.name}>{item.name}</Text>
+          <Text style={localStyles.ci}>CI: {item.ci}</Text>
+        </View>
 
-      <View style={localStyles.actionsRow}>
-        {/* 🔹 Ver perfil */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() =>
-            router.push({
-              pathname: "/(main)/profile/[ci]",
-              params: { ci: item.ci },
-            })
-          }
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Ver Perfil</Text>
-        </TouchableOpacity>
+        <Text style={localStyles.meta}>{item.email ?? ""}</Text>
+        <Text style={localStyles.meta}>{item.description ?? ""}</Text>
 
-        {/* 💬 Mensajes solo a profesores (y no a uno mismo) */}
-        {item.role === "PROFESOR" && user?.ci !== item.ci && (
+        <View style={localStyles.actionsRow}>
+          {/* 🔹 Ver perfil */}
           <TouchableOpacity
-            style={styles.msgButton}
+            style={styles.button}
+            onPress={() =>
+              router.push({
+                pathname: "/(main)/profile/[ci]",
+                params: { ci: item.ci },
+              })
+            }
             activeOpacity={0.8}
-            onPress={async () => {
-              try {
-                const chat = await getOrCreateChatWith(item.ci);
-                if (!chat?.id) {
-                  Alert.alert("Error", "No se pudo iniciar el chat.");
-                  return;
-                }
-
-                router.push({
-                  pathname: "/(main)/chats/[partnerCi]",
-                  params: { partnerCi: item.ci, chatId: String(chat.id) },
-                });
-              } catch {
-                Alert.alert("Error", "No se pudo iniciar el chat.");
-              }
-            }}
           >
-            <Text style={styles.msgButtonText}>Mensajes</Text>
+            <Text style={styles.buttonText}>Ver Perfil</Text>
           </TouchableOpacity>
-        )}
+
+          {canChat && (
+            <TouchableOpacity
+              style={styles.msgButton}
+              activeOpacity={0.8}
+              onPress={async () => {
+                try {
+                  const chat = await getOrCreateChatWith(item.ci);
+                  if (!chat?.id) {
+                    Alert.alert("Error", "No se pudo iniciar el chat.");
+                    return;
+                  }
+
+                  router.push({
+                    pathname: "/(main)/chats/[partnerCi]",
+                    params: {
+                      partnerCi: item.ci,
+                      chatId: String(chat.id),
+                    },
+                  });
+                } catch {
+                  Alert.alert("Error", "No se pudo iniciar el chat.");
+                }
+              }}
+            >
+              <Text style={styles.msgButtonText}>Mensajes</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return <ActivityIndicator style={styles.loader} size="large" />;
   }
+
   if (error) {
     return (
       <View style={localStyles.center}>
@@ -181,9 +201,6 @@ export default function ParticipantsList() {
   );
 }
 
-/* ────────────────────────────────
-   🎨 Estilos locales
-   ──────────────────────────────── */
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -222,6 +239,7 @@ const localStyles = StyleSheet.create({
   actionsRow: {
     marginTop: 8,
     flexDirection: "row",
+    gap: 8,
   },
   center: {
     padding: 20,

@@ -2,8 +2,43 @@ import { useRouter } from "expo-router";
 import { api } from "../services/api";
 
 /**
- * Tipos posibles de links que vienen del backend.
+ * Normaliza cualquier link entrante para obtener solo el path relevante.
+ * Soporta:
+ *  - https://mentora.app/courses/AAH2025/forums/4
+ *  - mentora://courses/AAH2025/forums/4
+ *  - /courses/AAH2025/forums/4
+ *  - courses/AAH2025/forums/4
  */
+function normalizeLink(rawLink: string): string {
+  if (!rawLink) return rawLink;
+
+  let link = rawLink.trim();
+
+  // Caso 1: URL completa (https://mentora.app/...)
+  if (link.startsWith("http://") || link.startsWith("https://")) {
+    try {
+      const url = new URL(link);
+      return url.pathname + url.search + url.hash;
+    } catch {
+    }
+  }
+
+  // Caso 2: esquema personalizado (mentora://courses/...)
+  if (link.startsWith("mentora://")) {
+    const withoutScheme = link.replace("mentora://", "");
+    return withoutScheme.startsWith("/") ? withoutScheme : "/" + withoutScheme;
+  }
+
+  // Caso 3: ruta cruda sin slash inicial (courses/AAH2025)
+  if (!link.startsWith("/")) {
+    return "/" + link;
+  }
+
+  return link;
+}
+
+
+// Parsea el path limpio en tipos conocidos.
 type ParsedLink =
   | { type: "COURSE"; courseId: string }
   | { type: "FORUM"; courseId: string; forumId: string }
@@ -14,51 +49,30 @@ type ParsedLink =
   | { type: "CHAT"; chatId: string }
   | null;
 
-/**
- * Parsea el link que viene del backend/web.
- * Ejemplos soportados ahora:
- *  - /courses/AAH2025
- *  - /courses/AAH2025/forums/4
- *  - /courses/AAH2025/forums/4/posts/33
- *  - /courses/AAH2025/contents/12
- *  - /courses/AAH2025/quizzes/8
- *  - /courses/AAH2025/evaluations/5
- *  - /chats/18
- */
 function parseBackendLink(link: string): ParsedLink {
   const parts = link.split("/").filter(Boolean);
 
   if (parts[0] === "courses") {
     const courseId = parts[1];
 
-    if (parts.length === 2) {
-      return { type: "COURSE", courseId };
-    }
+    if (parts.length === 2) return { type: "COURSE", courseId };
 
     if (parts[2] === "forums") {
       const forumId = parts[3];
 
       if (parts.length === 4) return { type: "FORUM", courseId, forumId };
-      if (parts[4] === "posts") {
-        const postId = parts[5];
-        return { type: "POST", courseId, forumId, postId };
-      }
+      if (parts[4] === "posts")
+        return { type: "POST", courseId, forumId, postId: parts[5] };
     }
 
-    if (parts[2] === "contents") {
-      const contentId = parts[3];
-      return { type: "CONTENT", courseId, contentId };
-    }
+    if (parts[2] === "contents")
+      return { type: "CONTENT", courseId, contentId: parts[3] };
 
-    if (parts[2] === "quizzes") {
-      const quizId = parts[3];
-      return { type: "QUIZ", courseId, quizId };
-    }
+    if (parts[2] === "quizzes")
+      return { type: "QUIZ", courseId, quizId: parts[3] };
 
-    if (parts[2] === "evaluations") {
-      const evaluationId = parts[3];
-      return { type: "EVALUATION", courseId, evaluationId };
-    }
+    if (parts[2] === "evaluations")
+      return { type: "EVALUATION", courseId, evaluationId: parts[3] };
   }
 
   if (parts[0] === "chats") {
@@ -71,7 +85,6 @@ function parseBackendLink(link: string): ParsedLink {
 export function useActivityNavigation() {
   const router = useRouter();
 
-  /** Obtiene partnerCi desde backend, necesario para chats */
   async function resolveChatPartner(chatId: string): Promise<string | null> {
     try {
       const response = await api.get(`/chats/${chatId}`);
@@ -82,14 +95,12 @@ export function useActivityNavigation() {
     }
   }
 
-  /**
-   * Navega a partir del link crudo enviado por backend
-   */
   async function navigateByActivityLink(rawLink: string) {
-    const parsed = parseBackendLink(rawLink);
+    const cleanPath = normalizeLink(rawLink);
+    const parsed = parseBackendLink(cleanPath);
 
     if (!parsed) {
-      console.warn("⚠ Link no reconocido:", rawLink);
+      console.warn("⚠ Link no reconocido:", rawLink, "→", cleanPath);
       return;
     }
 
@@ -130,7 +141,6 @@ export function useActivityNavigation() {
           console.warn("⚠ No se pudo resolver partnerCi del chat.");
           return;
         }
-
         router.push(`/(main)/chats/${partnerCi}`);
         break;
       }

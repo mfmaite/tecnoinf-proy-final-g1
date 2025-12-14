@@ -7,8 +7,14 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Image,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  useLocalSearchParams,
+  useRouter,
+  useNavigation,
+} from "expo-router";
+
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../services/api";
 import { getOrCreateChatWith } from "../../../services/chat";
@@ -26,6 +32,7 @@ interface UserProfile {
 }
 
 export default function ViewProfileScreen() {
+  const navigation = useNavigation();
   const router = useRouter();
   const { ci } = useLocalSearchParams<{ ci: string }>();
   const { user } = useAuth();
@@ -33,10 +40,12 @@ export default function ViewProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const roleLabels: Record<string, string> = {
+    ADMIN: "Administrador",
+    PROFESOR: "Profesor",
+    ESTUDIANTE: "Estudiante",
+  };
 
-  // ────────────────────────────────
-  // 📦 Obtener perfil por CI
-  // ────────────────────────────────
   useEffect(() => {
     if (!ci) return;
 
@@ -56,9 +65,15 @@ export default function ViewProfileScreen() {
     fetchProfile();
   }, [ci]);
 
-  // ────────────────────────────────
-  // ⏳ Estado de carga / error
-  // ────────────────────────────────
+  useEffect(() => {
+    if (profile?.name) {
+      navigation.setOptions({
+        title: `${profile.name}`,
+      });
+    }
+  }, [profile, navigation]);
+
+
   if (loading)
     return (
       <View style={localStyles.center}>
@@ -80,15 +95,8 @@ export default function ViewProfileScreen() {
       </View>
     );
 
-  // ────────────────────────────────
-  // 💬 Mostrar botón de "Enviar mensaje" solo si:
-  //   - el perfil es de un profesor
-  //   - y el usuario logueado es distinto
-  // ────────────────────────────────
   const canMessage =
-  user &&
-  user.ci !== profile.ci &&
-  profile.role === "PROFESOR";
+    user && user.ci !== profile.ci;
 
   const handleStartChat = async () => {
     try {
@@ -107,16 +115,14 @@ export default function ViewProfileScreen() {
     }
   };
 
-
-  // ────────────────────────────────
-  // 🎨 Render principal
-  // ────────────────────────────────
   return (
     <ScrollView contentContainerStyle={localStyles.container}>
-      {/* Avatar */}
       <View style={localStyles.avatarWrapper}>
         {profile.pictureUrl ? (
-          <Ionicons name="person-circle" size={120} color={colors.primary[60]} />
+          <Image
+            source={{ uri: profile.pictureUrl }}
+            style={localStyles.avatarImage}
+          />
         ) : (
           <Ionicons
             name="person-circle-outline"
@@ -126,13 +132,11 @@ export default function ViewProfileScreen() {
         )}
       </View>
 
-      {/* Info básica */}
-      <Text style={localStyles.name}>{profile.name}</Text>
-      <Text style={localStyles.role}>
-        {profile.role === "PROFESOR" ? "Profesor" : "Estudiante"}
+      <Text style={localStyles.name}>
+        {roleLabels[`${profile.role}`] ?? "Desconocido"}
       </Text>
 
-      {/* Info detallada */}
+
       <View style={localStyles.infoCard}>
         <Text style={localStyles.label}>CI:</Text>
         <Text style={localStyles.value}>{profile.ci}</Text>
@@ -150,7 +154,6 @@ export default function ViewProfileScreen() {
         ) : null}
       </View>
 
-      {/* Enviar mensaje */}
       {canMessage && (
         <TouchableOpacity
           style={[styles.msgButton, { marginTop: 24 }]}
@@ -161,7 +164,6 @@ export default function ViewProfileScreen() {
         </TouchableOpacity>
       )}
 
-      {/* 🔙 Volver */}
       <TouchableOpacity
         style={[styles.button, { marginTop: 16 }]}
         onPress={() => router.back()}
@@ -173,9 +175,6 @@ export default function ViewProfileScreen() {
   );
 }
 
-// ────────────────────────────────
-// 🎨 Estilos locales
-// ────────────────────────────────
 const localStyles = StyleSheet.create({
   container: {
     alignItems: "center",
@@ -189,6 +188,12 @@ const localStyles = StyleSheet.create({
   },
   avatarWrapper: {
     marginBottom: 16,
+  },
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.surfaceLight[20],
   },
   name: {
     fontSize: 22,

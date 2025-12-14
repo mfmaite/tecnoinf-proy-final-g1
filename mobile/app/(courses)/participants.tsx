@@ -90,6 +90,9 @@ export default function ParticipantsList() {
     fetchParticipants();
   }, [courseId]);
 
+  // ─────────────────────────────────────
+  // Filtrado por búsqueda
+  // ─────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return participants;
@@ -161,6 +164,9 @@ export default function ParticipantsList() {
     );
   };
 
+  // ─────────────────────────────────────
+  // UI principal
+  // ─────────────────────────────────────
   if (loading) {
     return <ActivityIndicator style={styles.loader} size="large" />;
   }
@@ -201,6 +207,9 @@ export default function ParticipantsList() {
   );
 }
 
+/* ────────────────────────────────
+   Estilos locales
+   ──────────────────────────────── */
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,

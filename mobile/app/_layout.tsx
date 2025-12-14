@@ -11,7 +11,6 @@ import { api } from "../services/api";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useActivityNavigation } from "../hooks/useActivityNavigation";
 
-// Configuración global de notificaciones
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -23,7 +22,6 @@ Notifications.setNotificationHandler({
 });
 
 
-//  Configuración global
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,   // muestra alerta nativa
@@ -54,7 +52,6 @@ function AppNavigator() {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-  // Verificamos login una única vez
   useEffect(() => {
     const checkToken = async () => {
       const storedToken = await SecureStore.getItemAsync("token");

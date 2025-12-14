@@ -117,7 +117,6 @@ export default function ViewProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={localStyles.container}>
-      {/* Avatar */}
       <View style={localStyles.avatarWrapper}>
         {profile.pictureUrl ? (
           <Image
@@ -133,13 +132,11 @@ export default function ViewProfileScreen() {
         )}
       </View>
 
-      {/* Rol (con estilo de name) */}
       <Text style={localStyles.name}>
         {roleLabels[`${profile.role}`] ?? "Desconocido"}
       </Text>
 
 
-      {/* Info detallada */}
       <View style={localStyles.infoCard}>
         <Text style={localStyles.label}>CI:</Text>
         <Text style={localStyles.value}>{profile.ci}</Text>
@@ -157,7 +154,6 @@ export default function ViewProfileScreen() {
         ) : null}
       </View>
 
-      {/* Enviar mensaje */}
       {canMessage && (
         <TouchableOpacity
           style={[styles.msgButton, { marginTop: 24 }]}
@@ -168,7 +164,6 @@ export default function ViewProfileScreen() {
         </TouchableOpacity>
       )}
 
-      {/* 🔙 Volver */}
       <TouchableOpacity
         style={[styles.button, { marginTop: 16 }]}
         onPress={() => router.back()}
@@ -180,9 +175,6 @@ export default function ViewProfileScreen() {
   );
 }
 
-// ────────────────────────────────
-// 🎨 Estilos locales
-// ────────────────────────────────
 const localStyles = StyleSheet.create({
   container: {
     alignItems: "center",

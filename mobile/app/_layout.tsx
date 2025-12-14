@@ -23,6 +23,18 @@ Notifications.setNotificationHandler({
 });
 
 
+//  Configuración global
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,   // muestra alerta nativa
+    shouldPlaySound: true,   // suena al llegar
+    shouldSetBadge: true,    // modifica badge del ícono
+    shouldShowBanner: true,  // iOS: muestra banner arriba
+    shouldShowList: true,    // iOS: aparece en Notification Center
+  }),
+});
+
+
 export default function RootLayout() {
   return (
     <NotificationProvider>
@@ -52,7 +64,6 @@ function AppNavigator() {
     checkToken();
   }, [token]);
 
-  // Guardar token de notificaciones en backend
   useEffect(() => {
     const savePushToken = async () => {
       if (fcmToken && isLoggedIn) {
@@ -67,39 +78,31 @@ function AppNavigator() {
     savePushToken();
   }, [fcmToken, isLoggedIn]);
 
-  // Handler de deep linking global (reset-password + activity links)
   useEffect(() => {
-
-    // App abierta por un deep link (cold start)
     const checkInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (!initialUrl) return;
 
       const parsed = Linking.parse(initialUrl);
 
-      // Caso especial reset-password (mantener tu lógica existente)
       if (parsed?.path === "reset-password" && parsed.queryParams?.token) {
         router.push(`/reset-password?token=${parsed.queryParams.token}`);
         return;
       }
 
-      // Otros deep links → usar activity navigation
       navigateByActivityLink(initialUrl);
     };
 
     checkInitialUrl();
 
-    // Listener cuando la app ya está abierta y llega un deep link nuevo
     const subscription = Linking.addEventListener("url", (event) => {
       const parsed = Linking.parse(event.url);
 
-      // Caso especial reset-password
       if (parsed?.path === "reset-password" && parsed.queryParams?.token) {
         router.push(`/reset-password?token=${parsed.queryParams.token}`);
         return;
       }
 
-      // Cualquier otro link → hook universal
       navigateByActivityLink(event.url);
     });
 

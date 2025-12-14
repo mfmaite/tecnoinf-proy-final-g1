@@ -41,7 +41,6 @@ export default ({ config }) => ({
     ...config.ios,
     bundleIdentifier: "com.mentora.mobile",
     supportsTablet: true,
-
     associatedDomains: ["applinks:mentora.app"]
   },
 

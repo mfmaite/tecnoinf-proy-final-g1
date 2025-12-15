@@ -122,7 +122,6 @@ const localStyles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  //  🔸 SOLO QUEDAN ESTOS INPUT Y PASSWORD
   input: {
     width: "100%",
     borderWidth: 1,

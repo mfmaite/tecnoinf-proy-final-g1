@@ -210,7 +210,65 @@ export default function CourseView() {
         </View>
       </View>
 
-      {/* --- resto del componente sin cambios --- */}
+      <View style={{ marginBottom: 12 }}>
+          <Text style={[styles.subtitle, { marginBottom: 8 }]}>Foros</Text>
+
+          <View style={{ flexDirection: "row", columnGap: 8 }}>
+            <TouchableOpacity
+              style={styles.forumButton}
+              activeOpacity={0.85}
+              onPress={() => {
+                const forum = courseData.forums?.find(
+                  (f) => f.type === "ANNOUNCEMENTS"
+                );
+                if (!forum) return;
+
+                router.push({
+                  pathname: "/[courseId]/forums/[forumId]",
+                  params: {
+                    courseId: String(courseData.id),
+                    forumId: String(forum.id),
+                    forumType: forum.type,
+                  },
+                });
+              }}
+            >
+              <Ionicons
+                name="megaphone-outline"
+                size={18}
+                color={colors.secondary[60]}
+              />
+              <Text style={styles.forumButtonText}>Anuncios</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.forumButton}
+              activeOpacity={0.85}
+              onPress={() => {
+                const forum = courseData.forums?.find(
+                  (f) => f.type === "CONSULTS"
+                );
+                if (!forum) return;
+
+                router.push({
+                  pathname: "/[courseId]/forums/[forumId]",
+                  params: {
+                    courseId: String(courseData.id),
+                    forumId: String(forum.id),
+                    forumType: forum.type,
+                  },
+                });
+              }}
+            >
+              <Ionicons
+                name="chatbubbles-outline"
+                size={18}
+                color={colors.secondary[60]}
+              />
+              <Text style={styles.forumButtonText}>Consultas</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       <Text style={styles.title}>Contenidos</Text>
       {contents.length ? (
         contents.map((item) => (

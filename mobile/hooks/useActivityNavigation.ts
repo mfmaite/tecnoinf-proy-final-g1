@@ -1,20 +1,12 @@
 import { useRouter } from "expo-router";
 import { api } from "../services/api";
 
-/**
- * Normaliza cualquier link entrante para obtener solo el path relevante.
- * Soporta:
- *  - https://mentora.app/courses/AAH2025/forums/4
- *  - mentora://courses/AAH2025/forums/4
- *  - /courses/AAH2025/forums/4
- *  - courses/AAH2025/forums/4
- */
 function normalizeLink(rawLink: string): string {
   if (!rawLink) return rawLink;
 
   let link = rawLink.trim();
 
-  // Caso 1: URL completa (https://mentora.app/...)
+
   if (link.startsWith("http://") || link.startsWith("https://")) {
     try {
       const url = new URL(link);
@@ -23,13 +15,11 @@ function normalizeLink(rawLink: string): string {
     }
   }
 
-  // Caso 2: esquema personalizado (mentora://courses/...)
   if (link.startsWith("mentora://")) {
     const withoutScheme = link.replace("mentora://", "");
     return withoutScheme.startsWith("/") ? withoutScheme : "/" + withoutScheme;
   }
 
-  // Caso 3: ruta cruda sin slash inicial (courses/AAH2025)
   if (!link.startsWith("/")) {
     return "/" + link;
   }
@@ -37,8 +27,6 @@ function normalizeLink(rawLink: string): string {
   return link;
 }
 
-
-// Parsea el path limpio en tipos conocidos.
 type ParsedLink =
   | { type: "COURSE"; courseId: string }
   | { type: "FORUM"; courseId: string; forumId: string }
@@ -100,7 +88,7 @@ export function useActivityNavigation() {
     const parsed = parseBackendLink(cleanPath);
 
     if (!parsed) {
-      console.warn("⚠ Link no reconocido:", rawLink, "→", cleanPath);
+      console.warn("Link no reconocido:", rawLink, "→", cleanPath);
       return;
     }
 
@@ -138,7 +126,7 @@ export function useActivityNavigation() {
       case "CHAT": {
         const partnerCi = await resolveChatPartner(parsed.chatId);
         if (!partnerCi) {
-          console.warn("⚠ No se pudo resolver partnerCi del chat.");
+          console.warn("No se pudo resolver partnerCi del chat.");
           return;
         }
         router.push(`/(main)/chats/${partnerCi}`);

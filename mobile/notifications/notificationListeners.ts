@@ -11,11 +11,10 @@ export function useNotificationListeners() {
     const subscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         const data = response.notification.request.content.data;
-        console.log("➡️ Usuario abrió notificación:", data);
+        console.log("Usuario abrió notificación:", data);
 
         const link = data?.link;
         if (link) {
-          // El link debería ser algo como "/(main)/courses/123"
           router.push(link as any);
         }
       }

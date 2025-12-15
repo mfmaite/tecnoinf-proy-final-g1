@@ -73,7 +73,7 @@ export default function ChatsListScreen() {
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: "/(main)/chats/[partnerCi]",
+                  pathname: "/(main)/chats/[chatId]",
                   params: {
                     partnerCi: other.ci,
                     chatId: String(item.id),

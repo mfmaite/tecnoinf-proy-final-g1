@@ -6,14 +6,12 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  Alert,
   StyleSheet,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
 import { colors } from "../../styles/colors";
-import { getOrCreateChatWith } from "../../services/chat";
 import { useAuth } from "../../contexts/AuthContext";
 
 interface Participant {
@@ -90,9 +88,6 @@ export default function ParticipantsList() {
     fetchParticipants();
   }, [courseId]);
 
-  // ─────────────────────────────────────
-  // Filtrado por búsqueda
-  // ─────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return participants;
@@ -118,7 +113,6 @@ export default function ParticipantsList() {
         <Text style={localStyles.meta}>{item.description ?? ""}</Text>
 
         <View style={localStyles.actionsRow}>
-          {/* 🔹 Ver perfil */}
           <TouchableOpacity
             style={styles.button}
             onPress={() =>
@@ -136,25 +130,12 @@ export default function ParticipantsList() {
             <TouchableOpacity
               style={styles.msgButton}
               activeOpacity={0.8}
-              onPress={async () => {
-                try {
-                  const chat = await getOrCreateChatWith(item.ci);
-                  if (!chat?.id) {
-                    Alert.alert("Error", "No se pudo iniciar el chat.");
-                    return;
-                  }
-
-                  router.push({
-                    pathname: "/(main)/chats/[partnerCi]",
-                    params: {
-                      partnerCi: item.ci,
-                      chatId: String(chat.id),
-                    },
-                  });
-                } catch {
-                  Alert.alert("Error", "No se pudo iniciar el chat.");
-                }
-              }}
+              onPress={() =>
+                router.push({
+                  pathname: "/(main)/chats/new",
+                  params: { recipientCi: item.ci },
+                })
+              }
             >
               <Text style={styles.msgButtonText}>Mensajes</Text>
             </TouchableOpacity>
@@ -164,9 +145,6 @@ export default function ParticipantsList() {
     );
   };
 
-  // ─────────────────────────────────────
-  // UI principal
-  // ─────────────────────────────────────
   if (loading) {
     return <ActivityIndicator style={styles.loader} size="large" />;
   }
@@ -207,9 +185,6 @@ export default function ParticipantsList() {
   );
 }
 
-/* ────────────────────────────────
-   Estilos locales
-   ──────────────────────────────── */
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,

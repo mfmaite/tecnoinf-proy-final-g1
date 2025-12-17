@@ -1,8 +1,4 @@
 import { api } from "./api";
-
-/**
- * Tipo base de respuesta del backend
- */
 interface ApiResponse<T> {
   success: boolean;
   status?: number;
@@ -10,9 +6,6 @@ interface ApiResponse<T> {
   data: T;
 }
 
-/**
- * Datos devueltos por /auth/login
- */
 interface LoginResponse {
   token: string;
   user: {
@@ -25,9 +18,6 @@ interface LoginResponse {
   };
 }
 
-/**
- * 🔹 Inicia sesión y devuelve token + usuario
- */
 export async function login(ci: string, password: string) {
   try {
     const { data } = await api.post<ApiResponse<LoginResponse>>("/auth/login", {
@@ -52,10 +42,6 @@ export async function login(ci: string, password: string) {
   }
 }
 
-/**
- * 🔹 Cambia la contraseña del usuario autenticado
- * (el token ya se inyecta automáticamente por el AuthContext)
- */
 export async function changePassword(
   oldPassword: string,
   newPassword: string,

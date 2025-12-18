@@ -6,12 +6,13 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  Alert,
   StyleSheet,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { styles } from "../../styles/styles";
 import { api } from "../../services/api";
+import { colors } from "../../styles/colors";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface Participant {
   ci: string;
@@ -29,16 +30,22 @@ export default function ParticipantsList() {
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState("");
 
+  const router = useRouter();
+  const { user } = useAuth();
+
   useEffect(() => {
     if (!courseId) return;
+
     const fetchParticipants = async () => {
       setLoading(true);
       setError("");
+
       try {
         const base =
           typeof (api as any).getUri === "function"
             ? (api as any).getUri()
             : (api as any).getUri ?? (api as any).defaults?.baseURL ?? "";
+
         const url = `${base.replace(/\/+$/, "")}/courses/${encodeURIComponent(
           String(courseId)
         )}/participants`;
@@ -56,11 +63,20 @@ export default function ParticipantsList() {
 
         const parsed = JSON.parse(text);
         const data = parsed?.data ?? [];
+
         if (!Array.isArray(data)) {
           throw new Error("Formato inesperado de respuesta (data no es array)");
         }
 
-        setParticipants(data as Participant[]);
+        const sorted = [...data].sort((a, b) =>
+          a.role === "PROFESOR" && b.role !== "PROFESOR"
+            ? -1
+            : b.role === "PROFESOR" && a.role !== "PROFESOR"
+            ? 1
+            : 0
+        );
+
+        setParticipants(sorted as Participant[]);
       } catch (err: any) {
         console.error("[getParticipants] error:", err);
         setError(err?.message ?? "Error al obtener participantes");
@@ -75,6 +91,7 @@ export default function ParticipantsList() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return participants;
+
     return participants.filter(
       (p) =>
         (p.name ?? "").toLowerCase().includes(q) ||
@@ -82,38 +99,56 @@ export default function ParticipantsList() {
     );
   }, [participants, search]);
 
-  const renderItem = ({ item }: { item: Participant }) => (
-    <View style={localStyles.itemCard}>
-      <View style={localStyles.itemRow}>
-        <Text style={localStyles.name}>{item.name}</Text>
-        <Text style={localStyles.ci}>CI: {item.ci}</Text>
-      </View>
-      <Text style={localStyles.meta}>{item.email ?? ""}</Text>
-      <Text style={localStyles.meta}>{item.description ?? ""}</Text>
-      <View style={localStyles.actionsRow}>
-        <TouchableOpacity
+  const renderItem = ({ item }: { item: Participant }) => {
+    const canChat = user?.ci !== item.ci;
+
+    return (
+      <View style={localStyles.itemCard}>
+        <View style={localStyles.itemRow}>
+          <Text style={localStyles.name}>{item.name}</Text>
+          <Text style={localStyles.ci}>CI: {item.ci}</Text>
+        </View>
+
+        <Text style={localStyles.meta}>{item.email ?? ""}</Text>
+        <Text style={localStyles.meta}>{item.description ?? ""}</Text>
+
+        <View style={localStyles.actionsRow}>
+          <TouchableOpacity
             style={styles.button}
-            onPress={() => Alert.alert("Ver Perfil", "Funcionalidad no implementada")}
+            onPress={() =>
+              router.push({
+                pathname: "/(main)/profile/[ci]",
+                params: { ci: item.ci },
+              })
+            }
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Ver Perfil</Text>
           </TouchableOpacity>
-        {item.role === "PROFESOR" && (
-          <TouchableOpacity
-            style={styles.msgButton}
-            onPress={() => Alert.alert("Mensajes", "Funcionalidad no implementada")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.msgButtonText}>Mensajes</Text>
-          </TouchableOpacity>
-        )}
+
+          {canChat && (
+            <TouchableOpacity
+              style={styles.msgButton}
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push({
+                  pathname: "/(main)/chats/new",
+                  params: { recipientCi: item.ci },
+                })
+              }
+            >
+              <Text style={styles.msgButtonText}>Mensajes</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return <ActivityIndicator style={styles.loader} size="large" />;
   }
+
   if (error) {
     return (
       <View style={localStyles.center}>
@@ -140,7 +175,9 @@ export default function ParticipantsList() {
         renderItem={renderItem}
         ListEmptyComponent={
           <View style={localStyles.center}>
-            <Text style={localStyles.emptyText}>No se encontraron participantes.</Text>
+            <Text style={localStyles.emptyText}>
+              No se encontraron participantes.
+            </Text>
           </View>
         }
       />
@@ -159,13 +196,11 @@ const localStyles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 12,
-    marginHorizontal: 12,
     marginBottom: 8,
   },
   itemCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.primary[20],
     padding: 12,
-    marginHorizontal: 12,
     marginVertical: 6,
     borderRadius: 8,
     elevation: 1,
@@ -188,6 +223,7 @@ const localStyles = StyleSheet.create({
   actionsRow: {
     marginTop: 8,
     flexDirection: "row",
+    gap: 8,
   },
   center: {
     padding: 20,

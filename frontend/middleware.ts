@@ -2,6 +2,13 @@ import { withAuth } from "next-auth/middleware"
 
 export default withAuth(
   function middleware(req) {
+    const { pathname } = req.nextUrl
+    const token = req.nextauth.token
+
+    if (!token && pathname !== '/login' && !pathname.startsWith('/reset-password')) {
+      return Response.redirect(new URL('/login', req.url))
+    }
+
     // Si está loggeado y trata de acceder a /login, redirigir a /
     if (req.nextUrl.pathname.startsWith('/login') && req.nextauth.token) {
       return Response.redirect(new URL('/', req.url))
@@ -28,12 +35,8 @@ export default withAuth(
           return true
         }
 
-        if (!token) {
-          return false
-        }
-
         if (req.nextUrl.pathname.startsWith('/admin')) {
-          return token.role === 'ADMIN'
+          return token?.role === 'ADMIN'
         }
 
         return true

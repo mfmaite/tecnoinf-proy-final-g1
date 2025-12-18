@@ -310,7 +310,7 @@ public class UserService {
         resetToken.setExpiryDate(expiry);
         passwordResetTokenRepository.save(resetToken);
 
-        String link = "https://tecnoinf-proy-final-g1-production.up.railway.app/reset-password?token=" + token;
+        String link = "https://www.mentora-app.info/reset-password?token=" + token;
 
         String subject = "Recuperación de contraseña";
         String body = "Haz clic en el siguiente enlace para restablecer tu contraseña (válido por 2 horas): " + link;

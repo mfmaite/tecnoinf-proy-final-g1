@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Image,
   StyleSheet,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -16,10 +15,14 @@ import {
   createResponse,
   deletePost,
   updatePost,
+  deleteResponse as deleteResponseApi,
+  updateResponse as updateResponseApi,
 } from "../../../../../services/posts";
 import { useAuth } from "../../../../../contexts/AuthContext";
 import { colors } from "../../../../../styles/colors";
 import { styles as globalStyles } from "../../../../../styles/styles";
+import { UserProfilePicture } from "@/components/user-profile-picture/user-profile-picture";
+import { OverflowMenu } from "../../../../../components/ui/OverflowMenu";
 
 interface Post {
   id: number;
@@ -45,9 +48,6 @@ export default function PostDetail() {
   const userCi = user?.ci ? String(user.ci) : "";
   const isProfessor = user?.role === "PROFESOR" || user?.role === "ADMIN";
 
-  /*───────────────────────────────
-    🔁 Cargar post y respuestas
-  ───────────────────────────────*/
   const loadPost = useCallback(async () => {
     if (!postId) return;
     setLoading(true);
@@ -68,9 +68,6 @@ export default function PostDetail() {
     loadPost();
   }, [loadPost]);
 
-  /*───────────────────────────────
-    🗨️ Crear respuesta
-  ───────────────────────────────*/
   async function handleReply() {
     if (!replyText.trim()) return Alert.alert("Escribí una respuesta.");
 
@@ -95,13 +92,14 @@ export default function PostDetail() {
     }
   }
 
-  /*───────────────────────────────
-    ✏️ Editar post o respuesta
-  ───────────────────────────────*/
   async function handleEdit(id: number, message: string) {
     if (!message.trim()) return Alert.alert("Mensaje vacío.");
     try {
-      await updatePost(String(id), message);
+      if (post && id === post.id) {
+        await updatePost(String(id), message);
+      } else {
+        await updateResponseApi(String(post?.id || ""), String(id), message);
+      }
       setEditingId(null);
       setEditedText("");
       await loadPost();
@@ -111,9 +109,6 @@ export default function PostDetail() {
     }
   }
 
-  /*───────────────────────────────
-    🗑️ Eliminar post o respuesta
-  ───────────────────────────────*/
   async function handleDelete(id: number) {
     Alert.alert("Confirmar", "¿Seguro que querés eliminar este mensaje?", [
       { text: "Cancelar", style: "cancel" },
@@ -122,7 +117,11 @@ export default function PostDetail() {
         style: "destructive",
         onPress: async () => {
           try {
-            await deletePost(String(id));
+            if (post && id === post.id) {
+              await deletePost(String(id));
+            } else {
+              await deleteResponseApi(String(post?.id || ""), String(id));
+            }
 
             if (id === post?.id) {
               Alert.alert("Eliminado", "El post se eliminó correctamente.", [
@@ -145,9 +144,6 @@ export default function PostDetail() {
     ]);
   }
 
-  /*───────────────────────────────
-    ⏳ Estado de carga
-  ───────────────────────────────*/
   if (loading)
     return (
       <ActivityIndicator
@@ -160,21 +156,22 @@ export default function PostDetail() {
   if (!post)
     return <Text style={globalStyles.error}>No se encontró el post.</Text>;
 
-  /*───────────────────────────────
-    🎨 Render principal
-  ───────────────────────────────*/
   return (
     <ScrollView style={globalStyles.container}>
-      {/* 🟢 Post principal */}
       <View style={[globalStyles.contentCard, localStyles.mainPost]}>
-        <View style={localStyles.replyHeader}>
-          {post.authorPictureUrl && (
-            <Image
-              source={{ uri: post.authorPictureUrl }}
-              style={localStyles.avatarLarge}
+        <View style={[localStyles.replyHeader, { justifyContent: "space-between" }]}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <UserProfilePicture name={post.authorName} pictureUrl={post.authorPictureUrl} size="sm" />
+            <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>{post.authorName}</Text>
+          </View>
+          {(String(post.authorCi) === userCi || isProfessor) && (
+            <OverflowMenu
+              items={[
+                { label: "Editar", onPress: () => { setEditingId(post.id); setEditedText(post.message); } },
+                { label: "Eliminar", onPress: () => handleDelete(post.id) },
+              ]}
             />
           )}
-          <Text style={localStyles.replyAuthor}>{post.authorName}</Text>
         </View>
 
         {editingId === post.id ? (
@@ -188,13 +185,13 @@ export default function PostDetail() {
             <View style={globalStyles.actionsRow}>
               <TouchableOpacity
                 onPress={() => setEditingId(null)}
-                style={[globalStyles.buttonSecondary, { marginRight: 8 }]}
+                style={[globalStyles.buttonPrimary, { marginRight: 8 }]}
               >
                 <Text style={globalStyles.buttonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleEdit(post.id, editedText)}
-                style={globalStyles.buttonPrimary}
+                style={globalStyles.buttonSecondary}
               >
                 <Text style={globalStyles.buttonText}>Guardar</Text>
               </TouchableOpacity>
@@ -206,30 +203,10 @@ export default function PostDetail() {
             <Text style={localStyles.replyDate}>
               {new Date(post.createdDate).toLocaleString("es-ES")}
             </Text>
-            {(String(post.authorCi) === userCi || isProfessor) && (
-              <View style={[globalStyles.actionsRow, { marginTop: 10 }]}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setEditingId(post.id);
-                    setEditedText(post.message);
-                  }}
-                  style={[globalStyles.buttonSecondary, { marginRight: 8 }]}
-                >
-                  <Text style={globalStyles.buttonText}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleDelete(post.id)}
-                  style={globalStyles.buttonPrimary}
-                >
-                  <Text style={globalStyles.buttonText}>Eliminar</Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </>
         )}
       </View>
 
-      {/* ✏️ Campo para responder — solo si no es foro de anuncios */}
       {forumType !== "ANNOUNCEMENTS" && (
         <View style={localStyles.replyBox}>
           <TextInput
@@ -248,7 +225,6 @@ export default function PostDetail() {
         </View>
       )}
 
-      {/* 💬 Lista de respuestas */}
       <Text style={[globalStyles.title, { marginTop: 16 }]}>Respuestas</Text>
       {responses.length ? (
         responses.map((r) => {
@@ -258,14 +234,19 @@ export default function PostDetail() {
               key={r.id}
               style={[globalStyles.contentCard, localStyles.replyCard]}
             >
-              <View style={localStyles.replyHeader}>
-                {r.authorPictureUrl && (
-                  <Image
-                    source={{ uri: r.authorPictureUrl }}
-                    style={localStyles.avatarSmall}
+              <View style={[localStyles.replyHeader, { justifyContent: "space-between" }]}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <UserProfilePicture name={r.authorName} pictureUrl={r.authorPictureUrl} size="sm" />
+                  <Text style={{ fontWeight: "bold", color: colors.primary[70], marginLeft: 8 }}>{r.authorName}</Text>
+                </View>
+                {(isAuthor || isProfessor) && (
+                  <OverflowMenu
+                    items={[
+                      { label: "Editar", onPress: () => { setEditingId(r.id); setEditedText(r.message); } },
+                      { label: "Eliminar", onPress: () => handleDelete(r.id) },
+                    ]}
                   />
                 )}
-                <Text style={localStyles.replyAuthor}>{r.authorName}</Text>
               </View>
 
               {editingId === r.id ? (
@@ -279,13 +260,13 @@ export default function PostDetail() {
                   <View style={globalStyles.actionsRow}>
                     <TouchableOpacity
                       onPress={() => setEditingId(null)}
-                      style={[globalStyles.buttonSecondary, { marginRight: 8 }]}
+                      style={[globalStyles.buttonPrimary, { marginRight: 8 }]}
                     >
                       <Text style={globalStyles.buttonText}>Cancelar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleEdit(r.id, editedText)}
-                      style={globalStyles.buttonPrimary}
+                      style={globalStyles.buttonSecondary}
                     >
                       <Text style={globalStyles.buttonText}>Guardar</Text>
                     </TouchableOpacity>
@@ -297,28 +278,6 @@ export default function PostDetail() {
                   <Text style={localStyles.replyDate}>
                     {new Date(r.createdDate).toLocaleString("es-ES")}
                   </Text>
-                  {(isAuthor || isProfessor) && (
-                    <View style={[globalStyles.actionsRow, { marginTop: 8 }]}>
-                      <TouchableOpacity
-                        onPress={() => {
-                          setEditingId(r.id);
-                          setEditedText(r.message);
-                        }}
-                        style={[
-                          globalStyles.buttonSecondary,
-                          { marginRight: 8 },
-                        ]}
-                      >
-                        <Text style={globalStyles.buttonText}>Editar</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleDelete(r.id)}
-                        style={globalStyles.buttonPrimary}
-                      >
-                        <Text style={globalStyles.buttonText}>Eliminar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
                 </>
               )}
             </View>

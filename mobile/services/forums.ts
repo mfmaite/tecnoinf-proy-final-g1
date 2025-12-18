@@ -1,8 +1,5 @@
 import { api } from "./api";
 
-// ──────────────────────────────
-// Tipos base
-// ──────────────────────────────
 export interface ForumPost {
   id: number;
   authorCi: string;
@@ -32,9 +29,6 @@ interface ForumPostsResponse {
   posts: ForumPost[];
 }
 
-// ──────────────────────────────
-// GET /forum/:forumId
-// ──────────────────────────────
 export async function getForumPosts(forumId: string): Promise<ForumPost[]> {
   try {
     const { data } = await api.get<ApiResponse<ForumPostsResponse>>(
@@ -61,9 +55,6 @@ export async function getForumPosts(forumId: string): Promise<ForumPost[]> {
   }
 }
 
-// ──────────────────────────────
-// POST /forum/:forumId
-// ──────────────────────────────
 export async function createForumPost(
   forumId: string,
   payload: NewPostPayload

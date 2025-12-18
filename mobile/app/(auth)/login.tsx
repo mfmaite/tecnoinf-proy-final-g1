@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,15 +11,22 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../styles/colors";
+import { styles as globalStyles }from "../../styles/styles"
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login,isAuthenticated } = useAuth();
   const router = useRouter();
   const logo = require("../../assets/images/mentora-logo-small.png");
   const [ci, setCi] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/(main)/home");
+    }
+  }, [isAuthenticated, router]);
 
   const handleLogin = async () => {
     try {
@@ -30,23 +37,23 @@ export default function LoginScreen() {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.title}>Mentora</Text>
-
+   return (
+    <View style={localStyles.container}>
+      <View style={localStyles.card}>
+        <Image source={logo} style={localStyles.logo} resizeMode="contain" />
+        <Text style={globalStyles.headerTitle}>Mentora</Text>
         <TextInput
-          style={styles.input}
+          style={localStyles.input}
           placeholder="Cédula"
           placeholderTextColor="#999"
           value={ci}
           onChangeText={setCi}
         />
 
-        <View style={styles.passwordContainer}>
+
+        <View style={localStyles.passwordContainer}>
           <TextInput
-            style={[styles.input, styles.passwordInput]}
+            style={[localStyles.input, { color: colors.textNeutral[50] }]}
             placeholder="Contraseña"
             placeholderTextColor="#999"
             secureTextEntry={!showPassword}
@@ -54,25 +61,31 @@ export default function LoginScreen() {
             onChangeText={setPassword}
           />
           <TouchableOpacity
-            style={styles.eyeIcon}
+            style={localStyles.eyeIcon}
             onPress={() => setShowPassword(!showPassword)}
           >
             <Ionicons
               name={showPassword ? "eye-off" : "eye"}
               size={22}
-              color="#266C35" // $secondary-color-60
+              color={colors.secondary[60]}
             />
           </TouchableOpacity>
         </View>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {/* ERROR */}
+        {error ? <Text style={globalStyles.error}>{error}</Text> : null}
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
+        {/* BOTÓN LOGIN (usa botón global) */}
+        <TouchableOpacity
+          style={globalStyles.buttonPrimary}
+          onPress={handleLogin}
+        >
+          <Text style={globalStyles.buttonText}>Iniciar sesión</Text>
         </TouchableOpacity>
 
+        {/* LINK RECUPERAR CONTRASEÑA */}
         <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-          <Text className="text-blue-500 text-center mt-3">
+          <Text style={globalStyles.link}>
             ¿Olvidaste tu contraseña?
           </Text>
         </TouchableOpacity>
@@ -81,7 +94,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const localStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primary[10],
@@ -108,12 +121,7 @@ const styles = StyleSheet.create({
     height: 60,
     marginBottom: 10,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.secondary[60],
-    marginBottom: 24,
-  },
+
   input: {
     width: "100%",
     borderWidth: 1,
@@ -129,35 +137,11 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   passwordInput: {
-    paddingRight: 40, // espacio para el ícono
+    paddingRight: 40,
   },
   eyeIcon: {
     position: "absolute",
     right: 12,
     top: 14,
-  },
-  button: {
-    backgroundColor: colors.primary[60],
-    borderRadius: 8,
-    paddingVertical: 12,
-    width: "100%",
-    alignItems: "center",
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  forgot: {
-    color: colors.secondary[60],
-    fontSize: 14,
-    textDecorationLine: "underline",
-  },
-  error: {
-    color: colors.accent.danger[50],
-    marginBottom: 8,
-    textAlign: "center",
   },
 });

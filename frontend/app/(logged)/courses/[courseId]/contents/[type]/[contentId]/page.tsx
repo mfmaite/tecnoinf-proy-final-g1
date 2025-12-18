@@ -297,9 +297,9 @@ export default function ContentDetailPage({ params }: Params) {
         </div>
       ) : null}
 
-      {content.type === 'simpleContent' ? (
+      {(content.type === 'simpleContent' || content.type === 'evaluation') && (
         <ContentDetail content={content} />
-      ) : null}
+      )}
 
       {content.type === 'quiz' ? (
         <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-6 text-text-neutral-50">

@@ -5,11 +5,11 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getChats } from "../../../services/chat";
 import { useAuth } from "../../../contexts/AuthContext";
+import { UserProfilePicture } from "@/components/user-profile-picture/user-profile-picture";
 
 type UserParticipant = {
   ci: string;
@@ -73,7 +73,7 @@ export default function ChatsListScreen() {
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: "/(main)/chats/[partnerCi]",
+                  pathname: "/(main)/chats/[chatId]",
                   params: {
                     partnerCi: other.ci,
                     chatId: String(item.id),
@@ -89,24 +89,10 @@ export default function ChatsListScreen() {
                 borderColor: "#eee",
               }}
             >
-              {/* FOTO */}
-              <Image
-                source={{
-                  uri:
-                    other.pictureUrl ??
-                    "https://cdn-icons-png.flaticon.com/512/847/847969.png",
-                }}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  marginRight: 10,
-                }}
-              />
+              <UserProfilePicture name={other.name} pictureUrl={other.pictureUrl} size="sm" />
 
-              {/* NOMBRE */}
-              <Text style={{ fontSize: 16, fontWeight: "500" }}>
-                Chat con {other.name}
+              <Text style={{ fontSize: 16, fontWeight: "500", marginLeft: 10 }}>
+                {other.name}
               </Text>
             </TouchableOpacity>
           );

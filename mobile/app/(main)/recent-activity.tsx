@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { getUserActivities, UserActivity } from "../../services/userService";
@@ -20,37 +21,48 @@ export default function RecentActivityScreen() {
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        if (!user?.ci) return;
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-        const data = await getUserActivities(user.ci);
-        setActivities(data);
-      } catch (e) {
-        console.error("Error cargando actividades:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const loadActivities = async () => {
+        try {
+          if (!user?.ci) return;
 
-    load();
-  }, [user]);
+          setLoading(true);
 
-  const renderItem = ({ item }: { item: UserActivity }) => {
-    return (
-      <TouchableOpacity
-        onPress={() => navigateByActivityLink(item.link)}
-      >
-        <View style={styles.activityCardItem}>
-          <Text style={styles.activityDescription}>{item.description}</Text>
-          <Text style={styles.activityDate}>
-            {new Date(item.createdDate).toLocaleString("es-UY")}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+          const data = await getUserActivities(user.ci);
+
+          if (isActive) {
+            setActivities(data.slice().reverse());
+          }
+        } catch (error) {
+          console.error("Error cargando actividades:", error);
+        } finally {
+          if (isActive) {
+            setLoading(false);
+          }
+        }
+      };
+
+      loadActivities();
+
+      return () => {
+        isActive = false;
+      };
+    }, [user?.ci])
+  );
+
+  const renderItem = ({ item }: { item: UserActivity }) => (
+    <TouchableOpacity onPress={() => navigateByActivityLink(item.link)}>
+      <View style={styles.activityCardItem}>
+        <Text style={styles.activityDescription}>{item.description}</Text>
+        <Text style={styles.activityDate}>
+          {new Date(item.createdDate).toLocaleString("es-UY")}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -63,7 +75,7 @@ export default function RecentActivityScreen() {
           </View>
         ) : (
           <FlatList
-            data={[...activities].reverse()}
+            data={activities}
             renderItem={renderItem}
             keyExtractor={(item) => item.id.toString()}
           />

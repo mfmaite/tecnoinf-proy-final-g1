@@ -279,7 +279,7 @@ public class DataSeeder implements CommandLineRunner {
             }
 
             // Evaluation text-only with markdown (1)
-            String titleTextEV = "Trabajo de reflexión - " + c.getName();
+            String titleTextEV = "Trabajo de reflexión";
             boolean existsTextEV = evaluationRepository.findByCourse_IdOrderByCreatedDateAsc(c.getId())
                     .stream().anyMatch(ev -> titleTextEV.equals(ev.getTitle()));
             if (!existsTextEV) {
@@ -299,7 +299,7 @@ public class DataSeeder implements CommandLineRunner {
             }
 
             // Quiz x1 (idempotent by title)
-            String quizTitle = "Quiz inicial - " + c.getName();
+            String quizTitle = "Quiz inicial";
             boolean existsQuiz = quizRepository.findByCourse_IdOrderByCreatedDateAsc(c.getId())
                     .stream().anyMatch(q -> quizTitle.equals(q.getTitle()));
             if (!existsQuiz) {

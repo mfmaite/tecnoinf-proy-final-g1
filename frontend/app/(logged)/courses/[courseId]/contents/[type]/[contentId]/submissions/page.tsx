@@ -134,7 +134,7 @@ export default function SubmissionsPage({ params }: Params) {
               )}
               {s.note != null && (
                 <p className="text-sm">
-                  <span className="font-bold">Nota:</span> {s.note}
+                  <span className="font-bold text-text-neutral-50">Nota:</span> {s.note}
                 </p>
               )}
             </div>
@@ -163,7 +163,7 @@ export default function SubmissionsPage({ params }: Params) {
               <p className="text-sm text-gray-700">
                 <span className="font-bold">Estudiante:</span> {s.author?.name} ({s.author?.ci})
               </p>
-              <p className="text-sm">
+              <p className="text-sm text-gray-700">
                 <span className="font-bold">Nota:</span> {s.note ?? 0}
               </p>
             </div>

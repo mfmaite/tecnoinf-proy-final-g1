@@ -2,88 +2,112 @@
 import React, { useEffect, useState } from "react";
 import { Slot, useRouter } from "expo-router";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { NotificationProvider, useNotification } from "../contexts/NotificationContext"
 import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
+import * as Notifications from "expo-notifications";
 import { ActivityIndicator, View } from "react-native";
+import { api } from "../services/api";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useActivityNavigation } from "../hooks/useActivityNavigation";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,   // muestra alerta nativa
+    shouldPlaySound: true,   // suena al llegar
+    shouldSetBadge: true,    // modifica badge del ícono
+    shouldShowBanner: true,  // iOS: muestra banner arriba
+    shouldShowList: true,    // iOS: aparece en Notification Center
+  }),
+});
+
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <NotificationProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </NotificationProvider>
   );
 }
 
 function AppNavigator() {
   const { token } = useAuth();
-
+  const { fcmToken } = useNotification();
   const router = useRouter();
+  const { navigateByActivityLink } = useActivityNavigation();
 
-  // Estado para controlar si ya verificamos el token almacenado
   const [loading, setLoading] = useState(true);
-
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkToken = async () => {
-      try {
-        // Buscamos el token guardado en el almacenamiento seguro
-        const storedToken = await SecureStore.getItemAsync("token");
-
-        // Si existe, el usuario tiene sesión activa
-        setIsLoggedIn(!!storedToken);
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setIsLoggedIn(false);
-      } finally {
-        // Terminamos la carga
-        setLoading(false);
-      }
+      const storedToken = await SecureStore.getItemAsync("token");
+      setIsLoggedIn(!!storedToken);
+      setLoading(false);
     };
-
     checkToken();
   }, [token]);
 
-    // ✅ Deep Link handler global (para reset-password, etc.)
   useEffect(() => {
-    const handleDeepLink = (event: Linking.EventType) => {
-      const url = event.url;
-      const { path, queryParams } = Linking.parse(url);
-
-      if (path === "reset-password" && queryParams?.token) {
-        router.push(`/reset-password?token=${queryParams.token}`);
+    const savePushToken = async () => {
+      if (fcmToken && isLoggedIn) {
+        try {
+          await api.post("/users/device-token", { token: fcmToken });
+          console.log("Token guardado en backend");
+        } catch (e) {
+          console.log("Error guardando token en backend", e);
+        }
       }
     };
+    savePushToken();
+  }, [fcmToken, isLoggedIn]);
 
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-
-    // En caso de que la app se abra directamente desde un deep link (no en ejecución)
+  useEffect(() => {
     const checkInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        handleDeepLink({ url: initialUrl } as Linking.EventType);
+      if (!initialUrl) return;
+
+      const parsed = Linking.parse(initialUrl);
+
+      if (parsed?.path === "reset-password" && parsed.queryParams?.token) {
+        router.push(`/reset-password?token=${parsed.queryParams.token}`);
+        return;
       }
+
+      navigateByActivityLink(initialUrl);
     };
+
     checkInitialUrl();
 
-    // Maneja si la app se abre directamente desde el link (cerrada)
-    // Linking.getInitialURL().then((url) => {
-    //   if (url) {
-    //     const { path, queryParams } = Linking.parse(url);
-    //     if (path === "reset-password" && queryParams?.token) {
-    //       router.push({
-    //         pathname: "/reset-password",
-    //         params: { token: queryParams.token },
-    //       });
-    //     }
-    //   }
-    // });
+    const subscription = Linking.addEventListener("url", (event) => {
+      const parsed = Linking.parse(event.url);
+
+      if (parsed?.path === "reset-password" && parsed.queryParams?.token) {
+        router.push(`/reset-password?token=${parsed.queryParams.token}`);
+        return;
+      }
+
+      navigateByActivityLink(event.url);
+    });
 
     return () => subscription.remove();
-  }, [router]);
+  }, [router, navigateByActivityLink]);
 
-  // Mientras verificamos la sesión, mostramos un indicador de carga
+
+
   if (loading) {
     return (
       <SafeAreaProvider>

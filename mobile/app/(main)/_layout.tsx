@@ -8,22 +8,20 @@ export default function MainLayout() {
     <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
       <Stack
         screenOptions={{
-          headerTitleStyle: styles.headerTitle, // 👈 estilo global de headers
+          headerTitleStyle: styles.headerTitle,
           headerTitleAlign: "center",
           headerTintColor: colors.secondary[60],
           headerStyle: { backgroundColor: colors.primary[10] },
         }}
       >
-        {/* 🏠 Home */}
         <Stack.Screen
           name="home"
           options={{
             headerShown: true,
-            title: "Mentora", // 👈 NO headerTitleStyle aquí
+            title: "Mentora",
           }}
         />
 
-        {/* 👤 Perfil */}
         <Stack.Screen
           name="profile/index"
           options={{
@@ -32,7 +30,6 @@ export default function MainLayout() {
           }}
         />
 
-        {/* ✏️ Editar perfil */}
         <Stack.Screen
           name="profile/edit-profile"
           options={{
@@ -41,12 +38,18 @@ export default function MainLayout() {
           }}
         />
 
-        {/* 🔐 Cambiar contraseña */}
         <Stack.Screen
           name="profile/change-password"
           options={{
             headerShown: true,
             title: "Cambiar contraseña",
+          }}
+        />
+        <Stack.Screen
+          name="chats/index"
+          options={{
+            headerShown: true,
+            title: "Chats",
           }}
         />
       </Stack>

@@ -1,8 +1,6 @@
 import { api } from "./api";
 
-// ──────────────────────────────
-// Tipos base
-// ──────────────────────────────
+
 export interface Post {
   id: number;
   authorCi: string;
@@ -31,9 +29,6 @@ interface ApiResponse<T> {
   data: T;
 }
 
-// ──────────────────────────────
-// GET /post/:postId
-// ──────────────────────────────
 export async function getPostById(postId: string): Promise<PostDetail> {
   try {
     const { data } = await api.get<ApiResponse<PostDetail>>(
@@ -53,9 +48,6 @@ export async function getPostById(postId: string): Promise<PostDetail> {
   }
 }
 
-// ──────────────────────────────
-// POST /post/:postId/response
-// ──────────────────────────────
 export async function createResponse(
   postId: string,
   message: string
@@ -79,9 +71,6 @@ export async function createResponse(
   }
 }
 
-// ──────────────────────────────
-// PUT /post/:postId
-// ──────────────────────────────
 export async function updatePost(
   postId: string,
   message: string
@@ -105,9 +94,6 @@ export async function updatePost(
   }
 }
 
-// ──────────────────────────────
-// DELETE /post/:postId
-// ──────────────────────────────
 export async function deletePost(postId: string): Promise<void> {
   try {
     const { data } = await api.delete<ApiResponse<unknown>>(
@@ -122,5 +108,39 @@ export async function deletePost(postId: string): Promise<void> {
     throw new Error(
       error.response?.data?.message || "No se pudo eliminar el post."
     );
+  }
+}
+
+export async function updateResponse(
+  postId: string,
+  responseId: string,
+  message: string
+): Promise<Post> {
+  try {
+    const { data } = await api.put<ApiResponse<Post>>(
+      `/post/${encodeURIComponent(postId)}/response/${encodeURIComponent(responseId)}`,
+      { message }
+    );
+    if (!data.success) {
+      throw new Error(data.message || "Error al editar la respuesta.");
+    }
+    return data.data;
+  } catch (error: any) {
+    console.error("[updateResponse] Error:", error);
+    throw new Error(error.response?.data?.message || "No se pudo editar la respuesta.");
+  }
+}
+
+export async function deleteResponse(postId: string, responseId: string): Promise<void> {
+  try {
+    const { data } = await api.delete<ApiResponse<unknown>>(
+      `/post/${encodeURIComponent(postId)}/response/${encodeURIComponent(responseId)}`
+    );
+    if (!data.success) {
+      throw new Error(data.message || "Error al eliminar la respuesta.");
+    }
+  } catch (error: any) {
+    console.error("[deleteResponse] Error:", error);
+    throw new Error(error.response?.data?.message || "No se pudo eliminar la respuesta.");
   }
 }

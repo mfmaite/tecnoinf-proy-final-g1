@@ -1,12 +1,13 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
+
+const API_URL = Constants.expoConfig?.extra?.apiUrl ?? "";
 
 export const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: API_URL,
   timeout: 10000,
 });
-
-// ✅ Interceptor de respuesta: manejo centralizado de errores
 api.interceptors.response.use(
   (response) => response,
   async (error) => {

@@ -1,4 +1,5 @@
 import { api } from "./api";
+import * as SecureStore from "expo-secure-store";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -15,9 +16,54 @@ export interface UserActivity {
   createdDate: string;
 }
 
-/**
- * Cambiar contraseña (TU CÓDIGO ORIGINAL)
- */
+export interface UpdateUserPayload {
+  name?: string;
+  email?: string;
+  description?: string;
+  picture?: { uri: string; name: string; type: string } | null;
+}
+
+export interface UserDto {
+  ci: string;
+  name: string;
+  email: string;
+  description?: string | null;
+  pictureUrl?: string | null;
+  role: string;
+}
+
+export const updateUserProfile = async (payload: UpdateUserPayload): Promise<UserDto> => {
+  try {
+    const form = new FormData();
+    if (payload.name !== undefined) form.append("name", payload.name);
+    if (payload.email !== undefined) form.append("email", payload.email);
+    if (payload.description !== undefined) form.append("description", payload.description);
+    if (payload.picture !== undefined) {
+      if (payload.picture) {
+        // @ts-expect-error - React Native FormData acepta { uri, name, type }
+        form.append("picture", payload.picture);
+      }
+    }
+
+    const { data } = await api.put<ApiResponse<UserDto>>("/users", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    if (!data.success || !data.data) {
+      throw new Error(data.message || "Error al actualizar perfil.");
+    }
+    try {
+      await SecureStore.setItemAsync("user", JSON.stringify(data.data));
+    } catch {}
+    return data.data;
+  } catch (error: any) {
+    console.error("[updateUserProfile] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "No se pudo actualizar el perfil."
+    );
+  }
+};
+
 export const changePassword = async (
   oldPassword: string,
   newPassword: string,
@@ -40,9 +86,6 @@ export const changePassword = async (
   }
 };
 
-/**
- * 🔹 NUEVO: Obtener actividades recientes del usuario
- */
 export const getUserActivities = async (userCi: string): Promise<UserActivity[]> => {
   try {
     const { data } = await api.get<ApiResponse<UserActivity[]>>(
@@ -58,6 +101,25 @@ export const getUserActivities = async (userCi: string): Promise<UserActivity[]>
     console.error("[getUserActivities] Error:", error);
     throw new Error(
       error.response?.data?.message || "No se pudieron obtener las actividades."
+    );
+  }
+};
+
+export const getUserProfileByCi = async (ci: string): Promise<UserDto> => {
+  try {
+    const { data } = await api.get<ApiResponse<UserDto>>(
+      `/users/profile?ci=${encodeURIComponent(ci)}`
+    );
+
+    if (!data.success || !data.data) {
+      throw new Error(data.message || "No se pudo obtener el perfil del usuario.");
+    }
+
+    return data.data;
+  } catch (error: any) {
+    console.error("[getUserProfileByCi] Error:", error);
+    throw new Error(
+      error.response?.data?.message || "Error al obtener el perfil del usuario."
     );
   }
 };
